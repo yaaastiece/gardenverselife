@@ -62,13 +62,13 @@ function FlyingCars() {
     const t = clock.elapsedTime;
     cars.forEach((c, i) => { const g = refs.current[i]; if (!g) return; const a = c.phase + t * c.speed;
       g.position.set(Math.sin(a) * c.radius, c.y + Math.sin(t * 0.5 + i) * 0.4, Math.cos(a) * c.radius);
-      g.rotation.y = a + (c.speed > 0 ? Math.PI / 2 : -Math.PI / 2); });
+      g.rotation.y = a + (c.speed > 0 ? 0 : Math.PI); });
   });
   return <>{cars.map((_, i) => (
     <group key={i} ref={(el) => { refs.current[i] = el; }}>
-      <mesh><capsuleGeometry args={[0.5, 1.6, 4, 8]} /><meshToonMaterial color={PALETTE.wallMid} /><Edges color={PALETTE.ink} /></mesh>
-      <mesh rotation-z={Math.PI / 2} position={[0, 0, 0]}><boxGeometry args={[0.15, 0.15, 0.15]} /><meshBasicMaterial color={PALETTE.pink} toneMapped={false} /></mesh>
-      <mesh position={[0, 0, 4.5]} rotation-x={Math.PI / 2}><cylinderGeometry args={[0.18, 0.02, 7, 6, 1, true]} /><meshBasicMaterial color={PALETTE.pink} transparent opacity={0.35} toneMapped={false} depthWrite={false} /></mesh>
+      <mesh><boxGeometry args={[2.4, 0.6, 1.1]} /><meshToonMaterial color={PALETTE.wallMid} /><Edges color={PALETTE.ink} /></mesh>
+      <mesh position={[0.2, 0.45, 0]}><boxGeometry args={[1.2, 0.4, 0.9]} /><meshToonMaterial color={PALETTE.wallLight} /><Edges color={PALETTE.ink} /></mesh>
+      <mesh position={[-4.7, 0, 0]} rotation-z={Math.PI / 2}><cylinderGeometry args={[0.02, 0.22, 7, 6, 1, true]} /><meshBasicMaterial color={PALETTE.pink} transparent opacity={0.4} toneMapped={false} depthWrite={false} /></mesh>
     </group>
   ))}</>;
 }
