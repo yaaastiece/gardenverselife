@@ -44,7 +44,7 @@ export function GardenScene() {
         <Deck />
         <Garden />
         <Seedling onStageChange={onStage} />
-        <OrbitControls target={[0, EYE_HEIGHT - 0.25, 0.9]} enableZoom={false} enablePan={false} rotateSpeed={-0.35} minPolarAngle={0.5} maxPolarAngle={2.3} />
+        <OrbitControls target={[0, EYE_HEIGHT - 0.12, 0.7]} enableZoom={false} enablePan={false} rotateSpeed={-0.35} minPolarAngle={0.5} maxPolarAngle={2.3} />
         <ReadySignal onReady={() => setReady(true)} />
       </Canvas>
 
