@@ -69,7 +69,7 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
             </mesh>;
           })}
         </group>
-        <mesh position={[0, 0.8, 0]} visible={false}><cylinderGeometry args={[0.35, 0.35, 0.8, 8]} /></mesh>
+        <mesh position={[0, 0.8, 0]}><cylinderGeometry args={[0.35, 0.35, 0.8, 8]} /><meshBasicMaterial transparent opacity={0} depthWrite={false} /></mesh>
       </group>
       <instancedMesh ref={drops} args={[undefined, undefined, DROPS]}><sphereGeometry args={[0.03, 6, 5]} /><meshBasicMaterial color="#9fe8ff" toneMapped={false} /></instancedMesh>
       <mesh ref={ring} position={[0, 0.58, 0]} rotation-x={-Math.PI / 2}><ringGeometry args={[0.18, 0.24, 32]} /><meshBasicMaterial color={PALETTE.green} transparent opacity={0} toneMapped={false} /></mesh>
