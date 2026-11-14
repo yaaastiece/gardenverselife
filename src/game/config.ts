@@ -20,3 +20,10 @@ export const BACKDROP = { radius: 20, arc: 2.6, aspect: 1920 / 620, bottom: -1.2
 // How far the player may turn: keep the image edges out of view.
 export const LOOK = { yaw: 0.55, polarMin: 1.3, polarMax: 1.78, fov: 55 };
 export const EYE_HEIGHT = 1.6;
+// Xion, the welcoming fairy: fairy-sized (~30 cm), hovering beside the seedling planter.
+export const XION = {
+  position: [-0.62, 0, -1.15] as [number, number, number],
+  height: 0.3, hover: 0.62, bobAmount: 0.03, bobSpeed: 1.4,
+  bubbleMs: 6000, fadeMs: 1000,
+  welcome: "Welcome to the Gardenverse. Here's your first seedling. Water it and watch it grow.",
+};
