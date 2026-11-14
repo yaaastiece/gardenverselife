@@ -31,3 +31,6 @@ use the editor.
 
 ## Gardenverse structure
 - 3D scene lives in `src/game/`: rules/data in plain TS (`plants/`, `config.ts`), scene pieces in `scene/`, audio in `audio/`; the `/` route renders it with `ssr: false` because WebGL is browser-only.
+
+## Gardenverse structure
+- 3D scene lives in `src/game/`: rules/data in plain TS (`plants/`, `config.ts`), scene pieces in `scene/`, audio in `audio/`; the `/` route uses `ssr: false` because WebGL is browser-only.
