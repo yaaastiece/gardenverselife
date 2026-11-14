@@ -8,6 +8,7 @@ import { Deck } from "./scene/Deck";
 import { Garden } from "./scene/Garden";
 import { Seedling } from "./scene/Seedling";
 import { Lounge } from "./scene/Lounge";
+import { Xion } from "./scene/Xion";
 import { createAmbience } from "./audio/ambience";
 import { BACKDROP, EYE_HEIGHT, LOOK } from "./config";
 
@@ -45,6 +46,7 @@ export function GardenScene() {
         <Deck />
         <Garden />
         <Lounge />
+        <Suspense fallback={null}><Xion /></Suspense>
         <Seedling onStageChange={onStage} />
         <OrbitControls target={[0, EYE_HEIGHT - 0.12, 0.7]} enableZoom={false} enablePan={false} rotateSpeed={-0.35} minPolarAngle={LOOK.polarMin} maxPolarAngle={LOOK.polarMax} minAzimuthAngle={-LOOK.yaw} maxAzimuthAngle={LOOK.yaw} />
         <ReadySignal onReady={() => setReady(true)} />
