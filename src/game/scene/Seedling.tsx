@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { RoundedBox } from "@react-three/drei";
+import { Plant } from "./Garden";
 import { PALETTE, WIND } from "../config";
 import { SEEDLING_STAGES, nextStage } from "../plants/growth";
 
@@ -55,8 +57,10 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
   return (
     <group position={[0, 0, -1.4]}>
       <group onClick={(e) => { e.stopPropagation(); water(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
-        <mesh position={[0, 0.06, 0]}><cylinderGeometry args={[0.55, 0.6, 0.12, 32]} /><meshStandardMaterial color="#e9e3ea" metalness={0.6} roughness={0.25} /></mesh>
-        <mesh position={[0, 0.125, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.56, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
+        <RoundedBox args={[1.6, 0.3, 0.9]} radius={0.08} position={[0, 0.15, 0]}><meshPhysicalMaterial color="#f6dcea" roughness={0.08} transparent opacity={0.6} clearcoat={1} /></RoundedBox>
+        <mesh position={[0, 0.08, 0.456]}><boxGeometry args={[1.45, 0.035, 0.01]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
+        <mesh position={[0, 0.301, 0]} rotation-x={-Math.PI / 2}><planeGeometry args={[1.5, 0.8]} /><meshStandardMaterial color="#3d2a22" roughness={1} /></mesh>
+        {[-0.55, -0.4, 0.4, 0.55].map((x, i) => <Plant key={x} kind={i < 2 ? "herb" : "rose"} position={[x, 0.3, (i % 2) * 0.15 - 0.05]} seed={40 + i} />)}
         <mesh position={[0, 0.35, 0]}><sphereGeometry args={[0.3, 32, 16, 0, Math.PI * 2, Math.PI * 0.35, Math.PI * 0.65]} /><meshPhysicalMaterial color="#d8fff4" transparent opacity={0.3} roughness={0.05} side={THREE.DoubleSide} depthWrite={false} emissive="#5dffd0" emissiveIntensity={hover ? 0.3 : 0.08} /></mesh>
         <mesh position={[0, 0.3, 0]}><cylinderGeometry args={[0.22, 0.12, 0.25, 24]} /><meshStandardMaterial color="#3d2a22" roughness={1} /></mesh>
         <mesh position={[0, 0.55, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.24, 0.012, 6, 48]} /><meshBasicMaterial color="#7dffd8" toneMapped={false} /></mesh>

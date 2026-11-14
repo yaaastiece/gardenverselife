@@ -1,0 +1,37 @@
+import { useMemo } from "react";
+import { useFrame, useLoader } from "@react-three/fiber";
+import * as THREE from "three";
+import skyline from "@/assets/skyline_backdrop.jpg.asset.json";
+import { BACKDROP } from "../config";
+
+// Painted skyline wrapped on a curved panorama. Uses only the image above the painted railing.
+const vert = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
+const frag = `uniform sampler2D map; uniform float time; uniform float vMin; uniform vec3 fill; varying vec2 vUv;
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
+void main(){
+  vec2 uv = vec2(1.0 - vUv.x, mix(vMin, 1.0, vUv.y));
+  vec3 c = texture2D(map, uv).rgb;
+  float lum = dot(c, vec3(0.299,0.587,0.114));
+  float sky = smoothstep(0.62, 0.75, uv.y);
+  vec2 cell = floor(uv * vec2(480.0, 268.0));
+  float tw = 0.5 + 0.5*sin(time*(0.8 + hash(cell)*1.6) + hash(cell+3.1)*6.283);
+  c *= 1.0 + sky * smoothstep(0.55, 0.85, lum) * (tw - 0.45) * 0.9;
+  c = mix(c, fill, smoothstep(0.93, 1.0, vUv.y));
+  gl_FragColor = vec4(c, 1.0);
+  #include <colorspace_fragment>
+}`;
+
+export function Backdrop() {
+  const tex = useLoader(THREE.TextureLoader, skyline.url);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  const uniforms = useMemo(() => ({ map: { value: tex }, time: { value: 0 }, vMin: { value: BACKDROP.vMin }, fill: { value: new THREE.Color(BACKDROP.fill).convertSRGBToLinear() } }), [tex]);
+  useFrame(({ clock }) => { uniforms.time.value = clock.elapsedTime; });
+  const { radius: R, arc, aspect, bottom } = BACKDROP;
+  const h = (R * arc) / aspect;
+  return (
+    <mesh position={[0, bottom + h / 2, 0]}>
+      <cylinderGeometry args={[R, R, h, 96, 1, true, Math.PI - arc / 2, arc]} />
+      <shaderMaterial vertexShader={vert} fragmentShader={frag} uniforms={uniforms} side={THREE.BackSide} depthWrite={false} toneMapped={false} />
+    </mesh>
+  );
+}
