@@ -65,7 +65,7 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
           {Array.from({ length: s.leaves }, (_, i) => {
             const a = i * 2.4; const y = s.height * (0.45 + (i / s.leaves) * 0.55);
             return <mesh key={`${stage}-${i}`} position={[Math.cos(a) * s.leafSize * 0.8, y, Math.sin(a) * s.leafSize * 0.8]} rotation={[0.5, -a, 0]} scale={[s.leafSize, s.leafSize * 0.25, s.leafSize * 1.7]}>
-              <sphereGeometry args={[1, 10, 8]} /><meshStandardMaterial color="#6be07a" emissive="#2fae4a" emissiveIntensity={0.45} roughness={0.4} />
+              <sphereGeometry args={[1, 10, 8]} /><meshStandardMaterial color="#6be07a" emissive="#1f7a34" emissiveIntensity={0.25} roughness={0.4} />
             </mesh>;
           })}
         </group>

@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Gardenverse structure
+- 3D scene lives in `src/game/`: rules/data in plain TS (`plants/`, `config.ts`), scene pieces in `scene/`, audio in `audio/`; the `/` route renders it with `ssr: false` because WebGL is browser-only.
