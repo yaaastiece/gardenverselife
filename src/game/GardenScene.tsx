@@ -6,6 +6,7 @@ import { City } from "./scene/City";
 import { Deck } from "./scene/Deck";
 import { Garden } from "./scene/Garden";
 import { Seedling } from "./scene/Seedling";
+import { Lounge } from "./scene/Lounge";
 import { createAmbience } from "./audio/ambience";
 import { EYE_HEIGHT, PALETTE } from "./config";
 
@@ -43,6 +44,7 @@ export function GardenScene() {
         <City />
         <Deck />
         <Garden />
+        <Lounge />
         <Seedling onStageChange={onStage} />
         <OrbitControls target={[0, EYE_HEIGHT - 0.12, 0.7]} enableZoom={false} enablePan={false} rotateSpeed={-0.35} minPolarAngle={0.5} maxPolarAngle={2.3} />
         <ReadySignal onReady={() => setReady(true)} />

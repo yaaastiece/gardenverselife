@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Outlines } from "@react-three/drei";
 import * as THREE from "three";
 import { PALETTE, WIND } from "../config";
 import { SEEDLING_STAGES, nextStage } from "../plants/growth";
@@ -58,8 +57,10 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
       <group onClick={(e) => { e.stopPropagation(); water(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
         <mesh position={[0, 0.06, 0]}><cylinderGeometry args={[0.55, 0.6, 0.12, 32]} /><meshStandardMaterial color="#e9e3ea" metalness={0.6} roughness={0.25} /></mesh>
         <mesh position={[0, 0.125, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.56, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
-        <mesh position={[0, 0.35, 0]}><cylinderGeometry args={[0.24, 0.17, 0.4, 24]} /><meshStandardMaterial color="#ffd3e8" metalness={0.3} roughness={0.2} emissive={PALETTE.pink} emissiveIntensity={hover ? 0.35 : 0.12} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
-        <mesh position={[0, 0.555, 0]} rotation-x={-Math.PI / 2}><circleGeometry args={[0.22, 24]} /><meshStandardMaterial color="#3d2a22" /></mesh>
+        <mesh position={[0, 0.35, 0]}><sphereGeometry args={[0.3, 32, 16, 0, Math.PI * 2, Math.PI * 0.35, Math.PI * 0.65]} /><meshPhysicalMaterial color="#d8fff4" transparent opacity={0.3} roughness={0.05} side={THREE.DoubleSide} depthWrite={false} emissive="#5dffd0" emissiveIntensity={hover ? 0.3 : 0.08} /></mesh>
+        <mesh position={[0, 0.3, 0]}><cylinderGeometry args={[0.22, 0.12, 0.25, 24]} /><meshStandardMaterial color="#3d2a22" roughness={1} /></mesh>
+        <mesh position={[0, 0.55, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.24, 0.012, 6, 48]} /><meshBasicMaterial color="#7dffd8" toneMapped={false} /></mesh>
+        <mesh position={[0, 0.555, 0]} rotation-x={-Math.PI / 2}><circleGeometry args={[0.235, 24]} /><meshStandardMaterial color="#3d2a22" /></mesh>
         <group ref={plant} position={[0, 0.56, 0]}>
           <mesh position={[0, s.height / 2, 0]}><cylinderGeometry args={[0.012, 0.02, s.height, 6]} /><meshStandardMaterial color="#3a9a4c" /></mesh>
           {Array.from({ length: s.leaves }, (_, i) => {
