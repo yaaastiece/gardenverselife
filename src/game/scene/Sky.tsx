@@ -32,11 +32,11 @@ export function Sky() {
   const moonPos = toPos([-0.45, 0.32], 160);
   return (
     <group>
-      <mesh><sphereGeometry args={[200, 32, 16]} /><shaderMaterial side={THREE.BackSide} depthWrite={false} uniforms={uniforms} vertexShader={vert} fragmentShader={frag} /></mesh>
-      <points geometry={stars}><pointsMaterial color="#ffffff" size={0.7} sizeAttenuation={false} transparent opacity={0.8} /></points>
-      <lineSegments geometry={lines}><lineBasicMaterial color={PALETTE.pinkSoft} transparent opacity={0.35} /></lineSegments>
-      <mesh position={moonPos}><circleGeometry args={[11, 48]} /><meshBasicMaterial color={PALETTE.moon} toneMapped={false} /></mesh>
-      <mesh position={moonPos.clone().multiplyScalar(1.01)}><circleGeometry args={[16, 48]} /><meshBasicMaterial color={PALETTE.pinkSoft} transparent opacity={0.15} /></mesh>
+      <mesh><sphereGeometry args={[200, 32, 16]} /><shaderMaterial fog={false} side={THREE.BackSide} depthWrite={false} uniforms={uniforms} vertexShader={vert} fragmentShader={frag} /></mesh>
+      <points geometry={stars}><pointsMaterial color="#ffffff" size={0.7} sizeAttenuation={false} transparent opacity={0.8} fog={false} /></points>
+      <lineSegments geometry={lines}><lineBasicMaterial color={PALETTE.pinkSoft} transparent opacity={0.35} fog={false} /></lineSegments>
+      <mesh position={moonPos}><circleGeometry args={[11, 48]} /><meshBasicMaterial color={PALETTE.moon} toneMapped={false} fog={false} /></mesh>
+      <mesh position={moonPos.clone().multiplyScalar(1.01)}><circleGeometry args={[16, 48]} /><meshBasicMaterial color={PALETTE.pinkSoft} transparent opacity={0.15} fog={false} /></mesh>
     </group>
   );
 }

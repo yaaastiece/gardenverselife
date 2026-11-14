@@ -57,7 +57,7 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
     <group position={[0, 0, -1.4]}>
       <group onClick={(e) => { e.stopPropagation(); water(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
         <mesh position={[0, 0.06, 0]}><cylinderGeometry args={[0.55, 0.6, 0.12, 32]} /><meshStandardMaterial color="#e9e3ea" metalness={0.6} roughness={0.25} /></mesh>
-        <mesh position={[0, 0.125, 0]}><torusGeometry args={[0.56, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
+        <mesh position={[0, 0.125, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.56, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
         <mesh position={[0, 0.35, 0]}><cylinderGeometry args={[0.24, 0.17, 0.4, 24]} /><meshStandardMaterial color="#ffd3e8" metalness={0.3} roughness={0.2} emissive={PALETTE.pink} emissiveIntensity={hover ? 0.35 : 0.12} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
         <mesh position={[0, 0.555, 0]} rotation-x={-Math.PI / 2}><circleGeometry args={[0.22, 24]} /><meshStandardMaterial color="#3d2a22" /></mesh>
         <group ref={plant} position={[0, 0.56, 0]}>
