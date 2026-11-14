@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { RoundedBox } from "@react-three/drei";
 import { Plant } from "./Garden";
+import { LEAF, leafTexture } from "../plants/leaves";
 import { PALETTE, WIND } from "../config";
 import { SEEDLING_STAGES, nextStage } from "../plants/growth";
 
@@ -69,8 +70,8 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
           <mesh position={[0, s.height / 2, 0]}><cylinderGeometry args={[0.012, 0.02, s.height, 6]} /><meshStandardMaterial color="#3a9a4c" /></mesh>
           {Array.from({ length: s.leaves }, (_, i) => {
             const a = i * 2.4; const y = s.height * (0.45 + (i / s.leaves) * 0.55);
-            return <mesh key={`${stage}-${i}`} position={[Math.cos(a) * s.leafSize * 0.8, y, Math.sin(a) * s.leafSize * 0.8]} rotation={[0.5, -a, 0]} scale={[s.leafSize, s.leafSize * 0.25, s.leafSize * 1.7]}>
-              <sphereGeometry args={[1, 10, 8]} /><meshStandardMaterial color="#6be07a" emissive="#1f7a34" emissiveIntensity={0.25} roughness={0.4} />
+            return <mesh key={`${stage}-${i}`} position={[0, y, 0]} geometry={LEAF.round} rotation={[-0.4, a, 0]} scale={s.leafSize * 2.2}>
+              <meshStandardMaterial map={leafTexture()} color="#6bd07a" emissive="#1f7a34" emissiveIntensity={0.2} roughness={0.5} side={THREE.DoubleSide} />
             </mesh>;
           })}
         </group>

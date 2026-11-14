@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import * as THREE from "three";
-import skyline from "@/assets/skyline_backdrop.jpg.asset.json";
+import skyline from "@/assets/skyline_backdrop_clear.jpg.asset.json";
 import { BACKDROP } from "../config";
 
 // Painted skyline wrapped on a curved panorama. Uses only the image above the painted railing.

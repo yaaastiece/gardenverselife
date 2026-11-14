@@ -14,7 +14,7 @@ export const PALETTE = {
   wood: "#8a7f78",
 };
 export const WIND = { strength: 0.06, speed: 1.3 };
-export const CARS = { count: 4, minSpeed: 0.12, maxSpeed: 0.22 };
+export const CARS = { count: 4, minCross: 15, maxCross: 25, gap: 4, minY: 6.5, maxY: 11 };
 // Painted panorama: radius, arc (radians), cropped image aspect, bottom height, vMin = image row of painted railing.
 export const BACKDROP = { radius: 20, arc: 2.6, aspect: 1920 / 620, bottom: -1.2, vMin: 0.42, fill: "#0c0b0e" };
 // How far the player may turn: keep the image edges out of view.
