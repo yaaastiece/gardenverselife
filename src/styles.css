@@ -30,6 +30,10 @@
  */
 
 @theme inline {
+  --font-display: "Bangers", system-ui, sans-serif;
+  --font-sans: "Quicksand", system-ui, sans-serif;
+  --color-neon: var(--neon);
+  --color-neon-green: var(--neon-green);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -74,6 +78,10 @@
 
 :root {
   --radius: 0.625rem;
+  --neon: oklch(0.72 0.22 350);
+  --neon-green: oklch(0.88 0.2 150);
+  --ink: oklch(0.12 0.01 320);
+  --glass: oklch(0.15 0.02 330 / 0.6);
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
@@ -152,4 +160,15 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
   }
+}
+
+@layer components {
+  .gv-stage { position: fixed; inset: 0; background: var(--ink); font-family: var(--font-sans); color: oklch(0.97 0.01 350); }
+  .gv-title { position: absolute; top: 1.25rem; left: 1.5rem; pointer-events: none; }
+  .gv-title h1 { font-family: var(--font-display); font-size: 2.6rem; letter-spacing: 0.06em; line-height: 1; color: var(--neon); text-shadow: 2px 2px 0 var(--ink), 0 0 18px var(--neon); }
+  .gv-title p { font-size: 0.8rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.75; }
+  .gv-hint { position: absolute; bottom: 1.25rem; left: 50%; transform: translateX(-50%); padding: 0.5rem 1rem; border-radius: 999px; background: var(--glass); border: 1.5px solid var(--ink); font-size: 0.85rem; pointer-events: none; backdrop-filter: blur(6px); }
+  .gv-chip { position: absolute; top: 1.4rem; left: 50%; transform: translateX(-50%); padding: 0.4rem 1rem; border-radius: 999px; background: var(--glass); border: 1.5px solid var(--neon-green); color: var(--neon-green); font-weight: 700; pointer-events: none; }
+  .gv-sound { position: absolute; top: 1.25rem; right: 1.5rem; padding: 0.55rem 1.1rem; border-radius: 999px; background: var(--neon); color: var(--ink); font-weight: 700; border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink), 0 0 16px var(--neon); cursor: pointer; transition: transform .15s; }
+  .gv-sound:hover { transform: translateY(-1px); }
 }
