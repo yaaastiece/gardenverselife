@@ -7,7 +7,7 @@ import { BACKDROP, CARS, PALETTE } from "../config";
 const TRAIL = 10;
 function trailGeo() {
   const g = new THREE.PlaneGeometry(1, 1, TRAIL, 1);
-  const p = g.attributes.position as THREE.BufferAttribute; const a = new Float32Array(p.count);
+  const p = g.attributes["position"] as THREE.BufferAttribute; const a = new Float32Array(p.count);
   for (let i = 0; i < p.count; i++) { const x = p.getX(i) + 0.5; a[i] = x; p.setY(i, p.getY(i) * (0.3 + x * 0.7)); }
   g.setAttribute("alpha", new THREE.BufferAttribute(a, 1)); return g;
 }

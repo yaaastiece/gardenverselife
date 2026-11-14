@@ -8,7 +8,7 @@ function leafShape(w: number, serrate: number) {
 }
 function makeLeaf(w: number, serrate: number, curl: number, cup: number) {
   const g = new THREE.ShapeGeometry(leafShape(w, serrate), 1);
-  const p = g.attributes.position as THREE.BufferAttribute; const uv = g.attributes.uv as THREE.BufferAttribute;
+  const p = g.attributes["position"] as THREE.BufferAttribute; const uv = g.attributes["uv"] as THREE.BufferAttribute;
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i), y = p.getY(i);
     uv.setXY(i, x / (2 * w) + 0.5, y);
