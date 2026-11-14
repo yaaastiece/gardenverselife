@@ -17,8 +17,8 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
   const ring = useRef<THREE.Mesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const dirs = useMemo(() => Array.from({ length: DROPS }, (_, i) => { const a = (i / DROPS) * Math.PI * 2; return new THREE.Vector3(Math.cos(a) * (0.3 + (i % 3) * 0.2), 1.2 + (i % 5) * 0.25, Math.sin(a) * (0.3 + (i % 3) * 0.2)); }), []);
-  const prevHeight = useRef(SEEDLING_STAGES[0].height);
-  const s = SEEDLING_STAGES[stage];
+  const prevHeight = useRef(SEEDLING_STAGES[0]!.height);
+  const s = SEEDLING_STAGES[stage]!;
 
   useEffect(() => { onStageChange(s.name); }, [s.name, onStageChange]);
   useEffect(() => { document.body.style.cursor = hover ? "pointer" : "auto"; return () => { document.body.style.cursor = "auto"; }; }, [hover]);

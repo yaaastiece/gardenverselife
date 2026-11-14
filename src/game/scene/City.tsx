@@ -30,7 +30,7 @@ export function City() {
     for (let i = 0; i < 70; i++) {
       const a = r() * Math.PI * 2; const dist = 28 + r() * 70;
       const tall = r() > 0.6;
-      list.push({ x: Math.sin(a) * dist, z: Math.cos(a) * dist, w: 4 + r() * 6, d: 4 + r() * 6, h: tall ? 25 + r() * 45 : 6 + r() * 14, tone: tones[Math.floor(r() * 3)], tex: Math.floor(r() * 3) });
+      list.push({ x: Math.sin(a) * dist, z: Math.cos(a) * dist, w: 4 + r() * 6, d: 4 + r() * 6, h: tall ? 25 + r() * 45 : 6 + r() * 14, tone: tones[Math.floor(r() * 3)]!, tex: Math.floor(r() * 3) });
     }
     return list;
   }, []);
@@ -38,7 +38,7 @@ export function City() {
     <group position={[0, -12, 0]}>
       <mesh rotation-x={-Math.PI / 2}><circleGeometry args={[120, 32]} /><meshBasicMaterial color="#1a181c" /></mesh>
       {buildings.map((b, i) => {
-        const tex = facades[b.tex].clone(); tex.repeat.set(b.w / 8, b.h / 16); tex.needsUpdate = true;
+        const tex = facades[b.tex]!.clone(); tex.repeat.set(b.w / 8, b.h / 16); tex.needsUpdate = true;
         return (
           <group key={i} position={[b.x, b.h / 2, b.z]}>
             <mesh>

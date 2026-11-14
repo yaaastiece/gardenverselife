@@ -45,7 +45,7 @@ export function Plant({ kind, position, seed }: { kind: PlantKind; position: [nu
           return (
             <mesh key={i} position={[Math.cos(a) * s * 0.7, y, Math.sin(a) * s * 0.7]} rotation={[0.6, -a, 0]} scale={[s, s * 0.25, s * 1.6]}>
               <sphereGeometry args={[1, 8, 6]} />
-              <meshStandardMaterial color={LEAF_COLORS[i % 4]} emissive="#1b5e2b" emissiveIntensity={0.35} roughness={0.5} />
+              <meshStandardMaterial color={LEAF_COLORS[i % 4]!} emissive="#1b5e2b" emissiveIntensity={0.35} roughness={0.5} />
             </mesh>
           );
         })}

@@ -26,7 +26,7 @@ export function Sky() {
   }, []);
   const lines = useMemo(() => {
     const pts: THREE.Vector3[] = [];
-    CONSTELLATIONS.forEach((c) => { for (let i = 0; i < c.length - 1; i++) pts.push(toPos(c[i], 179), toPos(c[i + 1], 179)); });
+    CONSTELLATIONS.forEach((c) => { for (let i = 0; i < c.length - 1; i++) pts.push(toPos(c[i]!, 179), toPos(c[i + 1]!, 179)); });
     return new THREE.BufferGeometry().setFromPoints(pts);
   }, []);
   const moonPos = toPos([-0.45, 0.32], 160);
