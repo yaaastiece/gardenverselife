@@ -31,7 +31,7 @@ export function Deck() {
       {posts.map((p, i) => (
         <mesh key={i} position={[p[0], 0.55, p[2]]}><boxGeometry args={[0.05, 1.1, 0.05]} /><meshToonMaterial color="#2a282d" /></mesh>
       ))}
-      {[[0, -SIZE / 2, 0], [-SIZE / 2, 0, Math.PI / 2], [SIZE / 2, 0, Math.PI / 2]].map(([x, z, r], i) => (
+      {([[0, -SIZE / 2, 0], [-SIZE / 2, 0, Math.PI / 2], [SIZE / 2, 0, Math.PI / 2]] as [number, number, number][]).map(([x, z, r], i) => (
         <group key={i} position={[x, 0, z]} rotation-y={r}>
           <mesh position={[0, 1.1, 0]}><boxGeometry args={[SIZE, 0.07, 0.09]} /><meshToonMaterial color="#2a282d" /></mesh>
           <mesh position={[0, 0.9, 0]}><boxGeometry args={[SIZE, 0.04, 0.05]} /><meshToonMaterial color="#2a282d" /></mesh>
