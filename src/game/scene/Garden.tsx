@@ -35,7 +35,7 @@ function rng(seed: number) { let x = Math.sin(seed * 999) * 10000; return () => 
 const BASE: Record<PlantKind, string> = { herb: "#3f9a45", tomato: "#3a7f3a", lettuce: "#86c75a", rose: "#2f6e3c", strawberry: "#3c8a40", pepper: "#3a8040" };
 
 function Leaf({ geo, color, pos, rot, s }: { geo: THREE.BufferGeometry; color: THREE.Color; pos: [number, number, number]; rot: [number, number, number]; s: number }) {
-  return <mesh geometry={geo} position={pos} rotation={rot} scale={s}><meshStandardMaterial map={leafTexture()} color={color} side={THREE.DoubleSide} roughness={0.55} /></mesh>;
+  return <mesh geometry={geo} position={pos} rotation={rot} scale={s * 1.8}><meshStandardMaterial map={leafTexture()} color={color} side={THREE.DoubleSide} roughness={0.55} /></mesh>;
 }
 
 function Bloom({ pos, color, s }: { pos: [number, number, number]; color: string; s: number }) {
