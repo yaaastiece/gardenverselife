@@ -3,7 +3,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
 import { Button } from "@/components/ui/button";
 import { Volume2, VolumeX } from "lucide-react";
-import { createXionInteraction } from "./interaction";
+import { createXionInteraction, isDrag } from "./interaction";
 import { XionCamera } from "./scene/XionCamera";
 import { XionSpeech } from "./ui/XionSpeech";
 import { Backdrop } from "./scene/Backdrop";
@@ -30,6 +30,7 @@ export function GardenScene() {
   const audio = useRef<ReturnType<typeof createAmbience> | null>(null);
   const [interaction] = useState(() => createXionInteraction({ x: XION.position[0], y: XION.position[1], z: XION.position[2] }));
   const bubbleRef = useRef<HTMLDivElement>(null);
+  const canvasPress = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss };
@@ -45,7 +46,17 @@ export function GardenScene() {
   const onStage = useCallback((n: string) => setStageName(n), []);
 
   return (
-    <div className="gv-stage" data-scene-ready={ready ? "" : undefined}>
+    <div className="gv-stage" data-scene-ready={ready ? "" : undefined}
+      onPointerDownCapture={(e) => {
+        if (!(e.target instanceof HTMLCanvasElement)) return;
+        canvasPress.current = { x: e.clientX, y: e.clientY };
+        interaction.state.pointerHandled = false;
+      }}
+      onPointerUp={(e) => {
+        const start = canvasPress.current;
+        canvasPress.current = null;
+        if (start && !interaction.state.pointerHandled && !isDrag(start, { x: e.clientX, y: e.clientY })) interaction.dismiss();
+      }}>
       <Canvas camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={[1, 2]} onPointerMissed={() => interaction.dismiss()}>
         <color attach="background" args={[BACKDROP.fill]} />
         <hemisphereLight args={["#ffd9ea", "#3a2a3a", 0.9]} />

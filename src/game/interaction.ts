@@ -43,7 +43,7 @@ export function speechPhase(elapsedMs: number) {
 export type Speech = { text: string; id: number };
 export function createXionInteraction(initial: Point3) {
   const listeners = new Set<(speech: Speech | null) => void>();
-  const state = { position: { ...initial }, focused: false, dragging: false, speech: { text: WELCOME, id: 0 } as Speech | null };
+  const state = { position: { ...initial }, focused: false, dragging: false, pointerHandled: false, speech: { text: WELCOME, id: 0 } as Speech | null };
   let sequence = 0;
   const say = (text: string | null) => {
     state.speech = text ? { text, id: ++sequence } : null;
@@ -52,7 +52,7 @@ export function createXionInteraction(initial: Point3) {
   return {
     state,
     subscribe(listener: (speech: Speech | null) => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
-    begin() { state.dragging = true; },
+    begin() { state.dragging = true; state.pointerHandled = true; },
     move(position: Point3) { state.position = floatingPosition(position); },
     release(dragged: boolean) {
       state.dragging = false;
