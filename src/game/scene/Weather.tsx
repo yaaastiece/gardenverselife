@@ -19,30 +19,30 @@ export function Weather({ weather }: { weather: WeatherState }) {
     const pos = new Float32Array(count * 6); const speed = new Float32Array(count);
     for (let i = 0; i < count; i++) {
       const x = AREA.cx + (Math.random() - 0.5) * AREA.x, z = AREA.cz + (Math.random() - 0.5) * AREA.z, y = Math.random() * AREA.top;
-      pos.set([x, y, z, x - 0.02, y + 0.22, z], i * 6); speed[i] = 7 + Math.random() * 3;
+      pos.set([x, y, z, x - 0.02, y + 0.32, z], i * 6); speed[i] = 7 + Math.random() * 3;
     }
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     return { g, speed };
   }, [count]);
   const mistTex = useMemo(() => {
     const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
-    if (x) { const r = x.createRadialGradient(64, 64, 0, 64, 64, 64); r.addColorStop(0, "rgba(235,225,240,0.55)"); r.addColorStop(1, "rgba(235,225,240,0)"); x.fillStyle = r; x.fillRect(0, 0, 128, 128); }
+    if (x) { const r = x.createRadialGradient(64, 64, 0, 64, 64, 64); r.addColorStop(0, "rgba(240,232,245,0.8)"); r.addColorStop(1, "rgba(235,225,240,0)"); x.fillStyle = r; x.fillRect(0, 0, 128, 128); }
     return new THREE.CanvasTexture(c);
   }, []);
-  const puffs = useMemo(() => Array.from({ length: 14 }, (_, i) => ({ x: AREA.cx + (Math.random() - 0.5) * 8, z: AREA.cz + (Math.random() - 0.5) * 6, y: 0.25 + Math.random() * 0.6, s: 2.2 + Math.random() * 2, p: i })), []);
+  const puffs = useMemo(() => Array.from({ length: 26 }, (_, i) => ({ x: AREA.cx + (Math.random() - 0.5) * 8, z: AREA.cz + (Math.random() - 0.5) * 6, y: 0.3 + Math.random() * 1.1, s: 2.2 + Math.random() * 2, p: i })), []);
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05); const a = amt.current; const k = dt / WEATHER_FADE;
     for (const key of ["rain", "fog", "fireflies"] as const) a[key] = THREE.MathUtils.clamp(a[key] + (mode === key ? k : -k), 0, 1);
     if (rainRef.current) {
       rainRef.current.visible = a.rain > 0.01;
-      (rainRef.current.material as THREE.LineBasicMaterial).opacity = 0.45 * a.rain;
+      (rainRef.current.material as THREE.LineBasicMaterial).opacity = 0.85 * a.rain;
       if (rainRef.current.visible) {
         const p = rain.g.attributes.position as THREE.BufferAttribute; const arr = p.array as Float32Array;
         for (let i = 0; i < count; i++) {
           const o = i * 6; const dy = rain.speed[i]! * dt;
           arr[o + 1]! -= dy; arr[o + 4]! -= dy;
-          if (arr[o + 1]! < 0) { arr[o + 1] = AREA.top; arr[o + 4] = AREA.top + 0.22; }
+          if (arr[o + 1]! < 0) { arr[o + 1] = AREA.top; arr[o + 4] = AREA.top + 0.32; }
         }
         p.needsUpdate = true;
       }
@@ -52,7 +52,7 @@ export function Weather({ weather }: { weather: WeatherState }) {
       const t = state.clock.elapsedTime;
       fogRef.current.children.forEach((c, i) => {
         const pf = puffs[i]!; c.position.x = pf.x + Math.sin(t * 0.08 + pf.p) * 0.8;
-        ((c as THREE.Sprite).material as THREE.SpriteMaterial).opacity = 0.55 * a.fog;
+        ((c as THREE.Sprite).material as THREE.SpriteMaterial).opacity = 0.95 * a.fog;
       });
     }
     if (flyRef.current) { flyRef.current.visible = a.fireflies > 0.01; flyRef.current.scale.setScalar(Math.max(0.001, a.fireflies)); }
@@ -60,7 +60,7 @@ export function Weather({ weather }: { weather: WeatherState }) {
 
   return <group>
     <lineSegments ref={rainRef} geometry={rain.g} raycast={() => {}} frustumCulled={false}>
-      <lineBasicMaterial color="#cfd6e6" transparent opacity={0} depthWrite={false} />
+      <lineBasicMaterial color="#e8ecf8" transparent opacity={0} depthWrite={false} />
     </lineSegments>
     <group ref={fogRef}>
       {puffs.map((pf) => <sprite key={pf.p} raycast={() => {}} position={[pf.x, pf.y, pf.z]} scale={[pf.s * 1.8, pf.s * 0.6, 1]}>
