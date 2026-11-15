@@ -35,43 +35,58 @@ export const CINEMATIC_PROMPTS = [
 ] as const;
 
 export function stagePrompt(stage: number) {
-  const prompt = currentPlantlet().story[stage]?.prompt;
+  const prompt = moonBeat(stage)?.prompt ?? currentPlantlet().story[stage]?.prompt;
   if (!prompt) throw new Error("Unknown companion stage");
   return prompt;
 }
 
 export function stageNarration(stage: number) {
-  const narration = currentPlantlet().story[stage]?.narration;
+  const narration = moonBeat(stage)?.narration ?? currentPlantlet().story[stage]?.narration;
   if (!narration) throw new Error("Unknown companion stage");
   return narration;
 }
 
 export function stageSuggestions(stage: number) {
-  const story = CINEMATIC_STAGES[stage];
+  const story = moonBeat(stage) ? MOON_SUGGESTIONS : CINEMATIC_STAGES[stage];
   if (!story) throw new Error("Unknown companion stage");
   return story.suggestions;
 }
 
 export function stageXionSuggestions(stage: number) {
-  const story = CINEMATIC_STAGES[stage];
+  const story = moonBeat(stage) ? MOON_SUGGESTIONS : CINEMATIC_STAGES[stage];
   if (!story) throw new Error("Unknown companion stage");
   return story.xionSuggestions;
 }
 
+const STYLE = "inked comic outlines, gray and black world lit by soft pink neon with green plants, slow dreamy camera drift";
 const MEDITATION_SCENES = {
-  arrive: "A slow, dreamy meditation scene on a moonlit neon rooftop garden: mist curls over the meditation cushion, the gray and pink city glows softly far below, calm and still, slow camera drift.",
-  breatheIn: "On the moonlit rooftop garden, soft pink and green light slowly swells through glowing leaves, fireflies rise gently into the night air, calm and peaceful, slow camera drift.",
-  breatheOut: "On the moonlit rooftop garden, the pink and green glow softens and dims, petals drift slowly down past the leaves, mist settles, calm and peaceful, slow camera drift.",
-  calm: "The moon brightens over the quiet rooftop garden, {companion} in the round center planter glows with a {glow}, silver moonlight on the leaves, deep calm, very slow camera drift.",
-  return: "Dawn-soft light washes over the rooftop garden, a tiny pink-winged fairy's wings shimmer gently above the meditation cushion, the city wakes softly in pink and gray, peaceful, slow camera drift.",
+  arrive: "A tiny pink-winged fairy with twin buns sits cross-legged on a cushion in her moonlit neon rooftop garden, eyes closed, shoulders softening, mist curling around her",
+  beach: "The tiny pink-winged fairy stands on a calm twilight beach and slowly raises her arms overhead as she breathes in, waves rolling gently in time with her breath",
+  city: "The tiny pink-winged fairy does a slow side-body stretch on a high ledge above a softly glowing night cityscape, city lights twinkling far below",
+  forest: "The tiny pink-winged fairy folds gently forward in a misty forest of moss and glowing ferns, roots and soft light all around her",
+  tech: "The tiny pink-winged fairy holds a calm standing stretch in a high-tech rooftop garden of glass planters and LED vines under a bright moon, {companion} glowing nearby with a {glow}",
+  return: "The tiny pink-winged fairy sits back down on her cushion in her own rooftop garden at dawn, wings shimmering, opening her eyes with a smile",
 } as const;
-/** Which scene each meditation script step shows (index = step). */
-export const MEDITATION_STEP_SCENES: (keyof typeof MEDITATION_SCENES)[] = ["arrive", "breatheIn", "arrive", "breatheIn", "breatheOut", "calm", "calm", "return"];
+/** Scenery and stretch for each meditation script step (index = step). */
+export const MEDITATION_STEP_SCENES: (keyof typeof MEDITATION_SCENES)[] = ["arrive", "beach", "beach", "city", "city", "forest", "tech", "return"];
 /** Orbis prompt for one meditation step, tinted with the chosen companion's glow. */
 export function meditationPrompt(step: number, companion: { name: string; glowName: string }) {
   const scene = MEDITATION_STEP_SCENES[Math.min(Math.max(step, 0), MEDITATION_STEP_SCENES.length - 1)] ?? "arrive";
-  return MEDITATION_SCENES[scene].replace("{companion}", companion.name).replace("{glow}", companion.glowName);
+  return `${MEDITATION_SCENES[scene].replace("{companion}", companion.name).replace("{glow}", companion.glowName)}, ${STYLE}.`;
 }
+
+/** Moonflower story: plays as cinematic stages MOON_STAGE..MOON_STAGE+2 when the quest blooms. */
+export const MOON_STAGE = 10;
+export const MOONFLOWER_STORY = [
+  { narration: "Moonflowers wait all day for one thing: the moon.", prompt: "A closed white moonflower bud on its trellis in a rooftop garden under a dark sky, the city humming far below, stillness and anticipation, " + STYLE + "." },
+  { narration: "It only opens for someone patient. That's you.", prompt: "Moonlight touches the vine and the big white moonflower petals slowly unfurl, glowing softly, " + STYLE + "." },
+  { narration: "It'll bloom every night now, a little lamp for the garden.", prompt: "Silver pollen drifts up from the glowing moonflowers toward the moon as the whole rooftop garden glows softly, " + STYLE + "." },
+] as const;
+const MOON_SUGGESTIONS = {
+  suggestions: ["The moon glows brighter", "Fireflies fill the air", "A gentle breeze", "The pixie flies closer"],
+  xionSuggestions: ["Hawk moths circle the blooms", "Petals glow like lanterns", "A cloud slides off the moon", "Dew shines on the trellis", "Perfume drifts on the breeze", "The vine climbs one more loop"],
+};
+const moonBeat = (stage: number) => (stage >= MOON_STAGE ? MOONFLOWER_STORY[stage - MOON_STAGE] : undefined);
 
 /** Calm Orbis visuals that accompany Xion's guided meditation (separate from growth lore). */
 export const MEDITATION_PROMPT = "A slow, dreamy meditation scene on a moonlit neon rooftop garden: soft pink and green light breathes gently through glowing leaves, fireflies drift, mist curls over the meditation cushion, the city glows softly far below, calm and peaceful, slow camera drift.";
