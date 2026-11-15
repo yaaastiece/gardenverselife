@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
+import { wilt, type BedCare, type PlantPick, type PlantSelection } from "../plants/beds";
 import { Outlines, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import { PALETTE, WIND } from "../config";
@@ -79,10 +80,23 @@ function Spill({ w, d, seed }: { w: number; d: number; seed: number }) {
   return <instancedMesh ref={ref} args={[LEAF.serrated, undefined, count]}><meshStandardMaterial map={leafTexture()} side={THREE.DoubleSide} roughness={0.6} /></instancedMesh>;
 }
 
-function Sway({ children, seed }: { children: React.ReactNode; seed: number }) {
+const PALE = new THREE.Color("#c9c48a");
+function Sway({ children, seed, wiltOf }: { children: React.ReactNode; seed: number; wiltOf?: (() => number) | undefined }) {
   const ref = useRef<THREE.Group>(null);
+  const w = useRef(0);
+  const mats = useRef<{ m: THREE.MeshStandardMaterial; base: THREE.Color }[] | null>(null);
   useFrame(({ clock }) => { if (!ref.current) return; const t = clock.elapsedTime * WIND.speed + seed;
-    ref.current.rotation.z = Math.sin(t) * WIND.strength; ref.current.rotation.x = Math.sin(t * 0.7 + 1) * WIND.strength * 0.6; });
+    const target = wiltOf ? wiltOf() : 0;
+    w.current += (target - w.current) * 0.05;
+    const k = w.current;
+    // Droop: lean over and sag; pale leaves when struggling.
+    ref.current.rotation.z = Math.sin(t) * WIND.strength * (1 - k * 0.5) + k * 0.18 * Math.sin(seed);
+    ref.current.rotation.x = Math.sin(t * 0.7 + 1) * WIND.strength * 0.6 + k * 0.15;
+    ref.current.scale.set(1 + k * 0.05, 1 - k * 0.14, 1 + k * 0.05);
+    if (wiltOf) {
+      if (!mats.current) { mats.current = []; ref.current.traverse((o) => { const m = (o as THREE.Mesh).material as THREE.MeshStandardMaterial | undefined; if (m?.map) mats.current!.push({ m, base: m.color.clone() }); }); }
+      for (const e of mats.current) e.m.color.copy(e.base).lerp(PALE, k * 0.35);
+    } });
   return <group ref={ref}>{children}</group>;
 }
 
@@ -105,7 +119,7 @@ function Bloom({ pos, color, s }: { pos: [number, number, number]; color: string
   );
 }
 
-export function Plant({ kind, position, seed }: { kind: PlantKind; position: [number, number, number]; seed: number }) {
+export function Plant({ kind, position, seed, wiltOf }: { kind: PlantKind; position: [number, number, number]; seed: number; wiltOf?: () => number }) {
   const parts = useMemo(() => {
     const r = rng(seed + 1);
     const base = new THREE.Color(BASE[kind]).offsetHSL((r() - 0.5) * 0.04, (r() - 0.5) * 0.1, (r() - 0.5) * 0.08);
@@ -138,7 +152,7 @@ export function Plant({ kind, position, seed }: { kind: PlantKind; position: [nu
   }, [kind, seed]);
   return (
     <group position={position}>
-      <Sway seed={seed}>
+      <Sway seed={seed} wiltOf={wiltOf}>
         {kind === "tomato" && <><mesh position={[0.05, 0.4, -0.04]}><cylinderGeometry args={[0.009, 0.011, 0.8, 5]} /><meshStandardMaterial color="#a9875a" roughness={0.9} /></mesh>{[0.25, 0.5].map((y) => <mesh key={y} position={[0.05, y, -0.04]}><torusGeometry args={[0.022, 0.004, 4, 10]} /><meshStandardMaterial color="#d8c7a0" /></mesh>)}</>}
         {parts.stems.map((st, i) => <mesh key={i} position={[Math.sin(-st.tilt[2]) * st.h / 2, st.h / 2, Math.sin(st.tilt[0]) * st.h / 2]} rotation={st.tilt}><cylinderGeometry args={[0.006, 0.011, st.h, 5]} /><meshStandardMaterial color="#3d6b2f" roughness={0.8} /></mesh>)}
         {parts.leaves.map((l, i) => <Leaf key={i} {...l} />)}
@@ -158,7 +172,23 @@ const ROWS: Row[] = [
   { pos: [2.8, 0, -1.7], rot: -Math.PI / 2, size: [2.2, 0.72, 0.75], kinds: ["rose", "herb", "rose", "rose", "lettuce"] },
 ];
 
-export function Garden() {
+function PlantHit({ bed, kind, beds, selection }: { bed: number; kind: PlantKind; beds: BedCare; selection: PlantSelection }) {
+  const pick = (e: ThreeEvent<PointerEvent | MouseEvent>): PlantPick => {
+    const v = new THREE.Vector3(); e.eventObject.getWorldPosition(v);
+    return { bed, kind, pos: { x: v.x, y: v.y + 0.75, z: v.z } };
+  };
+  void beds;
+  return <mesh position={[0, 0.3, 0]}
+    onClick={(e) => { e.stopPropagation(); selection.select(pick(e)); }}
+    onPointerOver={(e) => { if (e.pointerType !== "mouse") return; e.stopPropagation(); selection.hover(pick(e)); document.body.style.cursor = "pointer"; }}
+    onPointerOut={(e) => { if (e.pointerType !== "mouse") return; if (selection.state.hover?.bed === bed) selection.hover(null); document.body.style.cursor = "auto"; }}>
+    <cylinderGeometry args={[0.14, 0.14, 0.6, 8]} /><meshBasicMaterial transparent opacity={0} depthWrite={false} />
+  </mesh>;
+}
+
+export function Garden({ beds, selection }: { beds: BedCare; selection: PlantSelection }) {
+  useFrame((_, d) => beds.tick(Math.min(d, 0.05)));
+  const wilts = useMemo(() => beds.beds.map((b) => () => wilt(b)), [beds]);
   return (
     <group>
       {ROWS.map((r, i) => {
@@ -167,7 +197,7 @@ export function Garden() {
         return (
           <group key={i} position={r.pos} rotation-y={r.rot}>
             <Planter position={[0, 0, 0]} size={r.size}>
-              {r.kinds.map((k, j) => <group key={j} position={[-w / 2 + 0.15 + j * step, 0, (j % 2 ? -1 : 1) * d * 0.18]} scale={1.25}><Plant kind={k} position={[0, 0, 0]} seed={i * 11 + j} /></group>)}
+              {r.kinds.map((k, j) => <group key={j} position={[-w / 2 + 0.15 + j * step, 0, (j % 2 ? -1 : 1) * d * 0.18]} scale={1.25}><Plant kind={k} position={[0, 0, 0]} seed={i * 11 + j} wiltOf={wilts[i]!} /><PlantHit bed={i} kind={k} beds={beds} selection={selection} /></group>)}
               {r.kinds.map((k, j) => k === "tomato" && <mesh key={`ft${j}`} position={[-w / 2 + 0.15 + j * step + 0.12, 0.025, d * 0.2]}><sphereGeometry args={[0.035, 10, 8]} /><meshPhysicalMaterial color="#d9302b" roughness={0.3} clearcoat={0.7} /></mesh>)}
               <group position={[0, 0.1, 0]}><Spill w={w + 0.02} d={d + 0.02} seed={i} /></group>
             </Planter>
