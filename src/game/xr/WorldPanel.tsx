@@ -72,7 +72,7 @@ export function WorldPanel({ title, lines = [], bars = [], buttons = [], positio
     const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4; return map;
   }, [title, lineRows, bars.map((b) => `${b.label}:${Math.round(b.value)}`).join(), buttons.map((b) => `${b.label}:${b.disabled}:${b.active}`).join(), hover, height, width]);
   useEffect(() => () => texture.dispose(), [texture]);
-  return <Billboard position={position ?? [0, 0, 0]}>
+  return <Billboard position={position ?? [0, 0, 0]} userData={{ gvPanel: true }}>
     <mesh onClick={(e) => e.stopPropagation()}><planeGeometry args={[width, height]} /><meshBasicMaterial map={texture} transparent opacity={opacity} toneMapped={false} /></mesh>
     {buttons.map((button, i) => <mesh key={`${button.label}-${i}`} position={[0, height / 2 - bodyHeight - i * (VR.buttonHeight + 0.012) - VR.buttonHeight / 2, 0.002]}
       onPointerOver={(e) => { e.stopPropagation(); if (!button.disabled) setHover(i); }} onPointerOut={(e) => { e.stopPropagation(); setHover(-1); if (!button.disabled) button.release?.(); }}

@@ -18,6 +18,11 @@ function visible(object: THREE.Object3D | null) {
   for (let o = object; o; o = o.parent) if (!o.visible) return false;
   return true;
 }
+// Panels are the UI: they win over anything standing in front of them (like Xion's invisible tap area).
+function isPanel(object: THREE.Object3D) {
+  for (let o: THREE.Object3D | null = object; o; o = o.parent) if (o.userData?.["gvPanel"]) return true;
+  return false;
+}
 function chainOf(object: THREE.Object3D): R3FObject[] {
   const chain: R3FObject[] = [];
   for (let o: THREE.Object3D | null = object; o; o = o.parent) if ((o as R3FObject).__r3f?.eventCount) chain.push(o as R3FObject);
@@ -51,6 +56,7 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
 
   const log = useRef<string[]>([]);
   const note = (line: string) => { log.current = [...log.current.slice(-5), line]; };
+  if (import.meta.env.DEV) Object.assign(window, { __tap: { log, pointers } });
   const fire = (chain: R3FObject[], name: string, pointer: Pointer, hit: Hit | null) => {
     if (!chain.length) return;
     const target = { setPointerCapture() {}, releasePointerCapture() {}, hasPointerCapture: () => true };
@@ -158,7 +164,7 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
       tools.dir.set(0, 0, -1).transformDirection(tools.matrix);
       tools.raycaster.set(tools.from, tools.dir); tools.raycaster.far = RANGE;
       const hits = tools.raycaster.intersectObjects(interaction.current, true).filter((h) => visible(h.object));
-      const first = hits[0] ?? null;
+      const first = hits.find((h) => isPanel(h.object)) ?? hits[0] ?? null;
       const chain = first ? chainOf(first.object) : [];
       p.hits = hits; p.hit = first;
       // A green dot shows where each controller is pointing at something tappable.
