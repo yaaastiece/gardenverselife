@@ -306,6 +306,13 @@ export function GardenScene() {
   };
   const onStage = useCallback((n: string) => setStageName(n), []);
 
+  // Back to the start screen for the next judge, without leaving VR.
+  function startOver() {
+    helper.stop(); meditation.stop(); interaction.dismiss(); selection.clear(); setBowlOpen(false);
+    Object.values(careStates).forEach((c) => c.reset());
+    start.reset(); setPicking(true); setPendingStage(null);
+    void audio.current?.setPlaying(false); setPlaying(false);
+  }
   const exitVR = () => { void xrStore.getState().session?.end().catch(() => setVRError("Use the Quest menu to leave VR.")); };
   const enterVR = async () => {
     setVRError("");
@@ -334,7 +341,7 @@ export function GardenScene() {
       }}>
       <Canvas gl={{ preserveDrawingBuffer: false }} onCreated={(root) => { gardenCanvas.current = root.gl.domElement; renderer.current = root; root.gl.xr.setReferenceSpaceType("local-floor"); }} camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={inVR ? 1 : [1, LOOK.maxDpr]} onPointerMissed={() => { interaction.dismiss(); selection.clear(); }}>
         <XR store={xrStore}>
-        <VRRig snap={snap} />
+        <VRRig snap={snap} onRestart={startOver} />
         <group>
         <color attach="background" args={[BACKDROP.fill]} />
         <hemisphereLight args={["#ffd9ea", "#3a2a3a", night ? 0.35 : 0.9]} />
@@ -360,7 +367,7 @@ export function GardenScene() {
         {!inVR && <PlantCardAnchor selection={selection} cardRef={cardRef} />}
         {!inVR && <PlantFxLayer selection={selection} />}
         {inVR && picking && <Suspense fallback={null}><StartWorldPanel start={start} /></Suspense>}
-        {inVR && !picking && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={exitVR} exit={exitVR} cinematic={cinematic} steering={steering} />}
+        {inVR && !picking && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={exitVR} exit={exitVR} onStartOver={startOver} cinematic={cinematic} steering={steering} />}
         {inVR && bowlOpen && <BowlWorldPanel radio={radio} onMeditate={startMeditation} onClose={() => setBowlOpen(false)} />}
         {inVR && <MeditationWorldPanel meditation={meditation} />}
         <HelperTicker helper={helper} />
@@ -385,7 +392,7 @@ export function GardenScene() {
       </header>
       {!inVR && picking && <PlantletPicker start={start} onVR={vrSupported ? enterVR : undefined} vrError={vrError} />}
       {vrSupported && !inVR && !picking && <div className="gv-vr-entry"><Button variant="outline" onClick={enterVR}>Enter VR</Button>{vrError && <p role="status">{vrError}</p>}</div>}
-      <div className="gv-dock"><CarePanel care={care} onAction={careAction} onChangePlantlet={() => { care.reset(); start.reset(); setPicking(true); void audio.current?.setPlaying(false); setPlaying(false); }} open={dockOpen} setOpen={setDockOpen} />{dockOpen && <MoonQuestCard quest={quest} onTask={doMoonTask} />}</div>
+      <div className="gv-dock"><CarePanel care={care} onAction={careAction} onChangePlantlet={startOver} open={dockOpen} setOpen={setDockOpen} />{dockOpen && <MoonQuestCard quest={quest} onTask={doMoonTask} />}</div>
       {!inVR && bowlOpen && <SoundBowlCard radio={radio} onMeditate={startMeditation} visuals={visualsOn} setVisuals={setVisualsOn} onClose={() => setBowlOpen(false)} />}
       {!inVR && <MeditationOverlay meditation={meditation} visuals={meditationVisuals} radio={radio} />}
       <PlantCard beds={beds} selection={selection} cardRef={cardRef} />

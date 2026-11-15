@@ -1,14 +1,28 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { XROrigin, useXR } from "@react-three/xr";
+import { XROrigin, XRSpace, useXR, useXRInputSourceStates } from "@react-three/xr";
 import * as THREE from "three";
 import { VR, snapStep } from "./rules";
 
-export function VRRig({ snap }: { snap: boolean }) {
+// Always-visible aiming beam, drawn on top of the world. The library's own ray only shows when it hits something.
+function ControllerLasers() {
+  const states = useXRInputSourceStates();
+  return <>{states.filter((state) => state.type === "controller").map((state) => (
+    <XRSpace key={state.inputSource.handedness + state.id} space={state.inputSource.targetRaySpace}>
+      <mesh position={[0, 0, -0.6]} renderOrder={999} raycast={() => {}}>
+        <boxGeometry args={[0.004, 0.004, 1.2]} />
+        <meshBasicMaterial color="#ff8fcf" transparent opacity={0.85} depthTest={false} toneMapped={false} />
+      </mesh>
+    </XRSpace>
+  ))}</>;
+}
+
+export function VRRig({ snap, onRestart }: { snap: boolean; onRestart?: () => void }) {
   const origin = useRef<THREE.Group>(null);
   const session = useXR((s) => s.session);
   const { gl, camera, scene } = useThree();
   const latched = useRef(false);
+  const restartHeld = useRef(false);
   const pose = useMemo(() => ({ position: new THREE.Vector3(), quaternion: new THREE.Quaternion(), pivot: new THREE.Vector3(), offset: new THREE.Vector3() }), []);
   const hiddenLights = useRef(new Set<THREE.PointLight>());
   useEffect(() => {
@@ -34,6 +48,10 @@ export function VRRig({ snap }: { snap: boolean }) {
         object.raycast = () => {};
       }
     });
+    // Press the lower face buttons (X/A or Y/B) on both controllers together to start over.
+    const lowerPressed = [...session.inputSources].filter((s) => s.gamepad?.buttons[5]?.pressed).length;
+    if (lowerPressed >= 2 && !restartHeld.current) { restartHeld.current = true; onRestart?.(); }
+    if (lowerPressed < 2) restartHeld.current = false;
     const controller = [...session.inputSources].find((s) => s.handedness === "right" && s.gamepad)
       ?? [...session.inputSources].find((s) => s.gamepad);
     const axes = controller?.gamepad?.axes;
@@ -47,5 +65,5 @@ export function VRRig({ snap }: { snap: boolean }) {
     rig.position.copy(pose.pivot).add(pose.offset);
     rig.rotation.y += turn.radians;
   }, -60);
-  return session ? <XROrigin ref={origin} position={VR.origin} /> : null;
+  return session ? <><XROrigin ref={origin} position={VR.origin} /><ControllerLasers /></> : null;
 }
