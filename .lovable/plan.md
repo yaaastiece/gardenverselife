@@ -20,6 +20,15 @@
 - The flowers around the plantlet become a full, round bush: about 8–10 roses and herbs packed in a ring, sitting lower in the soil, instead of 4 spaced-out plants.
 - Pepper Peony and Lumibud stand slightly higher, so their feet sit just above the top of the bush instead of being hidden in it.
 
+## 4. Moonflower story video with Orbis
+- When the moonflower quest reaches its last step, "Bloom", Xion says a short story line and an Orbis video plays the moonflower's story.
+- The story has three parts, in the same order as the growth story videos:
+  - **The waiting:** a closed white bud on its trellis under the dark sky, with the city humming far below. Xion: "Moonflowers wait all day for one thing: the moon."
+  - **The opening:** moonlight touches the vine and the white petals slowly unfurl, glowing. Xion: "It only opens for someone patient. That's you."
+  - **The gift:** silver pollen drifts up toward the moon as the whole garden glows softly. Xion: "It'll bloom every night now, a little lamp for the garden."
+- The video uses the same Orbis window, steering and 15-second timer as the plantlet growth videos. Each run plays only once.
+- If a growth video is already playing, during meditation or in VR, the moonflower video waits its turn, like the growth videos do now.
+
 ## Unchanged
 Art style, plants elsewhere, care rules, growth stages, Orbis, meditation script, VR controls.
 
@@ -27,4 +36,5 @@ Art style, plants elsewhere, care rules, growth stages, Orbis, meditation script
 - Volume: `radio.setVolume` plus a new `voice.setVolume` in `xion/voice.ts`. The ElevenLabs `Audio.volume` and the `SpeechSynthesisUtterance.volume` are kept in plain TS and saved to localStorage. Music goes through a GainNode (`MediaElementSource`) so phones respect it. Reproduce with Playwright first.
 - Planter: `Seedling` group position z -1.4 to about -1.0, scale 1.2. Update the planter target and seat constants used by `interaction.ts`, the helper and `XionCamera`. Ring of `Plant`s generated around a radius. Add a companion y-offset (in `companion.ts`) to lift the feet above the bush.
 - Hint: a `BowlHint` drei `Html` or sprite label above the bowl. The "seen" flag lives in plain TS.
-- Tests: volume clamping and persistence; voice volume applied; planter target matches new position.
+- Moonflower: `MOONFLOWER_STORY` (narration and prompts) goes in `cinematic/prompts.ts`. The cinematic gate gets a "moonflower" entry that fires once when the quest step becomes `bloom`, and it reuses `cinematic.advance` with a story override.
+- Tests: moonflower fires once on bloom and waits in VR/meditation; volume clamping and persistence; voice volume applied; planter target matches new position.
