@@ -55,5 +55,11 @@ use the editor.
 ## Cinematic boundaries
 - Reactor session lifecycle and stage prompts live in `src/game/cinematic/`, separate from `CinematicOverlay`; one serialized controller and a browser lock prevent concurrent player sessions and let XR reuse the stream.
 - `/api/world` mints scoped Reactor tokens with a server-only key and disabled sensitive logging; never pass the provider key to the browser.
-- Capture the preserved garden drawing buffer once per run as a center-cropped 16:9 JPEG; later stages steer only the prompt so the running stream is not reset.
+- Render and synchronously copy a normal-view garden frame once per cinematic run as a center-cropped 16:9 JPEG without preserved drawing buffers; later stages steer only the prompt so the running stream is not reset.
 - Xion speaks through the `xionSpeech` server function (ElevenLabs) with browser speech as fallback, so no voice key reaches the browser.
+
+## Quest presentation boundaries
+- Keep VR settings, snap thresholds and cinematic deferral in plain TS `src/game/xr/rules.ts`; use one lazily created XR store and the existing garden actions so desktop, controller and hand interactions share care/Xion state.
+- `WorldPanel` paints crisp local canvas textures with world-meter hit targets; `GardenPanels` subscribes to existing state rather than implementing new care or quest rules.
+- Use floor-level `XROrigin`, no translation, head-pivot snap turns and unmounted desktop camera controls during sessions to preserve player-owned camera motion.
+- Queue growth cinematics during VR and flush only after session exit; Chat/Journal and Orbis remain normal-view presentation until VR part 2.

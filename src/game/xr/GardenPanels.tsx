@@ -19,7 +19,9 @@ export function GardenPanels({ care, beds, selection, quest, interaction, onMoon
   care: PlantCare; beds: BedCare; selection: PlantSelection; quest: MoonQuest; interaction: XionInteraction;
   onMoon: () => void; snap: boolean; setSnap: (v: boolean) => void; pending: number | null; playCinematic: () => void; exit: () => void;
 }) {
-  useRefresh(care.subscribe); useRefresh(beds.subscribe); useRefresh(selection.subscribe); useRefresh(quest.subscribe);
+  useRefresh(care.subscribe); useRefresh(beds.subscribe); useRefresh(selection.subscribe);
+  const [, refreshQuest] = useState(0);
+  useEffect(() => quest.subscribe(() => refreshQuest((v) => v + 1)), [quest]);
   const pick = selection.state.selected;
   const bed = pick ? beds.beds[pick.bed] : undefined;
   const task = MOON_TASKS[quest.state.step];

@@ -306,3 +306,16 @@
 .gv-cinematic-spinner { color: var(--neon); animation: gv-cinematic-spin 1.5s linear infinite; }
 @keyframes gv-cinematic-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .gv-cinematic-spinner { animation: none; } }
+
+.gv-stage[data-vr] > :not(canvas):not(div:has(> canvas)) { visibility: hidden; pointer-events: none; }
+.gv-stage[data-vr] .gv-header,
+.gv-stage[data-vr] .gv-dock,
+.gv-stage[data-vr] .gv-plant-card,
+.gv-stage[data-vr] .gv-xp-toggle,
+.gv-stage[data-vr] .gv-xp,
+.gv-stage[data-vr] .gv-bubble,
+.gv-stage[data-vr] .gv-hint,
+.gv-stage[data-vr] .gv-helping { display: none; }
+.gv-vr-entry { position: absolute; right: 1.5rem; top: 5rem; z-index: 10; }
+.gv-vr-entry p { max-width: 260px; background: var(--ink); color: var(--neon); padding: 0.5rem; font-size: 14px; }
+@media (max-width: 767px) { .gv-vr-entry { right: 0.75rem; top: 5.5rem; } }
