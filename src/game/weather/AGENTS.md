@@ -1,0 +1,1 @@
+- Weather mode, cycle order and saving live in plain TS `weather.ts`; `scene/Weather.tsx`, the header button and the VR control panel only present it. Weather is visual and sound only and never changes care, growth or quest state.
