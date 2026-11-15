@@ -47,6 +47,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@react-three/drei": "^10",
     "@react-three/fiber": "^9",
+    "@react-three/xr": "^6.6.32",
     "@reactor-team/js-sdk": "^3.4.0",
     "@supabase/supabase-js": "^2.119.0",
     "@tailwindcss/vite": "^4.2.1",
