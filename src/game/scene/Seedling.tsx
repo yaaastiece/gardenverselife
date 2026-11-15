@@ -5,7 +5,9 @@ import { Outlines } from "@react-three/drei";
 import { Plant } from "./Garden";
 import { LEAF, leafTexture } from "../plants/leaves";
 import { PALETTE, WIND } from "../config";
-import { SEEDLING_STAGES, nextStage } from "../plants/growth";
+import { SEEDLING_STAGES } from "../plants/growth";
+import { Sparkles } from "@react-three/drei";
+import type { PlantCare } from "../plants/care";
 
 const DROPS = 40;
 function heartShape() {
@@ -20,8 +22,12 @@ const heart = new THREE.ExtrudeGeometry(heartShape(), { depth: 0.44, bevelEnable
 heart.rotateZ(Math.PI); heart.translate(0, 0, 0.0);
 const heartTop = new THREE.ShapeGeometry(heartShape(), 24); heartTop.rotateZ(Math.PI);
 
-export function Seedling({ onStageChange }: { onStageChange: (name: string) => void }) {
-  const [stage, setStage] = useState(0);
+export function Seedling({ onStageChange, care }: { onStageChange: (name: string) => void; care: PlantCare }) {
+  const [stage, setStage] = useState(care.state.stage);
+  const [compost, setCompost] = useState(-1);
+  const glow = useRef<THREE.PointLight>(null);
+  const cone = useRef<THREE.Mesh>(null);
+  useEffect(() => care.subscribe((st) => { setStage((p) => { if (st.stage !== p) { prevHeight.current = SEEDLING_STAGES[p]!.height; grow.current = 0; } return st.stage; }); setCompost(st.compostAt); }), [care]);
   const [hover, setHover] = useState(false);
   const grow = useRef(1); // 0..1 tween toward current stage
   const plant = useRef<THREE.Group>(null);
@@ -38,12 +44,15 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
 
   const water = () => {
     burst.current = 0;
-    const n = nextStage(stage);
-    if (n !== stage) { prevHeight.current = s.height; grow.current = 0; setStage(n); }
+    care.act("water");
   };
 
   useFrame(({ clock }, delta) => {
     const dt = Math.min(delta, 0.05);
+    care.tick(dt);
+    const lit = care.state.time < care.state.lightUntil;
+    if (glow.current) glow.current.intensity = THREE.MathUtils.lerp(glow.current.intensity, lit ? 6 : 0, 0.1);
+    if (cone.current) { const m = cone.current.material as THREE.MeshBasicMaterial; m.opacity = THREE.MathUtils.lerp(m.opacity, lit ? 0.18 : 0, 0.1); }
     grow.current = Math.min(1, grow.current + dt * 0.8);
     if (plant.current) {
       const e = 1 - Math.pow(1 - grow.current, 3);
@@ -86,7 +95,16 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
       </group>
       <instancedMesh ref={drops} args={[undefined, undefined, DROPS]}><sphereGeometry args={[0.03, 6, 5]} /><meshBasicMaterial color="#9fe8ff" toneMapped={false} /></instancedMesh>
       <mesh ref={ring} position={[0, 0.58, 0]} rotation-x={-Math.PI / 2}><ringGeometry args={[0.18, 0.24, 32]} /><meshBasicMaterial color={PALETTE.green} transparent opacity={0} toneMapped={false} /></mesh>
+      <pointLight ref={glow} position={[0, 1.6, 0]} color="#ffc070" intensity={0} distance={3} />
+      <mesh ref={cone} position={[0, 1.15, 0]}><coneGeometry args={[0.45, 1.3, 24, 1, true]} /><meshBasicMaterial color="#ffc070" transparent opacity={0} depthWrite={false} side={THREE.DoubleSide} toneMapped={false} /></mesh>
+      {compost >= 0 && <CompostSparkle key={compost} />}
       <pointLight position={[0, 1.2, 0.3]} color="#ffe0f0" intensity={2} distance={3} />
     </group>
   );
+}
+
+function CompostSparkle() {
+  const [on, setOn] = useState(true);
+  useEffect(() => { const t = setTimeout(() => setOn(false), 1800); return () => clearTimeout(t); }, []);
+  return on ? <Sparkles position={[0, 0.6, 0]} count={30} scale={[0.6, 0.3, 0.6]} size={4} speed={1.5} color="#c9a26b" /> : null;
 }
