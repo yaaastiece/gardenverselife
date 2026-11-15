@@ -26,8 +26,13 @@ export const CINEMATIC_STAGES = [
   },
 ] as const;
 
-// Kept as a simple prompt list for the world-minting route and existing session tests.
-export const CINEMATIC_PROMPTS = CINEMATIC_STAGES.map((stage) => stage.prompt);
+// Kept as a fixed tuple for the world-minting route and existing session tests.
+export const CINEMATIC_PROMPTS = [
+  CINEMATIC_STAGES[0].prompt,
+  CINEMATIC_STAGES[1].prompt,
+  CINEMATIC_STAGES[2].prompt,
+  CINEMATIC_STAGES[3].prompt,
+] as const;
 
 export function stagePrompt(stage: number) {
   const prompt = CINEMATIC_PROMPTS[stage];
