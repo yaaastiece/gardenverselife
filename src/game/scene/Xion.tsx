@@ -27,7 +27,7 @@ export function Xion({ interaction }: { interaction: XionInteraction }) {
     plane.constant = -interaction.state.position.y;
     e.ray.intersectPlane(plane, hit);
     gesture.current = { id: e.pointerId, start: { x: e.clientX, y: e.clientY }, dragged: false, offset: new THREE.Vector3(interaction.state.position.x, interaction.state.position.y, interaction.state.position.z).sub(hit) };
-    e.target.setPointerCapture(e.pointerId);
+    (e.target as Element | null)?.setPointerCapture(e.pointerId);
   };
   const move = (e: ThreeEvent<PointerEvent>) => {
     const g = gesture.current;
@@ -40,7 +40,7 @@ export function Xion({ interaction }: { interaction: XionInteraction }) {
     const g = gesture.current;
     if (!g || g.id !== e.pointerId) return;
     e.stopPropagation(); gesture.current = null;
-    e.target.releasePointerCapture(e.pointerId);
+    (e.target as Element | null)?.releasePointerCapture(e.pointerId);
     interaction.release(g.dragged);
   };
   const w = useMemo(() => XION.height * (tex.image ? tex.image.width / tex.image.height : 0.4), [tex]);

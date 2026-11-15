@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { OrbitControls as Controls } from "three/examples/jsm/controls/OrbitControls.js";
+import type { OrbitControls as Controls } from "three-stdlib";
 import * as THREE from "three";
 import { LOOK, XION } from "../config";
 import type { XionInteraction } from "../interaction";
@@ -11,7 +11,7 @@ export function XionCamera({ interaction, bubbleRef }: { interaction: XionIntera
   const { camera, size } = useThree();
   const moving = useRef(true);
   const previous = useRef(false);
-  const vectors = useMemo(() => ({ normal: new THREE.Vector3(), target: new THREE.Vector3(), position: new THREE.Vector3(), anchor: new THREE.Vector3() }), []);
+  const vectors = useMemo(() => ({ target: new THREE.Vector3(), position: new THREE.Vector3(), anchor: new THREE.Vector3() }), []);
   useEffect(() => { moving.current = true; }, [size.width, size.height]);
   useFrame((_, delta) => {
     const orbit = controls.current;
