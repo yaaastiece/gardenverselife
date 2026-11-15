@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useFrame } from "@react-three/fiber";
 import type { Group } from "three";
 import { status, type PlantCare } from "../plants/care";
@@ -6,7 +6,9 @@ import { PLANT_INFO, bedStatus, type BedCare, type PlantSelection } from "../pla
 import { MOON_TASKS, type MoonQuest } from "../plants/moonflower";
 import { SEEDLING_STAGES } from "../plants/growth";
 import { FADE_MS, SPEECH_MS, type XionInteraction } from "../interaction";
-import { WorldPanel } from "./WorldPanel";
+import type { CinematicSession } from "../cinematic/session";
+import type { CinematicSteering } from "../cinematic/steering";
+import { WorldPanel, type PanelButton } from "./WorldPanel";
 
 function useRefresh(subscribe: (cb: () => void) => () => void) {
   const [, force] = useState(0);
@@ -15,9 +17,10 @@ function useRefresh(subscribe: (cb: () => void) => () => void) {
 const stats = (s: { water: number; sun: number; soil: number }) => [
   { label: "Water", value: s.water }, { label: "Sun", value: s.sun }, { label: "Soil", value: s.soil },
 ];
-export function GardenPanels({ care, beds, selection, quest, interaction, onMoon, snap, setSnap, pending, playCinematic, exit }: {
+export function GardenPanels({ care, beds, selection, quest, interaction, onMoon, snap, setSnap, pending, playCinematic, exit, cinematic, steering }: {
   care: PlantCare; beds: BedCare; selection: PlantSelection; quest: MoonQuest; interaction: XionInteraction;
   onMoon: () => void; snap: boolean; setSnap: (v: boolean) => void; pending: number | null; playCinematic: () => void; exit: () => void;
+  cinematic: CinematicSession; steering: CinematicSteering;
 }) {
   useRefresh(care.subscribe); useRefresh(beds.subscribe); useRefresh(selection.subscribe);
   const [, refreshQuest] = useState(0);
@@ -34,9 +37,50 @@ export function GardenPanels({ care, beds, selection, quest, interaction, onMoon
       lines={[...(bed.water > 90 ? ["Too much water"] : []), PLANT_INFO[pick.kind].likes]}
       buttons={(["water", "sun", "soil"] as const).map((action) => ({ label: action === "soil" ? "Feed soil" : action === "sun" ? "Sun" : "Water", action: () => { beds.act(pick.bed, action); selection.effect(action); } })).concat([{ label: "Close", action: () => selection.clear() }])} />}
     <XionWorldSpeech interaction={interaction} />
-    {pending !== null && <WorldPanel position={[0, 1.7, -1.15]} title="Cinematic ready" buttons={[{ label: "Exit VR & play", action: playCinematic }]} />}
+    {pending !== null && <SteeringWorldPanel stage={pending} cinematic={cinematic} steering={steering} playCinematic={playCinematic} />}
   </>;
 }
+
+function SteeringWorldPanel({ stage, cinematic, steering, playCinematic }: {
+  stage: number; cinematic: CinematicSession; steering: CinematicSteering; playCinematic: () => void;
+}) {
+  const state = useSyncExternalStore(steering.subscribe, steering.getSnapshot, steering.getSnapshot);
+  const [, setClock] = useState(0);
+  useEffect(() => {
+    steering.setStage(stage);
+    return () => steering.stopVoice();
+  }, [stage, steering]);
+  useEffect(() => {
+    const timer = window.setInterval(() => { steering.tick(); setClock((value) => value + 1); }, 250);
+    return () => window.clearInterval(timer);
+  }, [steering]);
+  const remaining = steering.remaining();
+  const blocked = state.sending || remaining > 0;
+  const submit = (text?: string) => {
+    if (blocked) return;
+    cinematic.resetCountdown();
+    void steering.submitCurrent(text);
+  };
+  const heard = state.draft.trim();
+  const statusLine = state.listening
+    ? `Listening · ${heard || "speak now"}`
+    : state.voiceMessage ?? state.message ?? (state.sent ? "Request ready for the cinematic" : "Hold the mic, or choose a suggestion");
+  const buttons: PanelButton[] = steering.chips().map((text, index) => ({
+    label: index >= 2 ? `Xion suggests · ${text}` : text,
+    disabled: blocked,
+    action: () => submit(text),
+  }));
+  buttons.push(
+    { label: state.listening ? "Listening · release to stop" : "Hold to talk", active: state.listening,
+      press: () => { cinematic.resetCountdown(); steering.startVoice(); }, release: steering.stopVoice },
+    { label: remaining > 0 ? `Send heard request · ${remaining}s` : "Send heard request", disabled: blocked || !heard, action: () => submit() },
+    { label: "Exit VR & play", action: playCinematic },
+  );
+  return <WorldPanel position={[0, 1.25, -1.05]} width={0.86} title="Steer the cinematic"
+    lines={["Xion suggests · two fresh ideas every 8 seconds", ...(heard && !state.listening ? [`Heard: ${heard}`] : []), statusLine]}
+    buttons={buttons} />;
+}
+
 function XionWorldSpeech({ interaction }: { interaction: XionInteraction }) {
   const [speech, setSpeech] = useState(interaction.state.speech);
   const [phase, setPhase] = useState("show");

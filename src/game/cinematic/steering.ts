@@ -1,8 +1,10 @@
-import { stagePrompt } from "./prompts";
+import { stagePrompt, stageSuggestions, stageXionSuggestions } from "./prompts";
 
 export const STEERING_LIMIT = 140;
 export const STEERING_COOLDOWN_MS = 6000;
+export const XION_SUGGESTION_ROTATION_MS = 8000;
 export const STEERING_REJECTION = "Try something gentle and garden-like";
+export const STEERING_VOICE_UNAVAILABLE = "Voice isn't available here, try the suggestions";
 
 const BLOCKED = [
   // Violence and gore.
@@ -37,33 +39,131 @@ export function steeringPrompt(stage: number, raw: string) {
   return `${stagePrompt(stage)} Then: ${result.text}.`;
 }
 
-export type SteeringState = { sending: boolean; sent: boolean; message: string | null; cooldownUntil: number };
+export type SteeringState = {
+  sending: boolean;
+  sent: boolean;
+  message: string | null;
+  cooldownUntil: number;
+  stage: number;
+  draft: string;
+  xionSuggestions: string[];
+  listening: boolean;
+  voiceMessage: string | null;
+};
+export type SteeringDictation = { start(): void; stop(): void };
+export type SteeringDictationFactory = (callbacks: {
+  heard: (text: string) => void;
+  listening: (value: boolean) => void;
+  unavailable: () => void;
+}) => SteeringDictation | null;
+type SteeringOptions = {
+  now?: () => number;
+  random?: () => number;
+  dictation?: SteeringDictationFactory;
+};
 
-/** Display-agnostic command gate; a future WebXR panel can use this same controller. */
-export function createCinematicSteering(send: (prompt: string) => Promise<void>, now: () => number = Date.now) {
-  let state: SteeringState = { sending: false, sent: false, message: null, cooldownUntil: 0 };
+/** Display-agnostic commands shared by typed text, chips, automatic prompts and voice. */
+export function createCinematicSteering(send: (prompt: string, stage: number) => Promise<void>, options: SteeringOptions = {}) {
+  const now = options.now ?? Date.now;
+  const random = options.random ?? Math.random;
+  let state: SteeringState = {
+    sending: false, sent: false, message: null, cooldownUntil: 0,
+    stage: 0, draft: "", xionSuggestions: [], listening: false, voiceMessage: null,
+  };
   const listeners = new Set<() => void>();
+  const histories = new Map<number, { used: Set<string>; chosen: Set<string> }>();
+  let nextRotationAt = now() + XION_SUGGESTION_ROTATION_MS;
+  let input: SteeringDictation | null | undefined;
+  let revision = 0;
   const update = (patch: Partial<SteeringState>) => { state = { ...state, ...patch }; listeners.forEach((listener) => listener()); };
-  return {
+  const history = (stage: number) => {
+    let value = histories.get(stage);
+    if (!value) { value = { used: new Set<string>(), chosen: new Set<string>() }; histories.set(stage, value); }
+    return value;
+  };
+  const draw = (stage: number, current: string[]) => {
+    const pool = [...stageXionSuggestions(stage)];
+    const past = history(stage);
+    const shuffled = (values: string[]) => {
+      const result = [...values];
+      for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.min(i, Math.floor(random() * (i + 1)));
+        [result[i], result[j]] = [result[j]!, result[i]!];
+      }
+      return result;
+    };
+    let available = pool.filter((text) => !past.used.has(text) && !past.chosen.has(text) && !current.includes(text));
+    if (available.length < 2) {
+      past.used.clear();
+      available = pool.filter((text) => !past.chosen.has(text) && !current.includes(text));
+    }
+    // A finite eight-item list eventually cycles; chosen items stay excluded while choices remain.
+    if (available.length < 2) available = pool.filter((text) => !current.includes(text));
+    if (available.length < 2) available = pool;
+    const picked = shuffled(available).slice(0, 2);
+    picked.forEach((text) => past.used.add(text));
+    return picked;
+  };
+  const stopVoice = () => { input?.stop(); };
+  const controller = {
     getSnapshot: () => state,
     subscribe(listener: () => void) { listeners.add(listener); return () => { listeners.delete(listener); }; },
     remaining() { return Math.max(0, Math.ceil((state.cooldownUntil - now()) / 1000)); },
+    chips() { return [...stageSuggestions(state.stage).slice(0, 2), ...state.xionSuggestions].slice(0, 4); },
     edited() { if (state.sent || state.message) update({ sent: false, message: null }); },
+    edit(raw: string) {
+      update({ draft: raw.slice(0, STEERING_LIMIT), sent: false, message: null, voiceMessage: null });
+    },
+    setStage(stage: number) {
+      stagePrompt(stage);
+      revision++;
+      stopVoice();
+      nextRotationAt = now() + XION_SUGGESTION_ROTATION_MS;
+      update({
+        stage, draft: "", sending: false, sent: false, message: null, cooldownUntil: 0,
+        listening: false, voiceMessage: null, xionSuggestions: draw(stage, []),
+      });
+    },
+    tick() {
+      if (now() < nextRotationAt) return;
+      nextRotationAt = now() + XION_SUGGESTION_ROTATION_MS;
+      update({ xionSuggestions: draw(state.stage, state.xionSuggestions) });
+    },
+    startVoice() {
+      if (state.listening) return;
+      if (input === undefined) {
+        input = options.dictation?.({
+          heard: (text) => update({ draft: sanitizeSteering(text), sent: false, message: null, voiceMessage: null }),
+          listening: (listening) => update({ listening }),
+          unavailable: () => update({ listening: false, voiceMessage: STEERING_VOICE_UNAVAILABLE }),
+        }) ?? null;
+      }
+      if (!input) { update({ voiceMessage: STEERING_VOICE_UNAVAILABLE, listening: false }); return; }
+      update({ draft: "", sent: false, message: null, voiceMessage: null });
+      input.start();
+    },
+    stopVoice,
+    dispose() { revision++; stopVoice(); listeners.clear(); },
     async submit(stage: number, raw: string) {
       if (state.sending || state.cooldownUntil > now()) return false;
       const result = validateSteering(raw);
       if (!result.ok) { update({ sent: false, message: result.message }); return false; }
-      update({ sending: true, sent: false, message: null, cooldownUntil: now() + STEERING_COOLDOWN_MS });
+      const ownRevision = revision;
+      history(stage).chosen.add(result.text);
+      update({ sending: true, sent: false, message: null, voiceMessage: null, cooldownUntil: now() + STEERING_COOLDOWN_MS });
       try {
-        await send(steeringPrompt(stage, result.text));
-        update({ sending: false, sent: true });
-        return true;
+        await send(steeringPrompt(stage, result.text), stage);
+        if (ownRevision === revision) update({ sending: false, sent: true, draft: "" });
+        return ownRevision === revision;
       } catch {
-        update({ sending: false, sent: false, message: "The scene couldn’t change. Try again." });
+        if (ownRevision === revision) update({ sending: false, sent: false, message: "The scene couldn’t change. Try again." });
         return false;
       }
     },
+    async submitCurrent(raw = state.draft) { return controller.submit(state.stage, raw); },
   };
+  controller.setStage(0);
+  return controller;
 }
 
 export type CinematicSteering = ReturnType<typeof createCinematicSteering>;
