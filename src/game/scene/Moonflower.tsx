@@ -6,7 +6,7 @@ import { PALETTE } from "../config";
 import { LEAF, leafTexture } from "../plants/leaves";
 import { moonVisual, type MoonQuest, type MoonStep } from "../plants/moonflower";
 
-export const MOONFLOWER_POS: [number, number, number] = [1.3, 0, -0.45];
+export const MOONFLOWER_POS: [number, number, number] = [1.15, 0, -1.0];
 const TRELLIS_H = 1.3;
 
 // Draws quest state only; tapping completes the current task (pointer now, hand pinch later).
@@ -41,7 +41,7 @@ export function Moonflower({ quest, onTask }: { quest: MoonQuest; onTask: () => 
 
   const tap = (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); onTask(); };
   return (
-    <group position={MOONFLOWER_POS} onClick={tap} onPointerOver={() => (document.body.style.cursor = "pointer")} onPointerOut={() => (document.body.style.cursor = "")}>
+    <group position={MOONFLOWER_POS} scale={0.8} onClick={tap} onPointerOver={() => (document.body.style.cursor = "pointer")} onPointerOut={() => (document.body.style.cursor = "")}>
       <mesh position={[0, 0.17, 0]}><cylinderGeometry args={[0.24, 0.18, 0.34, 20]} /><meshStandardMaterial color="#2a2530" roughness={0.6} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
       <mesh position={[0, 0.25, 0.22]} rotation-x={-0.18}><torusGeometry args={[0.235, 0.008, 6, 32, Math.PI]} /><meshBasicMaterial color={PALETTE.pink} toneMapped={false} /></mesh>
       <mesh position={[0, 0.335, 0]} rotation-x={-Math.PI / 2}><circleGeometry args={[0.22, 20]} /><meshStandardMaterial ref={soil} color="#4a3428" roughness={1} /></mesh>
