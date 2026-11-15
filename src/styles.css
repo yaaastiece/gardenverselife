@@ -262,7 +262,7 @@
 .gv-xp-msg { padding: 0.4rem 0.55rem; border-radius: 8px; border: 1.5px solid var(--ink); line-height: 1.4; font-size: 0.78rem; max-width: 92%; }
 .gv-xp-msg b { display: block; font-family: var(--font-display); color: var(--neon); font-size: 0.85rem; }
 .gv-xp-msg[data-role="user"] { align-self: flex-end; background: color-mix(in oklab, var(--neon) 22%, transparent); }
-.gv-xp-msg[data-role="assistant"] { align-self: flex-start; background: color-mix(in oklab, var(--color-background) 80%, transparent); }
+.gv-xp-msg[data-role="assistant"] { align-self: flex-start; background: color-mix(in oklab, var(--ink) 88%, transparent); color: var(--color-background); border-color: var(--neon); }
 .gv-xp-msg[data-error] { border-style: dashed; }
 .gv-xp-dots::after { content: "…"; animation: gv-blink 1s infinite; }
 @keyframes gv-blink { 50% { opacity: 0.2; } }
