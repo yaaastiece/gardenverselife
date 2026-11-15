@@ -1,7 +1,7 @@
 # Garden updates
-- [ ] Add shared four-chip steering, rotating Xion suggestions and hold-to-talk transcript rules
-- [ ] Add chest-height VR steering panel using the existing cinematic handoff
-- [ ] Test suggestion rotation, voice fallback, shared safety/cooldown and normal views
+- [x] Add shared four-chip steering, rotating Xion suggestions and hold-to-talk transcript rules
+- [x] Add chest-height VR steering panel using the existing cinematic handoff
+- [x] Test suggestion rotation, voice fallback, shared safety/cooldown and normal views
 - [x] Add and verify cinematic countdown, steering/stage resets and auto-close fade
 - [x] Explain sound-bowl radio, seated Xion and optional Orbis meditation visualization; playlist hookup awaits song files
 - [x] Explain actual garden weather changes via voice and web/VR options (not implemented)
