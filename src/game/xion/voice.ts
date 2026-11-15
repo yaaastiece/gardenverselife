@@ -1,3 +1,4 @@
+import { xionSpeech } from "@/lib/xion-voice.functions";
 // All of Xion's speaking goes through speak(); swap this file's body for ElevenLabs later.
 type Rec = { lang: string; interimResults: boolean; continuous: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: ((e: { error?: string }) => void) | null };
 
@@ -12,8 +13,8 @@ function pickVoice() {
 }
 
 if (typeof window !== "undefined" && "speechSynthesis" in window) { window.speechSynthesis.getVoices(); window.speechSynthesis.addEventListener?.("voiceschanged", () => window.speechSynthesis.getVoices()); }
-export function speak(text: string) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+function browserSpeak(text: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) { notify(false); return; }
   window.speechSynthesis.cancel(); window.speechSynthesis.resume();
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice(); if (v) u.voice = v;
@@ -21,7 +22,28 @@ export function speak(text: string) {
   u.onstart = () => notify(true); u.onend = () => notify(false); u.onerror = () => notify(false);
   window.speechSynthesis.speak(u);
 }
-export function stopSpeaking() { if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel(); notify(false); }
+let player: HTMLAudioElement | null = null; let turn = 0;
+/** Xion's ElevenLabs voice, falling back to the browser voice. */
+export function speak(text: string) {
+  if (typeof window === "undefined") return;
+  stopSpeaking(); const my = ++turn;
+  player ??= new Audio(); const a = player; // created inside the click gesture so playback is allowed
+  notify(true);
+  xionSpeech({ data: { text: text.slice(0, 1000) } }).then((r) => {
+    if (my !== turn) return;
+    if (!r.audio) return browserSpeak(text);
+    a.src = `data:audio/mpeg;base64,${r.audio}`;
+    a.onended = () => { if (my === turn) notify(false); };
+    a.onerror = () => { if (my === turn) browserSpeak(text); };
+    a.play().catch(() => { if (my === turn) browserSpeak(text); });
+  }).catch(() => { if (my === turn) browserSpeak(text); });
+}
+export function stopSpeaking() {
+  turn++;
+  if (player) { player.pause(); player.removeAttribute("src"); }
+  if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  notify(false);
+}
 
 export const VOICE_UNSUPPORTED = "Voice input isn't supported in this browser, try typing.";
 export function speechInputSupported() {
