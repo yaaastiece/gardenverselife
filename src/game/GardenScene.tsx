@@ -74,7 +74,7 @@ export function GardenScene() {
         canvasPress.current = null;
         if (start && !interaction.state.pointerHandled && !isDrag(start, { x: e.clientX, y: e.clientY })) interaction.dismiss();
       }}>
-      <Canvas camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={[1, 2]} onPointerMissed={() => interaction.dismiss()}>
+      <Canvas camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={[1, LOOK.maxDpr]} onPointerMissed={() => interaction.dismiss()}>
         <color attach="background" args={[BACKDROP.fill]} />
         <hemisphereLight args={["#ffd9ea", "#3a2a3a", night ? 0.35 : 0.9]} />
         <directionalLight position={[-20, 15, -30]} intensity={night ? 0.2 : 0.6} color={night ? "#b9c4ff" : "#ffe6f2"} />

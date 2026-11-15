@@ -3,12 +3,13 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import type { OrbitControls as Controls } from "three-stdlib";
 import * as THREE from "three";
-import { LOOK, XION } from "../config";
+import { LOOK, XION, lookYawLimit } from "../config";
 import type { XionInteraction } from "../interaction";
 
 export function XionCamera({ interaction, bubbleRef }: { interaction: XionInteraction; bubbleRef: RefObject<HTMLDivElement | null> }) {
   const controls = useRef<Controls>(null);
-  const { camera, size } = useThree();
+  const { camera, size, gl } = useThree();
+  const yaw = lookYawLimit(size.width, size.height);
   const moving = useRef(true);
   const previous = useRef(false);
   const vectors = useMemo(() => ({ target: new THREE.Vector3(), position: new THREE.Vector3(), anchor: new THREE.Vector3() }), []);
@@ -16,6 +17,8 @@ export function XionCamera({ interaction, bubbleRef }: { interaction: XionIntera
   useFrame((_, delta) => {
     const orbit = controls.current;
     if (!orbit) return;
+    // XR owns the head pose: never apply desktop clamps or camera glides to it.
+    if (gl.xr.isPresenting) { orbit.enabled = false; return; }
     const state = interaction.state;
     const mobile = size.width < 768;
     if (previous.current !== state.focused) { previous.current = state.focused; moving.current = true; }
@@ -27,7 +30,7 @@ export function XionCamera({ interaction, bubbleRef }: { interaction: XionIntera
       const aspect = size.width / size.height;
       const distance = Math.max(3, 2.05 / (2 * Math.tan(THREE.MathUtils.degToRad(LOOK.fov / 2)) * aspect));
       vectors.position.set(0, 1.6, -1.4 + distance);
-      // Look around in place (full 360): pivot sits just in front of the eye, aimed at the seedling.
+      // Look around in place: pivot sits just in front of the eye, aimed at the seedling.
       vectors.target.sub(vectors.position).setLength(0.05).add(vectors.position);
     }
     orbit.enabled = !state.dragging && !moving.current && !state.focused;
@@ -48,5 +51,5 @@ export function XionCamera({ interaction, bubbleRef }: { interaction: XionIntera
       bubble.style.top = `${Math.max(150 + bubble.offsetHeight, Math.min(size.height - 30, y - 18))}px`;
     }
   });
-  return <OrbitControls ref={controls} target={[0, 0.82, -1.4]} enableZoom={false} enablePan={false} rotateSpeed={-0.35} minPolarAngle={LOOK.polarMin} maxPolarAngle={LOOK.polarMax} minAzimuthAngle={-LOOK.yaw} maxAzimuthAngle={LOOK.yaw}  />;
+  return <OrbitControls ref={controls} target={[0, 0.82, -1.4]} enableZoom={false} enablePan={false} rotateSpeed={-0.35} minPolarAngle={LOOK.polarMin} maxPolarAngle={LOOK.polarMax} minAzimuthAngle={-yaw} maxAzimuthAngle={yaw} />;
 }
