@@ -93,7 +93,7 @@ export function GardenScene() {
   const [inVR, setInVR] = useState(false);
   const [vrSupported, setVRSupported] = useState(false);
   const [vrError, setVRError] = useState("");
-  const [snap, setSnap] = useState(false);
+  const [snap, setSnap] = useState(true);
   const [pendingStage, setPendingStage] = useState<number | null>(null);
   const audio = useRef<ReturnType<typeof createAmbience> | null>(null);
   const [interaction] = useState(() => createXionInteraction({ x: XION.position[0], y: XION.position[1], z: XION.position[2] }));
