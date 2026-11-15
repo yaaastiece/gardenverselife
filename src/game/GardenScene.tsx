@@ -34,7 +34,7 @@ import { createAmbience } from "./audio/ambience";
 import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
 import { createGardenCinematic } from "./cinematic/session";
 import { createCinematicSteering } from "./cinematic/steering";
-import { createDictation } from "./xion/voice";
+import { createDictation, speak, stopSpeaking, xionSpeechEnabled } from "./xion/voice";
 import { captureGardenFrame } from "./cinematic/capture";
 import { CinematicOverlay } from "./ui/CinematicOverlay";
 import { XR } from "@react-three/xr";
@@ -51,7 +51,6 @@ import { MeditationOverlay } from "./ui/MeditationOverlay";
 import { BowlWorldPanel, MeditationWorldPanel } from "./xr/MeditationPanels";
 import { useDockOpen } from "./ui/useDockOpen";
 import { MEDITATION_PROMPT } from "./cinematic/prompts";
-import { speak, stopSpeaking, xionSpeechEnabled } from "./xion/voice";
 import type { Meditation } from "./meditation/meditation";
 
 // Which bed a plant type is tracked in (matches the bed names Xion uses).
@@ -116,7 +115,7 @@ export function GardenScene() {
     onEnd: () => {
       void meditationVisuals.close();
       // Growth cinematics wait for the meditation to finish.
-      if (!xrStore.getState().session) requestAnimationFrame(() => cinematicGate.flush());
+      if (!xrStore.getState().session) requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); });
     },
   }));
   useEffect(() => radio.subscribe(() => audio.current?.duck(radio.getSnapshot().playing)), [radio]);
