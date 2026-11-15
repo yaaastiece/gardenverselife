@@ -20,6 +20,12 @@ The breathing meditation is already built: tap the sound bowl, choose "Meditate 
 - The video fades behind the captions. Tapping ends the meditation and the video together.
 - It still uses its own session with no 15s auto-end. Growth cinematics wait until the meditation is over. VR keeps the bowl light and captions only.
 
+## 3. Xion's background in her chat and memory
+- Save Xion's story as a project rule: a writer in noir San Francisco who writes horror, her cat Neo, her roommate Saint (Santa Monica), the villain Dravar, her films Chapter One, "Revisions" and "Homegoing", and creator Latiece Brown of The Pink Screen.
+- Her chat personality becomes quick-witted, stylish, a little guarded and quietly nurturing. She talks to her plants and loves strays.
+- She can mention Neo, Saint or her writing in passing. She keeps Dravar and horror light and cozy here, because the garden is a calm place.
+- The roadmap also gets this as a task.
+
 ## Unchanged
 Art, garden, plants, care, Pepper Peony/Lumibud, growth cinematics, steering, 15s timer, music and VR controls.
 
@@ -27,5 +33,6 @@ Art, garden, plants, care, Pepper Peony/Lumibud, growth cinematics, steering, 15
 - Add `spokenText()` (Xion→Zion, case-aware) in `src/game/xion/voice.ts`, applied inside `speak()` before both TTS paths.
 - Add `MEDITATION_PROMPTS` keyed by script step to `cinematic/prompts.ts`, with the companion glow injected. In `meditation.ts`, add a pure `promptForStep(step, plantlet)`. In `GardenScene`, `promptFor` reads the current step, and a step-change subscription calls `meditationVisuals.advance` (prompt-only steer).
 - `visualsOn` defaults to true.
+- Xion's lore goes into the `askXion` system prompt in `src/lib/xion.functions.ts`, and the memory file `mem://characters/xion-lore`.
 - Tests: pronunciation mapping; step→prompt mapping; prompts change only on step change.
 - Live Orbis streaming can't be verified here.
