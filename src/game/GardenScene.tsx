@@ -317,6 +317,7 @@ export function GardenScene() {
   const enterVR = async () => {
     setVRError("");
     try {
+      radio.unlock();
       const entering = xrStore.enterVR();
       if (!picking) {
         if (!audio.current) audio.current = createAmbience();
@@ -359,7 +360,7 @@ export function GardenScene() {
           <Garden beds={beds} selection={selection} />
           <Lounge />
         </group>
-        <SoundBowl radio={radio} meditation={meditation} onOpen={() => setBowlOpen(true)} />
+        <SoundBowl radio={radio} meditation={meditation} onOpen={() => { setBowlOpen(true); if (inVR && !radio.getSnapshot().playing) void radio.play(); }} />
         <Suspense fallback={null}><Xion interaction={interaction} meditation={meditation} /></Suspense>
         <Seedling key={plantletId} onStageChange={onStage} care={care} paused={picking} />
         <Moonflower quest={quest} onTask={doMoonTask} />
