@@ -8,7 +8,7 @@ import { SEEDLING_STAGES } from "../plants/growth";
 import { FADE_MS, SPEECH_MS, type XionInteraction } from "../interaction";
 import type { CinematicSession } from "../cinematic/session";
 import type { CinematicSteering } from "../cinematic/steering";
-import { WorldPanel } from "./WorldPanel";
+import { WorldPanel, type PanelButton } from "./WorldPanel";
 
 function useRefresh(subscribe: (cb: () => void) => () => void) {
   const [, force] = useState(0);
@@ -65,7 +65,7 @@ function SteeringWorldPanel({ stage, cinematic, steering, playCinematic }: {
   const statusLine = state.listening
     ? `Listening · ${heard || "speak now"}`
     : state.voiceMessage ?? state.message ?? (state.sent ? "Request ready for the cinematic" : "Hold the mic, or choose a suggestion");
-  const buttons = steering.chips().map((text, index) => ({
+  const buttons: PanelButton[] = steering.chips().map((text, index) => ({
     label: index >= 2 ? `Xion suggests · ${text}` : text,
     disabled: blocked,
     action: () => submit(text),

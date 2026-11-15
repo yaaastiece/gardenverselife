@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   createCinematicSteering, sanitizeSteering, steeringPrompt, validateSteering,
   STEERING_LIMIT, STEERING_VOICE_UNAVAILABLE, XION_SUGGESTION_ROTATION_MS,
+  type SteeringDictationFactory,
 } from "./steering";
 import { CINEMATIC_PROMPTS, stageXionSuggestions } from "./prompts";
 
@@ -89,7 +90,7 @@ describe("Orbis player steering", () => {
 
   it("uses the same safety, 140-character limit and cooldown for heard voice text", async () => {
     let time = 0;
-    let callbacks: Parameters<NonNullable<Parameters<typeof createCinematicSteering>[1]>["dictation"]>[0] | undefined;
+    let callbacks: Parameters<SteeringDictationFactory>[0] | undefined;
     const start = vi.fn(() => callbacks?.listening(true));
     const stop = vi.fn(() => callbacks?.listening(false));
     const send = vi.fn(async () => undefined);
