@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Mic, Send, Square, Volume2, VolumeX, Trash2, BookmarkPlus, X } from "lucide-react";
 import { SUGGESTIONS, type XionChat } from "../xion/chat";
 import { PLANT_KEYS, PLANT_LABELS, TAGS, type Journal, type PlantKey, type Snapshot } from "../xion/journal";
+import { CHECK_INTENT, type GardenHelper } from "../xion/helper";
 import { createDictation, onSpeaking, speak, stopSpeaking, VOICE_UNSUPPORTED } from "../xion/voice";
 
 type Props = {
@@ -9,6 +10,7 @@ type Props = {
   plant: PlantKey; setPlant: (p: PlantKey) => void;
   snapshot: (p: PlantKey) => Snapshot;
   onReply: (text: string) => void;
+  onCheck: () => void; helper: GardenHelper; onHelp: () => void;
 };
 
 function useSub(sub: (f: () => void) => () => void) { const [, f] = useState(0); useEffect(() => sub(() => f((x) => x + 1)), [sub]); }
@@ -64,10 +66,12 @@ function ChatTab(p: Props) {
   useEffect(() => { list.current?.scrollTo({ top: list.current.scrollHeight }); }, [chat.state.messages.length, chat.state.thinking]);
   const send = async (q: string) => {
     setText("");
+    if (CHECK_INTENT.test(q)) { chat.push("user", q.trim()); p.onCheck(); return; }
     const r = await chat.send(q, context(p));
     if (r) { p.onReply(r.text); if (voiceOn && !r.error) speak(r.text); }
   };
   return <div className="gv-xp-body">
+    <HelpRow {...p} />
     <p className="gv-xp-note">Asking about: <b>{PLANT_LABELS[p.plant]}</b></p>
     <div className="gv-xp-list" ref={list} aria-live="polite">
       {!chat.state.messages.length && <div className="gv-xp-chips">{SUGGESTIONS.map((s) => <button key={s} type="button" onClick={() => send(s)}>{s}</button>)}</div>}
@@ -115,5 +119,13 @@ function JournalTab(p: Props) {
       </li>)}
       {!journal.list(filter).length && <li className="gv-xp-note">No entries yet.</li>}
     </ul>
+  </div>;
+}
+
+function HelpRow({ onCheck, helper, onHelp }: Props) {
+  const h = helper.state; const cd = helper.cooldownLeft();
+  return <div className="gv-xp-row">
+    <button type="button" className="gv-xp-pill" onClick={onCheck} disabled={h.busy}>🌿 Check the garden</button>
+    {h.offer.length > 0 && !h.busy && <button type="button" className="gv-xp-primary" onClick={onHelp} disabled={cd > 0}>{cd > 0 ? `Yes, help (${cd}s)` : "Yes, help"}</button>}
   </div>;
 }
