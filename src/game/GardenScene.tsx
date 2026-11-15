@@ -234,7 +234,7 @@ export function GardenScene() {
   const tipIndex = useRef(0);
   const checkGarden = useCallback(() => {
     const patients: Patient[] = [
-      { id: "companion", label: plantName(), stats: care.state, tooWet: care.state.water > CARE.overwater, perch: { x: -0.35, y: 1.25, z: -1.15 }, fx: { x: 0, y: 1.2, z: -1.4 } },
+      { id: "companion", label: plantName(), stats: care.state, tooWet: care.state.water > CARE.overwater, perch: { x: -0.5, y: 1.35, z: -0.95 }, fx: { x: 0, y: 1.3, z: -1.2 } },
       ...beds.beds.map((b, i): Patient => {
         const c = BED_SPOTS[i] ?? { x: 0, y: 0.6, z: 0 };
         return { id: String(i), label: BED_LABELS[i] ?? "garden", stats: b, tooWet: b.water > BEDS.overwater, perch: { x: c.x, y: c.y + 0.6, z: c.z }, fx: { x: c.x, y: c.y + 0.7, z: c.z } };

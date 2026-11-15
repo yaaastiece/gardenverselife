@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Outlines } from "@react-three/drei";
 import { Plant } from "./Garden";
-import { PALETTE } from "../config";
+import { PALETTE, PLANTER } from "../config";
 import { companionStages } from "../plants/growth";
 import { Sparkles } from "@react-three/drei";
 import { Suspense } from "react";
@@ -12,6 +12,13 @@ import { useXR } from "@react-three/xr";
 import type { PlantCare } from "../plants/care";
 
 const DROPS = 40;
+// Full, round bush packed in a ring around the plantlet, set low in the soil.
+const BUSH = Array.from({ length: 10 }, (_, i) => {
+  const a = (i / 10) * Math.PI * 2 + 0.2; const r = i % 2 ? 0.28 : 0.22;
+  return { kind: (i % 3 === 0 ? "herb" : "rose") as "herb" | "rose", pos: [Math.cos(a) * r, 0.44, Math.sin(a) * r] as [number, number, number] };
+});
+/** The plantlet's feet stand just above the bush top. */
+const COMPANION_LIFT = 0.6;
 // Round pedestal table planter.
 const tableBody = new THREE.CylinderGeometry(0.42, 0.34, 0.5, 48);
 const tableTop = new THREE.CircleGeometry(0.38, 48);
@@ -63,15 +70,15 @@ export function Seedling({ onStageChange, care, paused = false }: { onStageChang
   });
 
   return (
-    <group position={[0, 0, -1.4]}>
+    <group position={[PLANTER.x, 0, PLANTER.z]} scale={PLANTER.scale}>
       <group onClick={(e) => { e.stopPropagation(); water(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
         <group><mesh geometry={tableBody} position={[0, 0.25, 0]}><meshStandardMaterial color="#a8a5ae" metalness={0.85} roughness={0.32} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
         <mesh position={[0, 0.5, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.4, 0.03, 10, 48]} /><meshStandardMaterial color="#b4b1ba" metalness={0.85} roughness={0.28} /></mesh>
         <mesh geometry={tableTop} position={[0, 0.49, 0]} rotation-x={-Math.PI / 2}><meshStandardMaterial color="#1f1510" roughness={1} /></mesh></group>
         <mesh position={[0, 0.05, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.38, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
-        {[-0.22, -0.14, 0.14, 0.22].map((x, i) => <Plant key={x} kind={i % 3 === 0 ? "herb" : "rose"} position={[x, 0.5, -0.12 + (i % 2) * 0.24]} seed={40 + i} />)}
+        {BUSH.map((p, i) => <Plant key={i} kind={p.kind} position={p.pos} seed={40 + i} />)}
       </group>
-      <group ref={plant} position={[0, 0.5, 0]}><Suspense fallback={null}><PlantCompanion stage={stage} care={care} onWater={water} onHover={setHover} /></Suspense></group>
+      <group ref={plant} position={[0, COMPANION_LIFT, 0]}><Suspense fallback={null}><PlantCompanion stage={stage} care={care} onWater={water} onHover={setHover} /></Suspense></group>
       <instancedMesh ref={drops} args={[undefined, undefined, DROPS]}><sphereGeometry args={[0.03, 6, 5]} /><meshBasicMaterial color="#9fe8ff" toneMapped={false} /></instancedMesh>
       <mesh ref={ring} position={[0, 0.58, 0]} rotation-x={-Math.PI / 2}><ringGeometry args={[0.18, 0.24, 32]} /><meshBasicMaterial color={PALETTE.green} transparent opacity={0} toneMapped={false} /></mesh>
       <pointLight ref={glow} position={[0, 1.6, 0]} color="#ffc070" intensity={0} distance={3} />

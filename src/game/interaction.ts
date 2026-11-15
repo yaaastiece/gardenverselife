@@ -1,3 +1,4 @@
+import { PLANTER } from "./config";
 // World-space interaction rules: pointer and future tracked-hand adapters share these.
 export type Point3 = { x: number; y: number; z: number };
 export type CareKind = "tomato" | "herb" | "rose" | "seedling";
@@ -13,14 +14,14 @@ export const CARE_TIPS: Record<CareKind, string> = {
 };
 export type CareTarget = { kind: CareKind; position: Point3 };
 export const CARE_TARGETS: CareTarget[] = [
-  { kind: "seedling", position: { x: 0, y: 0.85, z: -1.4 } },
+  { kind: "seedling", position: { x: PLANTER.x, y: 0.95, z: PLANTER.z } },
   ...Array.from({ length: 8 }, (_, j): CareTarget => ({ kind: [3, 4, 5, 7].includes(j) ? "tomato" : "herb", position: { x: -2.6, y: 0.85, z: 0.9 - j * 0.6 } })),
   { kind: "tomato", position: { x: -1.9, y: 0.85, z: -3.4 } },
   { kind: "herb", position: { x: -0.5, y: 0.85, z: -3.4 } },
   ...[1.1, 1.7, 2.3].map((x): CareTarget => ({ kind: "rose", position: { x, y: 0.9, z: -3.4 } })),
   ...[-2.8, -2.2, -1, -0.4].map((z): CareTarget => ({ kind: "rose", position: { x: 2.8, y: 0.9, z } })),
   { kind: "herb", position: { x: 2.8, y: 0.85, z: -1.6 } },
-  ...[-0.55, -0.4, 0.4, 0.55].map((x): CareTarget => ({ kind: x < 0 ? "herb" : "rose", position: { x, y: 0.7, z: -1.4 } })),
+  ...[-0.3, -0.2, 0.2, 0.3].map((x): CareTarget => ({ kind: x < 0 ? "herb" : "rose", position: { x: PLANTER.x + x, y: 0.8, z: PLANTER.z } })),
 ];
 export function nearestPlant(position: Point3, targets = CARE_TARGETS): CareKind | null {
   let distance = 0.85;
