@@ -320,9 +320,10 @@ export function GardenScene() {
     try {
       radio.unlock();
       const entering = xrStore.enterVR();
-      // Start the city sound inside this tap so the headset lets it play, even while choosing a plantlet.
-      if (!audio.current) audio.current = createAmbience();
-      void audio.current.setPlaying(true).then(() => setPlaying(true)).catch(() => setVRError("Ambient sound could not start."));
+      if (!picking) {
+        if (!audio.current) audio.current = createAmbience();
+        void audio.current.setPlaying(true).then(() => setPlaying(true)).catch(() => setVRError("Ambient sound could not start."));
+      }
       await entering;
     } catch { setVRError("VR could not start. Open the published garden in the Quest browser and try again."); }
   };
