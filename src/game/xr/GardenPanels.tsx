@@ -27,6 +27,7 @@ export function GardenPanels({ care, beds, selection, quest, interaction, onMoon
   useRefresh(care.subscribe); useRefresh(beds.subscribe); useRefresh(selection.subscribe);
   const [, refreshQuest] = useState(0);
   useEffect(() => quest.subscribe(() => refreshQuest((v) => v + 1)), [quest]);
+  const cin = useSyncExternalStore(cinematic.subscribe, cinematic.getSnapshot, cinematic.getSnapshot);
   const pick = selection.state.selected;
   const bed = pick ? beds.beds[pick.bed] : undefined;
   const task = MOON_TASKS[quest.state.step];
@@ -39,7 +40,7 @@ export function GardenPanels({ care, beds, selection, quest, interaction, onMoon
       lines={[...(bed.water > 90 ? ["Too much water"] : []), PLANT_INFO[pick.kind].likes]}
       buttons={(["water", "sun", "soil"] as const).map((action) => ({ label: action === "soil" ? "Feed soil" : action === "sun" ? "Sun" : "Water", action: () => { beds.act(pick.bed, action); selection.effect(action); } })).concat([{ label: "Close", action: () => selection.clear() }])} />}
     <XionWorldSpeech interaction={interaction} />
-    {pending !== null && <SteeringWorldPanel stage={pending} cinematic={cinematic} steering={steering} playCinematic={playCinematic} />}
+    {cin.open && cin.phase === "playing" && <SteeringWorldPanel stage={cin.stage} cinematic={cinematic} steering={steering} playCinematic={playCinematic} />}
   </>;
 }
 
@@ -76,9 +77,9 @@ function SteeringWorldPanel({ stage, cinematic, steering, playCinematic }: {
     { label: state.listening ? "Listening · release to stop" : "Hold to talk", active: state.listening,
       press: () => { cinematic.resetCountdown(); steering.startVoice(); }, release: steering.stopVoice },
     { label: remaining > 0 ? `Send heard request · ${remaining}s` : "Send heard request", disabled: blocked || !heard, action: () => submit() },
-    { label: "Exit VR & play", action: playCinematic },
+    { label: "Skip cinematic", action: playCinematic },
   );
-  return <WorldPanel position={[0, 1.25, -1.05]} width={0.86} title="Steer the cinematic"
+  return <WorldPanel position={[0.35, 0.95, -0.95]} width={0.86} title="Steer the cinematic"
     lines={["Xion suggests · two fresh ideas every 8 seconds", ...(heard && !state.listening ? [`Heard: ${heard}`] : []), statusLine]}
     buttons={buttons} />;
 }
