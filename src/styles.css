@@ -378,3 +378,13 @@
 .gv-meditate-caption b { display: block; color: var(--neon); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.15rem; }
 .gv-meditate-stop { position: relative; pointer-events: auto; display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.8rem; min-height: 36px; border-radius: 999px; background: var(--glass); border: 1.5px solid var(--neon); color: var(--neon); font-weight: 700; font-size: 0.8rem; cursor: pointer; }
 .gv-stage[data-vr] .gv-bowl, .gv-stage[data-vr] .gv-meditate { display: none; }
+.gv-pick-wrap { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; padding: 1rem; background: color-mix(in oklab, var(--ink) 45%, transparent); }
+.gv-pick { width: min(520px, 100%); padding: 0.9rem 1rem 1rem; border-radius: 12px; background: var(--glass); border: 2px solid var(--ink); box-shadow: 4px 4px 0 var(--ink), 0 0 18px var(--neon); backdrop-filter: blur(8px); }
+.gv-pick-sub { font-size: 0.8rem; margin: 0.3rem 0 0.7rem; opacity: 0.85; }
+.gv-pick-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+.gv-pick-card { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; padding: 0.6rem; border-radius: 10px; background: color-mix(in oklab, var(--ink) 30%, transparent); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); cursor: pointer; color: inherit; text-align: center; }
+.gv-pick-card:hover, .gv-pick-card[aria-pressed="true"] { border-color: var(--neon); box-shadow: 2px 2px 0 var(--ink), 0 0 12px var(--neon); }
+.gv-pick-card img { width: 100%; aspect-ratio: 1; object-fit: contain; }
+.gv-pick-card b { font-size: 1rem; }
+.gv-pick-card span { font-size: 0.72rem; opacity: 0.8; }
+.gv-care-switch { background: none; border: none; color: var(--neon); font-size: 0.7rem; text-decoration: underline; cursor: pointer; padding: 0; }

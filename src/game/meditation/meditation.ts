@@ -1,3 +1,4 @@
+import { named } from "../plants/plantlets";
 import type { Point3 } from "../interaction";
 
 export type MeditationStep = { text: string; seconds: number };
@@ -52,7 +53,7 @@ export function createMeditation(deps: Deps) {
   const m = {
     getSnapshot: () => state,
     subscribe(f: () => void) { subs.add(f); return () => { subs.delete(f); }; },
-    get caption() { return MEDITATION_SCRIPT[state.step]?.text ?? ""; },
+    get caption() { return named(MEDITATION_SCRIPT[state.step]?.text ?? ""); },
     get breath() { return breathPhase(state.elapsed); },
     start(from: Point3, visuals = false) {
       if (state.active) return;
@@ -61,7 +62,7 @@ export function createMeditation(deps: Deps) {
       if (startedMusic) deps.music.play();
       deps.move(PAD_SEAT);
       set({ active: true, seated: true, step: 0, elapsed: 0, visuals });
-      deps.speak(MEDITATION_SCRIPT[0]?.text ?? "");
+      deps.speak(named(MEDITATION_SCRIPT[0]?.text ?? ""));
     },
     setVisuals(on: boolean) { if (state.visuals !== on) set({ visuals: on }); },
     tick(dt: number) {
@@ -69,7 +70,7 @@ export function createMeditation(deps: Deps) {
       const elapsed = state.elapsed + dt;
       const step = stepAt(elapsed);
       if (step >= MEDITATION_SCRIPT.length) { m.stop(); return; }
-      if (step !== state.step) deps.speak(MEDITATION_SCRIPT[step]?.text ?? "");
+      if (step !== state.step) deps.speak(named(MEDITATION_SCRIPT[step]?.text ?? ""));
       state = { ...state, elapsed, step };
       if (step !== stepAt(elapsed - dt)) subs.forEach((f) => f());
     },

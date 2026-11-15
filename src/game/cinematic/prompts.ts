@@ -1,3 +1,4 @@
+import { currentPlantlet, named } from "../plants/plantlets";
 // Editable Orbis story: stage copy, narration and player-facing suggestions stay together.
 export const CINEMATIC_STAGES = [
   {
@@ -39,7 +40,8 @@ export const CINEMATIC_PROMPTS = [
 ] as const;
 
 export function stagePrompt(stage: number) {
-  const prompt = CINEMATIC_PROMPTS[stage];
+  const p = currentPlantlet().prompts;
+  const prompt = stage === 2 ? p.young : stage === 3 ? p.queen : CINEMATIC_PROMPTS[stage];
   if (!prompt) throw new Error("Unknown companion stage");
   return prompt;
 }
@@ -47,7 +49,7 @@ export function stagePrompt(stage: number) {
 export function stageNarration(stage: number) {
   const story = CINEMATIC_STAGES[stage];
   if (!story) throw new Error("Unknown companion stage");
-  return story.narration;
+  return named(story.narration);
 }
 
 export function stageSuggestions(stage: number) {

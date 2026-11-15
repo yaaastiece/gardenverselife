@@ -1,5 +1,6 @@
 // Plant companion stage art: frame layout measured from the cut-outs (fractions of the 1920x1048 frame).
 import type { status } from "./care";
+import { currentPlantlet } from "./plantlets";
 export type Condition = ReturnType<typeof status>;
 export const COMPANION = {
   aspect: 1920 / 1048,
@@ -16,8 +17,9 @@ export const GLOW: Record<Condition, number> = { Thriving: 0.9, Okay: 0.45, Stru
 export const SWAY_SPEED: Record<Condition, number> = { Thriving: 1, Okay: 1, Struggling: 0.45 };
 /** Plane size and offset so the figure's visible height matches the stage height and its feet sit at y=0. */
 export function companionLayout(stage: number) {
-  const f = COMPANION.frames[stage]!;
-  const h = COMPANION.heights[stage]! / (f.bottom - f.top);
-  const w = h * COMPANION.aspect;
+  const p = currentPlantlet();
+  const f = p.frames[stage]!;
+  const h = p.heights[stage]! / (f.bottom - f.top);
+  const w = h * p.aspect;
   return { w, h, x: (0.5 - f.cx) * w, y: (f.bottom - 0.5) * h };
 }

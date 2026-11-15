@@ -1,5 +1,5 @@
 # Garden updates
-- [ ] Lumibud: choosable plant person before the experience starts (keep 3D art as-is) — waiting on how 3 images map to 4 growth stages
+- [x] Lumibud: choosable plantlet at start
 - [x] Sound bowl radio with 3 songs, LED light, play/next
 - [x] Guided meditation: seated Xion, voice + captions, breath light, optional Orbis visuals
 - [x] Collapsible desktop status panels
@@ -28,4 +28,4 @@
 - [x] Reusable interaction rules, tests, and browser verification
 - [x] Restore a single 150-degree skyline with original proportions and blended sky edges
 - [x] Limit desktop/phone turning, preserve unrestricted XR head tracking, and check texture filtering
-- [x] Verify desktop/phone views and existing garden interactions (real headset and phone performance remain hardware-only checks)
+- [x] Verify desktop/phone views and existing garden interactions (real headset and phone performance remain hardware-only checks)- [ ] Weather in the garden (+ matching Orbis scenes) — waiting on user's go-ahead

@@ -68,3 +68,6 @@ use the editor.
 
 ## Sound bowl and meditation
 - Keep playlist, LED color, meditation script/timing, breath phases and Xion seat/return in plain TS (`audio/radio.ts`, `meditation/meditation.ts`); screen cards and XR WorldPanels only subscribe, and meditation visuals use a separate non-auto-ending cinematic session while growth cinematics wait in the gate.
+
+## Plantlets
+- The center-planter plant person is chosen in plain TS `plants/plantlets.ts` (art layout, name, Young/Queen prompts, saved choice); copy is written with Pepper Peony's name and passed through `named()`, so new plantlets need no copy rewrites.
