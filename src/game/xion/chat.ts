@@ -1,4 +1,4 @@
-import { plantName } from "../plants/plantlets";
+import { currentPlantlet } from "../plants/plantlets";
 // Plain TS chat state; screen panel now, WebXR panel later.
 export type ChatMsg = { id: number; role: "user" | "assistant"; text: string; error?: boolean };
 export type AskFn = (messages: { role: "user" | "assistant"; text: string }[], context: string) => Promise<{ ok: true; text: string } | { ok: false; reason: "rate" | "credits" | "failed" }>;

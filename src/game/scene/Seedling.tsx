@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { Outlines } from "@react-three/drei";
 import { Plant } from "./Garden";
 import { PALETTE } from "../config";
-import { SEEDLING_STAGES } from "../plants/growth";
+import { companionStages } from "../plants/growth";
 import { Sparkles } from "@react-three/drei";
 import { Suspense } from "react";
 import { PlantCompanion } from "./PlantCompanion";

@@ -5,7 +5,7 @@ import type { Group } from "three";
 import { status, type PlantCare } from "../plants/care";
 import { PLANT_INFO, bedStatus, type BedCare, type PlantSelection } from "../plants/beds";
 import { MOON_TASKS, type MoonQuest } from "../plants/moonflower";
-import { SEEDLING_STAGES } from "../plants/growth";
+import { companionStages } from "../plants/growth";
 import { FADE_MS, SPEECH_MS, type XionInteraction } from "../interaction";
 import type { CinematicSession } from "../cinematic/session";
 import type { CinematicSteering } from "../cinematic/steering";
