@@ -42,5 +42,5 @@ use the editor.
 - Dev-only `window.__game` exposes live `state`, `move({x,y,z})`, `tap()`, `release()`, and `dismiss()` for repeatable garden interaction checks; `[data-scene-ready]` marks rendered frames.
 
 ## Skyline and view boundaries
-- Keep one aspect-preserving front skyline arc under the all-direction `SkyDome`, sharing `skyShader.ts` for identical edge-fade colors; this avoids repeats and seams.
-- Desktop/touch yaw limits account for horizontal FOV; skip OrbitControls and camera glides while XR is presenting so head tracking remains unrestricted.
+- Keep one seamless, aspect-preserving 360 skyline ring (painted panels joined edge to edge) under `SkyDome`, sharing `skyShader.ts` for the top fade; this avoids stretching and repeats.
+- Turning is unlimited because the city wraps fully; skip OrbitControls and camera glides while XR is presenting so head tracking remains unrestricted.

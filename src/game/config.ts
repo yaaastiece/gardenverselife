@@ -15,16 +15,14 @@ export const PALETTE = {
 };
 export const WIND = { strength: 0.06, speed: 1.3 };
 export const CARS = { count: 4, minCross: 15, maxCross: 25, gap: 4, minY: 6.5, maxY: 11 };
-// One image: height uses its full original aspect before cropping below the painted railing.
-export const BACKDROP = { radius: 20, arc: 150 * Math.PI / 180, aspect: 1920 / 768, bottom: -1.2, vMin: 0.2, edgeFade: 0.09, fill: "#0d0a10" };
+// Seamless 360 ring: the 1920px front painting keeps its 150-degree span; the strip is 4608px wide.
+export const BACKDROP = { radius: 20, arc: 2 * Math.PI, frontArc: 150 * Math.PI / 180, aspect: 4608 / 768, bottom: -1.2, vMin: 0.2, edgeFade: 0.09, fill: "#0d0a10" };
 // Sky dome colors: horizon matches the painted dusk, zenith matches the image top.
 export const SKY = { horizon: "#d8879f", zenith: "#0d0a10", haze: "#8a6a7c" };
-// Permit a five-degree sky margin beyond either image edge, accounting for viewport FOV.
+// The city wraps fully, so turning is unlimited everywhere.
 export const LOOK = { margin: 5 * Math.PI / 180, polarMin: 0.9, polarMax: 2.25, fov: 55, maxDpr: 2 };
-export function lookYawLimit(width: number, height: number, inXR = false) {
-  if (inXR) return Infinity;
-  const horizontalHalfFov = Math.atan(Math.tan(LOOK.fov * Math.PI / 360) * width / Math.max(1, height));
-  return Math.max(0, BACKDROP.arc / 2 + LOOK.margin - horizontalHalfFov);
+export function lookYawLimit(_width: number, _height: number, _inXR = false) {
+  return Infinity;
 }
 export function backdropHeight() {
   return BACKDROP.radius * BACKDROP.arc / BACKDROP.aspect * (1 - BACKDROP.vMin);
