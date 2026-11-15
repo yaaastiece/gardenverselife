@@ -26,3 +26,18 @@ export function loadVolume(key: string, fallback: number) {
   try { const raw = localStorage.getItem(key); return raw === null ? fallback : clampVolume(Number(raw)); } catch { return fallback; }
 }
 export function saveVolume(key: string, v: number) { try { localStorage.setItem(key, String(v)); } catch { /* private mode */ } }
+
+/** Shared sound context (created lazily inside a tap). */
+export function audioContext(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  const AC = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AC) return null;
+  ctx ??= new AC(); if (ctx.state === "suspended") void ctx.resume(); return ctx;
+}
+export const GARDEN_VOLUME_KEY = "gv-garden-volume";
+let gardenVolume = typeof window === "undefined" ? 0.8 : loadVolume(GARDEN_VOLUME_KEY, 0.8);
+const gardenSubs = new Set<() => void>();
+/** Garden sounds (city hum, wind, plantlet noises) 0..1, saved per device. */
+export function getGardenVolume() { return gardenVolume; }
+export function setGardenVolume(v: number) { gardenVolume = clampVolume(v); saveVolume(GARDEN_VOLUME_KEY, gardenVolume); gardenSubs.forEach((f) => f()); }
+export function onGardenVolume(f: () => void) { gardenSubs.add(f); return () => { gardenSubs.delete(f); }; }

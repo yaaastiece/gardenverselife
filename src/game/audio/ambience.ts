@@ -1,3 +1,4 @@
+import { getGardenVolume, onGardenVolume } from "./mixer";
 // Synthesized city hum + wind (no external files).
 export function createAmbience() {
   const ctx = new AudioContext();
@@ -21,6 +22,7 @@ export function createAmbience() {
   lfo.connect(lfoG).connect(wG.gain); lfo.start();
   let on = false; let ducked = false;
   const apply = () => master.gain.setTargetAtTime(on ? (ducked ? 0.15 : 0.6) : 0, ctx.currentTime, 0.4);
+  const offVol = onGardenVolume(apply);
   return {
     async setPlaying(next: boolean) {
       if (ctx.state === "suspended") await ctx.resume();
@@ -28,6 +30,6 @@ export function createAmbience() {
     },
     /** Fade the city sound down while the sound bowl plays music. */
     duck(next: boolean) { ducked = next; apply(); },
-    dispose() { void ctx.close(); },
+    dispose() { offVol(); void ctx.close(); },
   };
 }

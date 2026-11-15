@@ -1,15 +1,23 @@
 import neon from "@/assets/song_neon_botanica.mp3.asset.json";
 import night from "@/assets/song_night_garden.mp3.asset.json";
 import planting from "@/assets/song_planting.mp3.asset.json";
+import moon from "@/assets/song_take_me_to_the_moon.mp3.asset.json";
+import divine from "@/assets/song_divine_algorithm.mp3.asset.json";
+import coder from "@/assets/song_master_coder.mp3.asset.json";
+import gminor from "@/assets/song_g_minor_lo_fi.mp3.asset.json";
 
 import { applyVolume, clampVolume, loadVolume, saveVolume } from "./mixer";
 
 export const MUSIC_VOLUME_KEY = "gv-music-volume";
 export type Track = { title: string; url: string };
 export const TRACKS: Track[] = [
+  { title: "Take Me to the Moon", url: moon.url },
   { title: "Neon Botanica", url: neon.url },
   { title: "Night Garden", url: night.url },
   { title: "Planting", url: planting.url },
+  { title: "Divine Algorithm", url: divine.url },
+  { title: "Master Coder", url: coder.url },
+  { title: "G Minor Lo-Fi", url: gminor.url },
 ];
 /** LED colors the sound bowl cycles through. */
 export const BOWL_COLORS = ["#ff5fb8", "#5dff8f", "#b47cff"] as const;
@@ -48,6 +56,11 @@ export function createRadio(tracks: Track[] = TRACKS, makePlayer: () => RadioPla
       const wasPlaying = state.playing || !player;
       set({ index: (state.index + 1) % tracks.length });
       if (wasPlaying || state.playing) await radio.play(); else ensure();
+    },
+    /** Jump to a song in the list and play it. */
+    async select(i: number) {
+      if (i < 0 || i >= tracks.length) return;
+      set({ index: i }); await radio.play();
     },
     dispose() { player?.pause(); player = null; subs.clear(); },
   };
