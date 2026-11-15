@@ -33,6 +33,8 @@ import { CARE } from "./plants/care";
 import { createAmbience } from "./audio/ambience";
 import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
 import { createGardenCinematic } from "./cinematic/session";
+import { createCinematicSteering } from "./cinematic/steering";
+import { createDictation } from "./xion/voice";
 import { captureGardenFrame } from "./cinematic/capture";
 import { CinematicOverlay } from "./ui/CinematicOverlay";
 import { XR } from "@react-three/xr";
@@ -85,6 +87,24 @@ export function GardenScene() {
     return captureGardenFrame(canvas);
   }));
   const [cinematicGate] = useState(() => createCinematicGate((stage) => { void cinematic.advance(stage); }));
+  const queuedSteering = useRef<{ prompt: string; stage: number } | null>(null);
+  const [steering] = useState(() => createCinematicSteering(async (prompt, stage) => {
+    // VR keeps the established exit-to-play handoff; the validated request follows it into the same stream.
+    if (xrStore.getState().session) { queuedSteering.current = { prompt, stage }; return; }
+    await cinematic.steer(prompt);
+  }, {
+    dictation: (callbacks) => createDictation(callbacks.heard, callbacks.listening, callbacks.unavailable, callbacks.heard),
+  }));
+  useEffect(() => cinematic.subscribe(() => {
+    const state = cinematic.getSnapshot();
+    const queued = queuedSteering.current;
+    if (queued && state.open && queued.stage !== state.stage) queuedSteering.current = null;
+    if (!queued || !state.open || state.phase !== "playing" || xrStore.getState().session) return;
+    if (queued.stage !== state.stage) return;
+    queuedSteering.current = null;
+    void cinematic.steer(queued.prompt).catch(() => undefined);
+  }), [cinematic, xrStore]);
+  useEffect(() => () => steering.dispose(), [steering]);
   useEffect(() => {
     let alive = true;
     const xr = navigator.xr;
@@ -167,10 +187,10 @@ export function GardenScene() {
   const canvasPress = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, beds, xr: xrStore, renderer: () => renderer.current, selection };
+    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, beds, xr: xrStore, renderer: () => renderer.current, selection, cinematic, steering };
     Object.assign(window, { __game: debug });
     return () => { Reflect.deleteProperty(window, "__game"); };
-  }, [interaction, care, beds, xrStore, selection]);
+  }, [interaction, care, beds, xrStore, selection, cinematic, steering]);
   useEffect(() => () => audio.current?.dispose(), []);
   const toggleSound = async () => {
     if (!audio.current) audio.current = createAmbience();
@@ -227,7 +247,7 @@ export function GardenScene() {
         {!inVR && <XionCamera interaction={interaction} bubbleRef={bubbleRef} />}
         {!inVR && <PlantCardAnchor selection={selection} cardRef={cardRef} />}
         {!inVR && <PlantFxLayer selection={selection} />}
-        {inVR && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={exitVR} exit={exitVR} />}
+        {inVR && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={exitVR} exit={exitVR} cinematic={cinematic} steering={steering} />}
         <HelperTicker helper={helper} />
         <ReadySignal onReady={() => setReady(true)} />
         </group>
@@ -249,7 +269,7 @@ export function GardenScene() {
       {helper.state.busy && <div className="gv-helping" role="status">✨ Xion is helping · tap to stop</div>}
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
       <div className="gv-hint">Drag to look around · Tap the seedling or moonflower</div>
-      {!inVR && <CinematicOverlay session={cinematic} />}
+      {!inVR && <CinematicOverlay session={cinematic} steering={steering} />}
     </div>
   );
 }
