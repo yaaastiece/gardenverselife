@@ -101,6 +101,13 @@ export function GardenScene() {
     }
   }), [xrStore, cinematicGate, interaction]);
   useEffect(() => {
+    const session = xrStore.getState().session;
+    if (!session) return;
+    const stopHelp = () => helper.stop();
+    session.addEventListener("selectstart", stopHelp); session.addEventListener("squeezestart", stopHelp);
+    return () => { session.removeEventListener("selectstart", stopHelp); session.removeEventListener("squeezestart", stopHelp); };
+  }, [inVR]);
+  useEffect(() => {
     let lastStage = care.state.stage;
     const unsubscribe = care.subscribe((state) => {
       if (state.stage <= lastStage) return;
@@ -198,7 +205,7 @@ export function GardenScene() {
       <Canvas gl={{ preserveDrawingBuffer: false }} onCreated={(root) => { gardenCanvas.current = root.gl.domElement; renderer.current = root; root.gl.xr.setReferenceSpaceType("local-floor"); }} camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={inVR ? 1 : [1, LOOK.maxDpr]} onPointerMissed={() => { interaction.dismiss(); selection.clear(); }}>
         <XR store={xrStore}>
         <VRRig snap={snap} />
-        <group onPointerDown={() => { if (helper.state.busy) helper.stop(); }}>
+        <group>
         <color attach="background" args={[BACKDROP.fill]} />
         <hemisphereLight args={["#ffd9ea", "#3a2a3a", night ? 0.35 : 0.9]} />
         <directionalLight position={[-20, 15, -30]} intensity={night ? 0.2 : 0.6} color={night ? "#b9c4ff" : "#ffe6f2"} />
