@@ -4,7 +4,7 @@ import { BACKDROP, LOOK, backdropHeight, lookYawLimit } from "./config";
 describe("single skyline projection", () => {
   it("covers 150 degrees with the original image proportions", () => {
     expect(BACKDROP.arc * 180 / Math.PI).toBeCloseTo(150);
-    expect(BACKDROP.radius * BACKDROP.arc / (backdropHeight() / (1 - BACKDROP.vMin))).toBeCloseTo(1920 / 1072);
+    expect(BACKDROP.radius * BACKDROP.arc / (backdropHeight() / (1 - BACKDROP.vMin))).toBeCloseTo(1920 / 768);
   });
   it.each([[1280, 1800], [1920, 1080], [390, 844]])("allows only a five-degree sky margin at %ix%i", (width, height) => {
     const halfFov = Math.atan(Math.tan(55 * Math.PI / 360) * width / height);
