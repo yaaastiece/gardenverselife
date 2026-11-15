@@ -30,6 +30,7 @@ export function VRRig({ snap }: { snap: boolean }) {
       // XR's cursor/ray meshes must not become targets of their own pointers.
       if (object instanceof THREE.Mesh && !Array.isArray(object.material) &&
         (object.material.constructor.name === "PointerRayMaterial" || object.material.constructor.name === "PointerCursorMaterial")) {
+        object.pointerEvents = "none";
         object.raycast = () => {};
       }
     });
