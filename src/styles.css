@@ -299,6 +299,12 @@
 /* Cinematic display only: the controller owns the video stream and all commands. */
 .gv-cinematic { --tw-translate-x: 0; --tw-translate-y: 0; position: fixed; inset: 0; translate: 0 0; transform: none; animation: none; width: 100%; max-width: none; height: 100dvh; border: 0; border-radius: 0; padding: 0; display: block; background: var(--ink); color: var(--color-background); font-family: var(--font-sans); }
 .gv-cinematic-video { width: 100%; height: 100%; object-fit: contain; }
+.gv-cinematic { opacity: 1; transition: opacity 1s linear; }
+.gv-cinematic[data-ending] { opacity: 0; }
+.gv-cinematic-progress { appearance: none; position: absolute; z-index: 5; inset: 0 0 auto; width: 100%; height: 3px; border: 0; background: var(--glass); pointer-events: none; }
+.gv-cinematic-progress::-webkit-progress-bar { background: var(--glass); }
+.gv-cinematic-progress::-webkit-progress-value { background: var(--neon); }
+.gv-cinematic-progress::-moz-progress-bar { background: var(--neon); }
 .gv-cinematic-message { position: absolute; z-index: 2; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 4rem 1.5rem 15rem; font-size: 16px; text-align: center; background: var(--ink); }
 .gv-cinematic-message p { max-width: 380px; }
 .gv-cinematic-controls { position: absolute; z-index: 4; left: max(1rem, env(safe-area-inset-left)); top: max(1rem, env(safe-area-inset-top)); }

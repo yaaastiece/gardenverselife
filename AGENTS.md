@@ -53,6 +53,7 @@ use the editor.
 - "Xion helps" lives in plain TS `src/game/xion/helper.ts` (report, neediest-first queue, cooldown); it flies Xion only through `interaction.move` and fixes through `care.assist`/`beds.assist`, which never award growth points.
 
 ## Cinematic boundaries
+- Keep cinematic countdown deadlines, reset rules and auto-end timing in the plain TypeScript session-owned timer so screen and XR displays share one clock.
 - Reactor session lifecycle and stage prompts live in `src/game/cinematic/`, separate from `CinematicOverlay`; one serialized controller and a browser lock prevent concurrent player sessions and let XR reuse the stream.
 - `/api/world` mints scoped Reactor tokens with a server-only key and disabled sensitive logging; never pass the provider key to the browser.
 - Render and synchronously copy a normal-view garden frame once per cinematic run as a center-cropped 16:9 JPEG without preserved drawing buffers; later stages steer only the prompt so the running stream is not reset.
