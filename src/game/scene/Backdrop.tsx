@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import skyline from "@/assets/skyline_wide.jpg.asset.json";
+import skyline from "@/assets/skyline_ring.jpg.asset.json";
 import { BACKDROP, SKY, backdropHeight } from "../config";
 import { skyShader } from "./skyShader";
 
@@ -16,9 +16,8 @@ void main(){
   vec2 cell = floor(vec2(s, v) * vec2(960.0, 480.0));
   float tw = 0.5 + 0.5*sin(time*(0.8 + hash(vec3(cell,0.0))*1.6) + hash(vec3(cell+3.1,0.0))*6.283);
   c *= 1.0 + sky * smoothstep(0.55, 0.85, lum) * (tw - 0.45) * 0.9;
-  float edge = smoothstep(0.0, edgeFade, min(s, 1.0-s));
-  float top = 1.0-smoothstep(0.9, 1.0, vUv.y);
-  c = mix(skyColor(vDir-cameraPosition), c, edge * top);
+    float top = 1.0-smoothstep(0.9, 1.0, vUv.y);
+  c = mix(skyColor(vDir-cameraPosition), c, top);
   gl_FragColor = vec4(c, 1.0);
   #include <colorspace_fragment>
 }`;
@@ -28,7 +27,7 @@ export function Backdrop() {
   const tex = useLoader(THREE.TextureLoader, skyline.url);
   useMemo(() => {
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
     tex.generateMipmaps = true;
     tex.minFilter = THREE.LinearMipmapLinearFilter;
     tex.magFilter = THREE.LinearFilter;
@@ -37,11 +36,11 @@ export function Backdrop() {
   }, [tex, gl]);
   const uniforms = useMemo(() => ({ map: { value: tex }, time: { value: 0 }, vMin: { value: BACKDROP.vMin }, edgeFade: { value: BACKDROP.edgeFade }, horizon: { value: new THREE.Color(SKY.horizon) }, zenith: { value: new THREE.Color(SKY.zenith) } }), [tex]);
   useFrame(({ clock }) => { uniforms.time.value = clock.elapsedTime; });
-  const { radius: R, arc, bottom } = BACKDROP;
+  const { radius: R, arc, frontArc, bottom } = BACKDROP;
   const h = backdropHeight();
   return (
     <mesh position={[0, bottom + h / 2, 0]} renderOrder={-1}>
-      <cylinderGeometry args={[R, R, h, 96, 1, true, Math.PI - arc / 2, arc]} />
+      <cylinderGeometry args={[R, R, h, 192, 1, true, frontArc / 2 - Math.PI, arc]} />
       <shaderMaterial vertexShader={vert} fragmentShader={frag} uniforms={uniforms} side={THREE.BackSide} depthWrite={false} toneMapped={false} />
     </mesh>
   );
