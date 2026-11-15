@@ -16,7 +16,7 @@ export type RadioPlayer = { src: string; volume: number; play(): Promise<void>; 
 export type RadioState = { playing: boolean; index: number; error: string | null };
 
 /** Playlist radio for the sound bowl: plays in order and loops; screen and XR panels only subscribe. */
-export function createRadio(tracks: Track[] = TRACKS, makePlayer: () => RadioPlayer = () => new Audio()) {
+export function createRadio(tracks: Track[] = TRACKS, makePlayer: () => RadioPlayer = () => new Audio() as unknown as RadioPlayer) {
   let state: RadioState = { playing: false, index: 0, error: null };
   let player: RadioPlayer | null = null;
   const subs = new Set<() => void>();
@@ -58,7 +58,7 @@ function mix(a: string, b: string, t: number) {
 export function bowlLight(t: number, playing: boolean, breath: number | null = null) {
   const pos = ((t / BOWL_CYCLE_SECONDS) % 1) * BOWL_COLORS.length;
   const i = Math.floor(pos);
-  const color = mix(BOWL_COLORS[i % 3], BOWL_COLORS[(i + 1) % 3], pos - i);
+  const color = mix(BOWL_COLORS[i % 3] ?? BOWL_COLORS[0], BOWL_COLORS[(i + 1) % 3] ?? BOWL_COLORS[0], pos - i);
   const intensity = breath !== null ? 0.35 + 0.65 * breath : playing ? 0.75 + 0.25 * Math.sin(t * 2) : 0.3;
   return { color, intensity };
 }

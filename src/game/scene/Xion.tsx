@@ -19,7 +19,8 @@ export function Xion({ interaction, meditation }: { interaction: XionInteraction
   const [hover, setHover] = useState(false);
   const tex = useLoader(THREE.TextureLoader, xion.url);
   tex.colorSpace = THREE.SRGBColorSpace;
-  const [front, back] = useLoader(THREE.TextureLoader, [seatedFront.url, seatedBack.url]);
+  const front = useLoader(THREE.TextureLoader, seatedFront.url);
+  const back = useLoader(THREE.TextureLoader, seatedBack.url);
   front.colorSpace = THREE.SRGBColorSpace; back.colorSpace = THREE.SRGBColorSpace;
   const sprite = useRef<THREE.Mesh>(null);
   const seatedRoot = useRef<THREE.Group>(null);
