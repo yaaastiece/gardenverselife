@@ -25,7 +25,7 @@ export function StartWorldPanel({ start }: { start: StartScreen }) {
   });
   const waiting = state.phase === "waiting";
   return <group ref={anchor}>
-    <WorldPanel title="Gardenverse · Xion" width={0.78} opacity={state.opacity} lines={waiting ? ["Which seed will you plant?"] : [state.visibleText]} buttons={waiting ? [{ label: "Tap to begin", action: start.begin }] : [
+    <WorldPanel title="Gardenverse · Xion · v4" width={0.78} opacity={state.opacity} lines={waiting ? ["Which seed will you plant?"] : [state.visibleText]} buttons={waiting ? [{ label: "Tap to begin", action: start.begin }] : [
       ...(Object.keys(PLANTLETS) as PlantletId[]).map((id) => ({ label: PLANTLETS[id].name, active: state.selected === id, action: () => start.select(id), disabled: state.phase !== "choosing" })),
       { label: "Enter the garden", disabled: !state.selected || state.phase !== "choosing", action: start.enter },
     ]} />

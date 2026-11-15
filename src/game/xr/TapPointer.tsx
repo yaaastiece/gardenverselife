@@ -30,6 +30,7 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
   const next = useRef(100);
   const tools = useMemo(() => ({ raycaster: new THREE.Raycaster(), matrix: new THREE.Matrix4(), from: new THREE.Vector3(), dir: new THREE.Vector3() }), []);
   const interaction = useRef<THREE.Object3D[]>([]);
+  const dots = useRef<(THREE.Mesh | null)[]>([]);
   const state = useRef<{ interaction: THREE.Object3D[] } | null>(null);
 
   const fire = (chain: R3FObject[], name: string, pointer: Pointer, hit: Hit | null) => {
@@ -79,6 +80,8 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
     state.current = root.internal as unknown as { interaction: THREE.Object3D[] };
     interaction.current = state.current.interaction.filter((object) => visible(object));
     const originMatrix = origin.current?.matrixWorld;
+    dots.current.forEach((dot) => { if (dot) dot.visible = false; });
+    let slot = 0;
     for (const source of session.inputSources) {
       if (!source.targetRaySpace) continue;
       const pose = frame.getPose(source.targetRaySpace, refSpace);
@@ -94,6 +97,9 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
       const first = hits[0] ?? null;
       const chain = first ? chainOf(first.object) : [];
       p.hits = hits; p.hit = first;
+      // A green dot shows where each controller is pointing at something tappable.
+      const dot = dots.current[slot++];
+      if (dot && first && chain.length) { dot.visible = true; dot.position.copy(first.point); }
       if (chain[0] !== p.chain[0]) {
         fire(p.chain, "onPointerOut", p, first); fire(chain, "onPointerOver", p, first);
       }
@@ -101,5 +107,10 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
       if (p.downChain.length && first) fire(p.downChain, "onPointerMove", p, first);
     }
   }, -55);
-  return null;
+  return <>{[0, 1].map((i) => (
+    <mesh key={i} ref={(m) => { dots.current[i] = m; }} visible={false} renderOrder={1000} raycast={() => {}}>
+      <sphereGeometry args={[0.012, 12, 8]} />
+      <meshBasicMaterial color="#6dffb0" depthTest={false} toneMapped={false} />
+    </mesh>
+  ))}</>;
 }
