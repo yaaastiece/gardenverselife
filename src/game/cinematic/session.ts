@@ -1,5 +1,5 @@
 import type { Reactor, ReactorMessage } from "@reactor-team/js-sdk";
-import { CINEMATIC_PROMPTS, stagePrompt } from "./prompts";
+import { stagePrompt } from "./prompts";
 
 export type CinematicState = { open: boolean; phase: "idle" | "loading" | "playing" | "error"; error: string | null; stream: MediaStream | null };
 type Client = Pick<Reactor, "connect" | "disconnect" | "sendCommand" | "uploadFile" | "on" | "off">;
@@ -77,7 +77,7 @@ export function createCinematicSession(deps: Dependencies) {
         const onError = () => { if (id === generation && state.open) fail(); };
         const onTrack = (name: string, track: MediaStreamTrack, stream: MediaStream) => {
           if (name !== "main_video" || id !== generation || !state.open) return;
-          const attach = () => { if (id === generation && state.open) update({ stream }); };
+          const attach = () => { if (id === generation && state.open) update({ stream: new MediaStream(stream.getTracks()) }); };
           attach(); track.addEventListener("unmute", attach);
           unmuteCleanups.push(() => track.removeEventListener("unmute", attach));
         };

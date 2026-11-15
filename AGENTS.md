@@ -51,3 +51,8 @@ use the editor.
 - Garden-bed health and plant hover/selection live in plain TS `plants/beds.ts`; `PlantCard` (screen) and `PlantCardAnchor`/`PlantFxLayer` (scene) only present it, so WebXR panels can reuse the state.
 - Xion chat and journal state live in plain TS `src/game/xion/` (chat, journal, voice with a single `speak(text)`); `ui/XionPanel.tsx` only presents it. AI replies come from the `askXion` server function in `src/lib/xion.functions.ts`, so no key reaches the browser.
 - "Xion helps" lives in plain TS `src/game/xion/helper.ts` (report, neediest-first queue, cooldown); it flies Xion only through `interaction.move` and fixes through `care.assist`/`beds.assist`, which never award growth points.
+
+## Cinematic boundaries
+- Reactor session lifecycle and stage prompts live in `src/game/cinematic/`, separate from `CinematicOverlay`; one serialized controller and a browser lock prevent concurrent player sessions and let XR reuse the stream.
+- `/api/world` mints scoped Reactor tokens with a server-only key and disabled sensitive logging; never pass the provider key to the browser.
+- Capture the preserved garden drawing buffer once per run as a center-cropped 16:9 JPEG; later stages steer only the prompt so the running stream is not reset.
