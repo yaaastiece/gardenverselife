@@ -1,4 +1,5 @@
 # Garden updates
+- [ ] Lumibud (second character): images received, awaiting how they should appear
 - [ ] Sound bowl radio with 3 songs, LED light, play/next
 - [ ] Guided meditation: seated Xion, voice + captions, breath light, optional Orbis visuals
 - [ ] Collapsible desktop status panels
