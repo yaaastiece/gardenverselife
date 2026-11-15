@@ -41,5 +41,6 @@ use the editor.
 - `XionCamera` owns camera glides and projects the speech anchor, while `XionSpeech` subscribes to speech events at fixed screen dimensions; future XR panels replace presentation without changing rules.
 - Dev-only `window.__game` exposes live `state`, `move({x,y,z})`, `tap()`, `release()`, and `dismiss()` for repeatable garden interaction checks; `[data-scene-ready]` marks rendered frames.
 
-## 360 view
-- Default camera looks around in place (orbit pivot 5 cm ahead of the eye) with no yaw limit; the skyline is a full seamless ring under a `SkyDome`, so new scenery must hold up from every direction.
+## Skyline and view boundaries
+- Keep one aspect-preserving front skyline arc under the all-direction `SkyDome`, sharing `skyShader.ts` for identical edge-fade colors; this avoids repeats and seams.
+- Desktop/touch yaw limits account for horizontal FOV; skip OrbitControls and camera glides while XR is presenting so head tracking remains unrestricted.

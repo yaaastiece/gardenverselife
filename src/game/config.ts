@@ -15,12 +15,20 @@ export const PALETTE = {
 };
 export const WIND = { strength: 0.06, speed: 1.3 };
 export const CARS = { count: 4, minCross: 15, maxCross: 25, gap: 4, minY: 6.5, maxY: 11 };
-// Painted panorama: radius, arc (radians), cropped image aspect, bottom height, vMin = image row of painted railing.
-export const BACKDROP = { radius: 20, aspect: 1920 / 960, bottom: -1.2, vMin: 0.44, seam: 0.06, repeat: 2, fill: "#121420" };
+// One image: height uses its full original aspect before cropping below the painted railing.
+export const BACKDROP = { radius: 20, arc: 150 * Math.PI / 180, aspect: 1920 / 1072, bottom: -1.2, vMin: 0.42, edgeFade: 0.09, fill: "#0d0a10" };
 // Sky dome colors: horizon matches the painted dusk, zenith matches the image top.
-export const SKY = { horizon: "#5a3c4a", zenith: "#121420", haze: "#8a6a7c" };
-// How far the player may turn: keep the image edges out of view.
-export const LOOK = { yaw: Infinity, polarMin: 0.9, polarMax: 2.25, fov: 55 };
+export const SKY = { horizon: "#d8879f", zenith: "#0d0a10", haze: "#8a6a7c" };
+// Permit a five-degree sky margin beyond either image edge, accounting for viewport FOV.
+export const LOOK = { margin: 5 * Math.PI / 180, polarMin: 0.9, polarMax: 2.25, fov: 55, maxDpr: 2 };
+export function lookYawLimit(width: number, height: number, inXR = false) {
+  if (inXR) return Infinity;
+  const horizontalHalfFov = Math.atan(Math.tan(LOOK.fov * Math.PI / 360) * width / Math.max(1, height));
+  return Math.max(0, BACKDROP.arc / 2 + LOOK.margin - horizontalHalfFov);
+}
+export function backdropHeight() {
+  return BACKDROP.radius * BACKDROP.arc / BACKDROP.aspect * (1 - BACKDROP.vMin);
+}
 export const EYE_HEIGHT = 1.6;
 // Xion, the welcoming fairy: fairy-sized (~30 cm), hovering beside the seedling planter.
 export const XION = {
