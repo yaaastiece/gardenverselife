@@ -19,7 +19,7 @@ function buttonRows(label: string) {
   const rows: string[] = [];
   let row = "";
   words.forEach((word) => {
-    if ((row + " " + word).trim().length > 38 && row) { rows.push(row); row = word; }
+    if ((row + " " + word).trim().length > Math.floor(38 / VR.textScale) && row) { rows.push(row); row = word; }
     else row += (row ? " " : "") + word;
   });
   if (row) rows.push(row);
@@ -33,10 +33,10 @@ export function WorldPanel({ title, lines = [], bars = [], buttons = [], positio
   const [hover, setHover] = useState(-1);
   const lineRows = useMemo(() => lines.flatMap((line) => {
     const words = line.split(" "); const rows: string[] = []; let row = "";
-    words.forEach((word) => { if ((row + " " + word).length > 39 && row) { rows.push(row); row = word; } else row += (row ? " " : "") + word; });
+    words.forEach((word) => { if ((row + " " + word).length > Math.floor(39 / VR.textScale) && row) { rows.push(row); row = word; } else row += (row ? " " : "") + word; });
     if (row) rows.push(row); return rows;
   }), [lines.join("\n")]);
-  const bodyHeight = 0.12 + bars.length * 0.07 + lineRows.length * 0.033;
+  const bodyHeight = 0.12 * VR.textScale + bars.length * 0.07 + lineRows.length * 0.033 * VR.textScale;
   const height = bodyHeight + buttons.length * (VR.buttonHeight + 0.012) + 0.035;
   const texture = useMemo(() => {
     const canvas = document.createElement("canvas"); canvas.width = 1536; canvas.height = Math.ceil(1536 * height / width);
@@ -46,15 +46,15 @@ export function WorldPanel({ title, lines = [], bars = [], buttons = [], positio
       ctx.fillStyle = PALETTE.ink; ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.strokeStyle = PALETTE.pink; ctx.lineWidth = 0.003 * k; ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
       ctx.textBaseline = "middle"; ctx.fillStyle = PALETTE.pinkSoft;
-      ctx.font = `bold ${0.031 * k}px sans-serif`; ctx.fillText(title, 0.025 * k, 0.047 * k);
-      let y = 0.1;
+      ctx.font = `bold ${0.031 * VR.textScale * k}px sans-serif`; ctx.fillText(title, 0.025 * k, 0.047 * VR.textScale * k);
+      let y = 0.1 * VR.textScale;
       bars.forEach((bar) => {
-        ctx.font = `${0.022 * k}px sans-serif`; ctx.fillStyle = PALETTE.moon; ctx.fillText(`${bar.label}   ${Math.round(bar.value)}%`, 0.025 * k, y * k);
+        ctx.font = `${0.022 * VR.textScale * k}px sans-serif`; ctx.fillStyle = PALETTE.moon; ctx.fillText(`${bar.label}   ${Math.round(bar.value)}%`, 0.025 * k, y * k);
         ctx.fillStyle = PALETTE.wallDark; ctx.fillRect(0.025 * k, (y + 0.021) * k, (width - 0.05) * k, 0.009 * k);
         ctx.fillStyle = bar.value < 30 ? PALETTE.pink : PALETTE.green; ctx.fillRect(0.025 * k, (y + 0.021) * k, (width - 0.05) * k * Math.max(0, Math.min(100, bar.value)) / 100, 0.009 * k);
         y += 0.07;
       });
-      lineRows.forEach((line) => { ctx.fillStyle = PALETTE.moon; ctx.font = `${0.022 * k}px sans-serif`; ctx.fillText(line, 0.025 * k, y * k); y += 0.033; });
+      lineRows.forEach((line) => { ctx.fillStyle = PALETTE.moon; ctx.font = `${0.022 * VR.textScale * k}px sans-serif`; ctx.fillText(line, 0.025 * k, y * k); y += 0.033 * VR.textScale; });
       buttons.forEach((button, i) => {
         const top = bodyHeight + i * (VR.buttonHeight + 0.012);
         ctx.fillStyle = button.active ? PALETTE.green : i === hover && !button.disabled ? PALETTE.wallDark : PALETTE.wallMid;
@@ -63,13 +63,13 @@ export function WorldPanel({ title, lines = [], bars = [], buttons = [], positio
         ctx.strokeStyle = button.active || i === hover ? PALETTE.green : PALETTE.pink;
         ctx.strokeRect(0.02 * k, top * k, (width - 0.04) * k, VR.buttonHeight * k);
         ctx.fillStyle = button.disabled ? PALETTE.wallLight : PALETTE.ink;
-        ctx.font = `bold ${0.021 * k}px sans-serif`; ctx.textAlign = "center";
+        ctx.font = `bold ${0.021 * VR.textScale * k}px sans-serif`; ctx.textAlign = "center";
         const rows = buttonRows(button.label);
         rows.forEach((row, rowIndex) => ctx.fillText(row, width * k / 2, (top + VR.buttonHeight / 2 + (rowIndex - (rows.length - 1) / 2) * 0.025) * k));
         ctx.textAlign = "left";
       });
     }
-    const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4; return map;
+    const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 8; return map;
   }, [title, lineRows, bars.map((b) => `${b.label}:${Math.round(b.value)}`).join(), buttons.map((b) => `${b.label}:${b.disabled}:${b.active}`).join(), hover, height, width]);
   useEffect(() => () => texture.dispose(), [texture]);
   return <Billboard position={position ?? [0, 0, 0]} userData={{ gvPanel: true }}>

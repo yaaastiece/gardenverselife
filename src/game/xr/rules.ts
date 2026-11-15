@@ -6,11 +6,15 @@ export const VR = {
   pixelRatio: 1,
   frameRate: 72,
   snapDegrees: 30,
+  walkSpeed: 1.6,
+  walkDeadzone: 0.2,
+  walkBounds: { minX: -3.4, maxX: 3.4, minZ: -3.6, maxZ: 3.4 },
   snapEngage: 0.65,
   snapRelease: 0.25,
   dragMeters: 0.02,
   minTarget: 0.03,
-  buttonHeight: 0.075,
+  buttonHeight: 0.088,
+  textScale: 1.25,
   origin: [0, 0, 0.2] as [number, number, number],
 };
 export function snapStep(axis: number, latched: boolean, enabled: boolean) {
