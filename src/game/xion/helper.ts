@@ -9,7 +9,8 @@ export const CHECK_INTENT = /\b(check (on )?(my |the )?(garden|plants)|how are (
 export type Patient = { id: string; label: string; stats: { water: number; sun: number; soil: number }; tooWet: boolean; perch: Point3; fx: Point3 };
 export type Need = { patient: Patient; stat: CareAction; value: number };
 
-const PROBLEM: Record<CareAction, string> = { water: "thirsty", sun: "want more light", soil: "need richer soil" };
+const PROBLEM: Record<CareAction, [string, string]> = { water: ["is thirsty", "are thirsty"], sun: ["wants more light", "want more light"], soil: ["needs richer soil", "need richer soil"] };
+const plural = (l: string) => l.endsWith("s");
 const DID: Record<CareAction, (l: string) => string> = {
   water: (l) => `I watered the ${l} at the base, not the leaves, so the roots drink and the leaves stay dry.`,
   sun: (l) => `I gave the ${l} a warm grow light. Plants turn light into food, and most veggies want 6 to 8 hours a day.`,
@@ -33,7 +34,7 @@ export function report(patients: Patient[], tipIndex = 0): { text: string; needs
   const needs = findNeeds(patients);
   const wet = patients.filter((p) => p.tooWet);
   if (!needs.length && !wet.length) return { text: `Everything is thriving! ${TIPS[tipIndex % TIPS.length]}`, needs };
-  const parts = needs.slice(0, 3).map((n) => `the ${n.patient.label} ${n.patient.label.endsWith("s") ? "are" : "is"} ${PROBLEM[n.stat]}`);
+  const parts = needs.slice(0, 3).map((n) => `the ${n.patient.label} ${PROBLEM[n.stat][plural(n.patient.label) ? 1 : 0]}`);
   wet.forEach((p) => parts.push(`the ${p.label} ${p.label.endsWith("s") ? "are" : "is"} too wet, so let the soil dry`));
   const happy = patients.filter((p) => !p.tooWet && !needs.some((n) => n.patient.id === p.id)).map((p) => p.label);
   const list = parts.length > 1 ? `${parts.slice(0, -1).join(", ")} and ${parts.at(-1)}` : parts[0]!;
