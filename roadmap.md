@@ -1,4 +1,7 @@
 # Garden updates
+- [ ] Add Quest sessions, shared controls and world-anchored panels
+- [ ] Add VR performance settings and deferred cinematic handoff
+- [ ] Test VR rules and normal views; document headset/emulator checks
 - [x] Add private Reactor world-session endpoint and install requested packages
 - [x] Add reusable cinematic session controller and stage-triggered overlay
 - [x] Test lifecycle, command order, capture, and desktop/phone display
