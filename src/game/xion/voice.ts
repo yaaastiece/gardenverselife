@@ -1,3 +1,4 @@
+import { applyVolume, clampVolume, loadVolume, saveVolume } from "../audio/mixer";
 import { xionSpeech } from "@/lib/xion-voice.functions";
 // All of Xion's speaking goes through speak(); swap this file's body for ElevenLabs later.
 type Rec = { lang: string; interimResults: boolean; continuous: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: ((e: { error?: string }) => void) | null };
@@ -6,6 +7,17 @@ type Rec = { lang: string; interimResults: boolean; continuous: boolean; start()
 export function spokenText(text: string) {
   return text.replace(/\bXION\b/g, "ZION").replace(/\bxion\b/gi, (m) => (m[0] === "X" ? "Zion" : "zion"));
 }
+
+const VOICE_VOLUME_KEY = "gv-voice-volume";
+let voiceVolume = typeof window === "undefined" ? 0.9 : loadVolume(VOICE_VOLUME_KEY, 0.9);
+const volumeSubs = new Set<() => void>();
+export function getVoiceVolume() { return voiceVolume; }
+export function setVoiceVolume(v: number) {
+  voiceVolume = clampVolume(v); saveVolume(VOICE_VOLUME_KEY, voiceVolume);
+  if (player) applyVolume(player, voiceVolume);
+  volumeSubs.forEach((f) => f());
+}
+export function onVoiceVolume(f: () => void) { volumeSubs.add(f); return () => { volumeSubs.delete(f); }; }
 
 let xionSpeaks = true;
 const preferenceSubs = new Set<() => void>();
@@ -29,7 +41,7 @@ function browserSpeak(text: string) {
   window.speechSynthesis.cancel(); window.speechSynthesis.resume();
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice(); if (v) u.voice = v;
-  u.pitch = 1.25; u.rate = 0.98; u.volume = 0.9;
+  u.pitch = 1.25; u.rate = 0.98; u.volume = voiceVolume;
   u.onstart = () => notify(true); u.onend = () => notify(false); u.onerror = () => notify(false);
   window.speechSynthesis.speak(u);
 }
@@ -40,6 +52,7 @@ export function speak(caption: string) {
   const text = spokenText(caption);
   stopSpeaking(); const my = ++turn;
   player ??= new Audio(); const a = player; // created inside the click gesture so playback is allowed
+  applyVolume(a, voiceVolume);
   notify(true);
   xionSpeech({ data: { text: text.slice(0, 1000) } }).then((r) => {
     if (my !== turn) return;

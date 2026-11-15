@@ -28,9 +28,11 @@ export function backdropHeight() {
   return BACKDROP.radius * BACKDROP.arc / BACKDROP.aspect * (1 - BACKDROP.vMin);
 }
 export const EYE_HEIGHT = 1.6;
+/** Center pedestal planter: position and size (scale) shared by the scene and care targets. */
+export const PLANTER = { x: 0, z: -1.2, scale: 1.2 };
 // Xion, the welcoming fairy: fairy-sized (~30 cm), hovering beside the seedling planter.
 export const XION = {
-  position: [-0.25, 0.98, -0.85] as [number, number, number],
+  position: [-0.6, 0.98, -0.75] as [number, number, number],
   height: 0.48, hover: 0.98, bobAmount: 0.025, bobSpeed: 1.4,
   bubbleMs: 6000, fadeMs: 1000,
   welcome: "Welcome to the Gardenverse. Here's your first seedling. Water it and watch it grow.",

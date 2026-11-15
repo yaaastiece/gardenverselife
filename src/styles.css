@@ -454,6 +454,9 @@
 }
 @media (prefers-reduced-motion: reduce) { .gv-start-xion { animation: none; } }
 
-.gv-bowl-volume { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; margin: 0.4rem 0; }
-.gv-bowl-volume input { flex: 1; min-height: 28px; accent-color: var(--primary); }
-.gv-bowl-volume span:last-child { width: 2ch; text-align: right; opacity: 0.8; }
+.gv-bowl-volume { display: flex; align-items: center; gap: 0.4rem; font-size: 0.75rem; margin: 0.35rem 0; color: var(--neon); }
+.gv-bowl-volume-name { width: 2.8rem; color: var(--moon, #fff3f8); }
+.gv-bowl-volume input { flex: 1; min-width: 0; min-height: 32px; accent-color: var(--neon); cursor: pointer; touch-action: none; }
+.gv-bowl-volume-num { width: 3ch; text-align: right; opacity: 0.85; color: var(--moon, #fff3f8); }
+.gv-bowl-meditate { font-size: 0.95rem !important; min-height: 44px; width: 100%; margin-top: 0.5rem; }
+.gv-bowl-sub { margin: 0.25rem 0 0.35rem; font-size: 0.72rem; opacity: 0.8; text-align: center; }

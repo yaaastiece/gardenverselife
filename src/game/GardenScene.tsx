@@ -55,7 +55,8 @@ import { SoundBowlCard } from "./ui/SoundBowlCard";
 import { MeditationOverlay } from "./ui/MeditationOverlay";
 import { BowlWorldPanel, MeditationWorldPanel } from "./xr/MeditationPanels";
 import { useDockOpen } from "./ui/useDockOpen";
-import { meditationPrompt } from "./cinematic/prompts";
+import { meditationPrompt, MOON_STAGE } from "./cinematic/prompts";
+import { createCinematicMusic } from "./audio/cinematicMusic";
 import type { Meditation } from "./meditation/meditation";
 
 // Which bed a plant type is tracked in (matches the bed names Xion uses).
@@ -145,6 +146,12 @@ export function GardenScene() {
       if (!xrStore.getState().session) requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); });
     },
   }));
+  const [cinematicMusic] = useState(() => createCinematicMusic(radio));
+  useEffect(() => {
+    const sync = () => { if (cinematic.getSnapshot().open && !meditation.getSnapshot().active) cinematicMusic.start(); else cinematicMusic.stop(); };
+    const off = cinematic.subscribe(sync);
+    return () => { off(); cinematicMusic.stop(); };
+  }, [cinematic, cinematicMusic, meditation]);
   useEffect(() => radio.subscribe(() => audio.current?.duck(radio.getSnapshot().playing)), [radio]);
   useEffect(() => () => { meditation.stop(); radio.dispose(); void meditationVisuals.close(); }, [meditation, radio, meditationVisuals]);
   useEffect(() => {
@@ -234,7 +241,7 @@ export function GardenScene() {
   const tipIndex = useRef(0);
   const checkGarden = useCallback(() => {
     const patients: Patient[] = [
-      { id: "companion", label: plantName(), stats: care.state, tooWet: care.state.water > CARE.overwater, perch: { x: -0.35, y: 1.25, z: -1.15 }, fx: { x: 0, y: 1.2, z: -1.4 } },
+      { id: "companion", label: plantName(), stats: care.state, tooWet: care.state.water > CARE.overwater, perch: { x: -0.5, y: 1.35, z: -0.95 }, fx: { x: 0, y: 1.3, z: -1.2 } },
       ...beds.beds.map((b, i): Patient => {
         const c = BED_SPOTS[i] ?? { x: 0, y: 0.6, z: 0 };
         return { id: String(i), label: BED_LABELS[i] ?? "garden", stats: b, tooWet: b.water > BEDS.overwater, perch: { x: c.x, y: c.y + 0.6, z: c.z }, fx: { x: c.x, y: c.y + 0.7, z: c.z } };
@@ -246,6 +253,24 @@ export function GardenScene() {
   const acceptHelp = useCallback(() => { helper.start(); }, [helper]);
   const [night, setNight] = useState(false);
   useEffect(() => quest.subscribe((st) => setNight(st === "bloom")), [quest]);
+  // Moonflower story: plays its three beats through the shared cinematic when the quest blooms.
+  useEffect(() => {
+    const timers: number[] = [];
+    const off = quest.subscribe((st) => {
+      if (st !== "bloom") return;
+      const wait = Boolean(xrStore.getState().session) || meditation.getSnapshot().active || cinematic.getSnapshot().open;
+      if (wait) { cinematicGate.advance(MOON_STAGE, true); setPendingStage(cinematicGate.pending); return; }
+      void cinematic.advance(MOON_STAGE);
+    });
+    const offStage = cinematic.subscribe(() => {
+      const c = cinematic.getSnapshot();
+      if (!c.open && cinematicGate.pending !== null && !xrStore.getState().session && !meditation.getSnapshot().active) { requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); }); return; }
+      if (c.open && c.phase === "playing" && c.stage >= MOON_STAGE && c.stage < MOON_STAGE + 2 && timers.length === 0) {
+        timers.push(window.setTimeout(() => { timers.length = 0; const n = cinematic.getSnapshot(); if (n.open && n.stage === c.stage) void cinematic.advance(c.stage + 1); }, 6000));
+      }
+    });
+    return () => { off(); offStage(); timers.forEach(clearTimeout); };
+  }, [quest, cinematic, cinematicGate, xrStore, meditation]);
   const doMoonTask = useCallback(() => {
     const lesson = quest.advance();
     interaction.move({ x: MOONFLOWER_POS[0] - 0.35, y: 1.3, z: MOONFLOWER_POS[2] + 0.1 });
