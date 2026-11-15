@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useFrame, useLoader, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import skyline from "@/assets/skyline_original.jpg.asset.json";
+import skyline from "@/assets/skyline_wide.jpg.asset.json";
 import { BACKDROP, SKY, backdropHeight } from "../config";
 import { skyShader } from "./skyShader";
 

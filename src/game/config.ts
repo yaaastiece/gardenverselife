@@ -16,7 +16,7 @@ export const PALETTE = {
 export const WIND = { strength: 0.06, speed: 1.3 };
 export const CARS = { count: 4, minCross: 15, maxCross: 25, gap: 4, minY: 6.5, maxY: 11 };
 // One image: height uses its full original aspect before cropping below the painted railing.
-export const BACKDROP = { radius: 20, arc: 150 * Math.PI / 180, aspect: 1920 / 1072, bottom: -1.2, vMin: 0.42, edgeFade: 0.09, fill: "#0d0a10" };
+export const BACKDROP = { radius: 20, arc: 150 * Math.PI / 180, aspect: 1920 / 768, bottom: -1.2, vMin: 0.2, edgeFade: 0.09, fill: "#0d0a10" };
 // Sky dome colors: horizon matches the painted dusk, zenith matches the image top.
 export const SKY = { horizon: "#d8879f", zenith: "#0d0a10", haze: "#8a6a7c" };
 // Permit a five-degree sky margin beyond either image edge, accounting for viewport FOV.
