@@ -3,7 +3,8 @@ export type Stage = { name: string; height: number; leaves: number; leafSize: nu
 export const SEEDLING_STAGES: Stage[] = [
   { name: "Seedling", height: 0.12, leaves: 2, leafSize: 0.05 },
   { name: "Sprout", height: 0.28, leaves: 4, leafSize: 0.08 },
-  { name: "Young plant", height: 0.5, leaves: 8, leafSize: 0.11 },
+  { name: "Young", height: 0.5, leaves: 8, leafSize: 0.11 },
+  { name: "Queen", height: 0.7, leaves: 12, leafSize: 0.13 },
 ];
 export function nextStage(current: number, total = SEEDLING_STAGES.length): number {
   return Math.min(current + 1, total - 1);
