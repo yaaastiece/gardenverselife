@@ -1,5 +1,5 @@
 # Garden updates
-- [ ] Lumibud (second character): images received, awaiting how they should appear
+- [ ] Lumibud: choosable plant person before the experience starts (keep 3D art as-is) — waiting on how 3 images map to 4 growth stages
 - [x] Sound bowl radio with 3 songs, LED light, play/next
 - [x] Guided meditation: seated Xion, voice + captions, breath light, optional Orbis visuals
 - [x] Collapsible desktop status panels
