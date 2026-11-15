@@ -13,12 +13,12 @@ import type { PlantCare } from "../plants/care";
 
 const DROPS = 40;
 // Full, round bush packed in a ring around the plantlet, set low in the soil.
-const BUSH = Array.from({ length: 10 }, (_, i) => {
-  const a = (i / 10) * Math.PI * 2 + 0.2; const r = i % 2 ? 0.28 : 0.22;
-  return { kind: (i % 3 === 0 ? "herb" : "rose") as "herb" | "rose", pos: [Math.cos(a) * r, 0.44, Math.sin(a) * r] as [number, number, number] };
+const BUSH = Array.from({ length: 12 }, (_, i) => {
+  const a = (i / 12) * Math.PI * 2 + 0.2; const r = i % 2 ? 0.3 : 0.22;
+  return { kind: (i % 3 === 0 ? "rose" : "herb") as "herb" | "rose", pos: [Math.cos(a) * r, 0.47, Math.sin(a) * r] as [number, number, number] };
 });
 /** The plantlet's feet stand just above the bush top. */
-const COMPANION_LIFT = 0.6;
+const COMPANION_LIFT = 0.64;
 // Round pedestal table planter.
 const tableBody = new THREE.CylinderGeometry(0.42, 0.34, 0.5, 48);
 const tableTop = new THREE.CircleGeometry(0.38, 48);
@@ -76,7 +76,7 @@ export function Seedling({ onStageChange, care, paused = false }: { onStageChang
         <mesh position={[0, 0.5, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.4, 0.03, 10, 48]} /><meshStandardMaterial color="#b4b1ba" metalness={0.85} roughness={0.28} /></mesh>
         <mesh geometry={tableTop} position={[0, 0.49, 0]} rotation-x={-Math.PI / 2}><meshStandardMaterial color="#1f1510" roughness={1} /></mesh></group>
         <mesh position={[0, 0.05, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.38, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
-        {BUSH.map((p, i) => <Plant key={i} kind={p.kind} position={p.pos} seed={40 + i} />)}
+        {BUSH.map((p, i) => <group key={i} position={p.pos} scale={p.kind === "rose" ? 0.42 : 0.6}><Plant kind={p.kind} position={[0, 0, 0]} seed={40 + i} /></group>)}
       </group>
       <group ref={plant} position={[0, COMPANION_LIFT, 0]}><Suspense fallback={null}><PlantCompanion stage={stage} care={care} onWater={water} onHover={setHover} /></Suspense></group>
       <instancedMesh ref={drops} args={[undefined, undefined, DROPS]}><sphereGeometry args={[0.03, 6, 5]} /><meshBasicMaterial color="#9fe8ff" toneMapped={false} /></instancedMesh>
