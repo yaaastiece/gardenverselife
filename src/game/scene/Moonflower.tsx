@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { Outlines, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
+import { useXR } from "@react-three/xr";
 import { PALETTE } from "../config";
 import { LEAF, leafTexture } from "../plants/leaves";
 import { moonVisual, type MoonQuest, type MoonStep } from "../plants/moonflower";
@@ -11,6 +12,8 @@ const TRELLIS_H = 1.3;
 
 // Draws quest state only; tapping completes the current task (pointer now, hand pinch later).
 export function Moonflower({ quest, onTask }: { quest: MoonQuest; onTask: () => void }) {
+  const inVR = useXR((s) => Boolean(s.session));
+  const [hovered, setHovered] = useState(false);
   const [step, setStep] = useState<MoonStep>(quest.state.step);
   useEffect(() => quest.subscribe(setStep), [quest]);
   const target = moonVisual(step);
@@ -41,11 +44,11 @@ export function Moonflower({ quest, onTask }: { quest: MoonQuest; onTask: () => 
 
   const tap = (e: ThreeEvent<MouseEvent>) => { e.stopPropagation(); onTask(); };
   return (
-    <group position={MOONFLOWER_POS} rotation-y={-0.5} scale={0.8} onClick={tap} onPointerOver={() => (document.body.style.cursor = "pointer")} onPointerOut={() => (document.body.style.cursor = "")}>
+    <group position={MOONFLOWER_POS} rotation-y={-0.5} scale={0.8} onClick={tap} onPointerOver={() => { setHovered(true); if (!inVR) document.body.style.cursor = "pointer"; }} onPointerOut={() => { setHovered(false); if (!inVR) document.body.style.cursor = ""; }}>
       <mesh position={[0, 0.17, 0]}><cylinderGeometry args={[0.24, 0.18, 0.34, 20]} /><meshStandardMaterial color="#2a2530" roughness={0.6} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
       <mesh position={[0, 0.25, 0.22]} rotation-x={-0.18}><torusGeometry args={[0.235, 0.008, 6, 32, Math.PI]} /><meshBasicMaterial color={PALETTE.pink} toneMapped={false} /></mesh>
       <mesh position={[0, 0.335, 0]} rotation-x={-Math.PI / 2}><circleGeometry args={[0.22, 20]} /><meshStandardMaterial ref={soil} color="#4a3428" roughness={1} /></mesh>
-      <mesh ref={ring} position={[0, 0.01, 0]} rotation-x={-Math.PI / 2}><ringGeometry args={[0.32, 0.36, 40]} /><meshBasicMaterial color={PALETTE.green} toneMapped={false} transparent opacity={0.8} /></mesh>
+      <mesh ref={ring} position={[0, 0.01, 0]} rotation-x={-Math.PI / 2}><ringGeometry args={[0.32, 0.36, 40]} /><meshBasicMaterial color={inVR && hovered ? PALETTE.pinkSoft : PALETTE.green} toneMapped={false} transparent opacity={0.8} /></mesh>
       {/* bamboo trellis */}
       {[-0.14, 0.14].map((x) => <mesh key={x} position={[x, 0.34 + TRELLIS_H / 2, -0.05]}><cylinderGeometry args={[0.012, 0.012, TRELLIS_H, 6]} /><meshStandardMaterial color="#c9b27a" /></mesh>)}
       {[0.5, 0.8, 1.1, 1.4].map((y) => <mesh key={y} position={[0, y, -0.05]} rotation-z={Math.PI / 2}><cylinderGeometry args={[0.007, 0.007, 0.3, 5]} /><meshStandardMaterial color="#c9b27a" /></mesh>)}
@@ -61,7 +64,7 @@ export function Moonflower({ quest, onTask }: { quest: MoonQuest; onTask: () => 
           ))}
         </group>
       </group>
-      {step === "bloom" && <><pointLight position={[0, 1.3, 0.3]} color="#fff4e0" intensity={1.5} distance={2.2} /><Sparkles count={24} scale={[0.8, 1.2, 0.8]} position={[0, 1.2, 0]} size={2.5} speed={0.3} color={PALETTE.pinkSoft} /></>}
+      {step === "bloom" && <><pointLight position={[0, 1.3, 0.3]} color="#fff4e0" intensity={1.5} distance={2.2} /><Sparkles count={inVR ? 6 : 24} scale={[0.8, 1.2, 0.8]} position={[0, 1.2, 0]} size={2.5} speed={0.3} color={PALETTE.pinkSoft} /></>}
     </group>
   );
 }
