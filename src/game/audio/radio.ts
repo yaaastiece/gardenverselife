@@ -2,6 +2,9 @@ import neon from "@/assets/song_neon_botanica.mp3.asset.json";
 import night from "@/assets/song_night_garden.mp3.asset.json";
 import planting from "@/assets/song_planting.mp3.asset.json";
 
+import { applyVolume, clampVolume, loadVolume, saveVolume } from "./mixer";
+
+export const MUSIC_VOLUME_KEY = "gv-music-volume";
 export type Track = { title: string; url: string };
 export const TRACKS: Track[] = [
   { title: "Neon Botanica", url: neon.url },
@@ -17,12 +20,12 @@ export type RadioState = { playing: boolean; index: number; error: string | null
 
 /** Playlist radio for the sound bowl: plays in order and loops; screen and XR panels only subscribe. */
 export function createRadio(tracks: Track[] = TRACKS, makePlayer: () => RadioPlayer = () => new Audio() as unknown as RadioPlayer) {
-  let state: RadioState = { playing: false, index: 0, error: null, volume: 0.7 };
+  let state: RadioState = { playing: false, index: 0, error: null, volume: loadVolume(MUSIC_VOLUME_KEY, 0.7) };
   let player: RadioPlayer | null = null;
   const subs = new Set<() => void>();
   const set = (patch: Partial<RadioState>) => { state = { ...state, ...patch }; subs.forEach((f) => f()); };
   const ensure = () => {
-    if (!player) { player = makePlayer(); player.volume = state.volume; player.onended = () => { void radio.next(); }; }
+    if (!player) { player = makePlayer(); applyVolume(player, state.volume); player.onended = () => { void radio.next(); }; }
     const want = tracks[state.index]?.url ?? "";
     if (!player.src.endsWith(want)) player.src = want;
     return player;
@@ -33,11 +36,12 @@ export function createRadio(tracks: Track[] = TRACKS, makePlayer: () => RadioPla
     get track() { return tracks[state.index]; },
     async play() {
       const p = ensure();
+      applyVolume(p, state.volume);
       set({ playing: true, error: null });
       try { await p.play(); } catch { set({ playing: false, error: "Tap play to start the music." }); }
     },
     /** Music volume 0..1, applied right away. */
-    setVolume(v: number) { const volume = Math.min(1, Math.max(0, v)); if (player) player.volume = volume; set({ volume }); },
+    setVolume(v: number) { const volume = clampVolume(v); if (player) applyVolume(player, volume); saveVolume(MUSIC_VOLUME_KEY, volume); set({ volume }); },
     pause() { player?.pause(); set({ playing: false }); },
     toggle() { return state.playing ? (radio.pause(), Promise.resolve()) : radio.play(); },
     async next() {
