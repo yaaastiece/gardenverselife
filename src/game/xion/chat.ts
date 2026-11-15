@@ -28,7 +28,8 @@ export function createXionChat(ask: AskFn) {
       let reply: ChatMsg;
       try {
         const history = state.messages.filter((m) => !m.error).slice(-10).map(({ role, text: t }) => ({ role, text: t }));
-        const r = await ask(history, `Plant person in the center planter: ${plantName()}\n${context}`);
+        const plant = currentPlantlet();
+        const r = await ask(history, `Plant companion in the center planter: ${plant.name}\nStages: ${plant.stageNames.join(", ")}\nCare note: ${plant.careProfile.likes}\n${context}`);
         reply = r.ok ? { id: ++id, role: "assistant", text: r.text } : { id: ++id, role: "assistant", text: ERRORS[r.reason], error: true };
       } catch {
         reply = { id: ++id, role: "assistant", text: ERRORS.failed, error: true };
