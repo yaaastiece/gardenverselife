@@ -23,6 +23,7 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
   const prevMat = useRef<THREE.MeshBasicMaterial>(null);
   const glowMat = useRef<THREE.SpriteMaterial>(null);
   const sway = useRef(0);
+  const drop = useRef(1);
   useEffect(() => {
     if (stage === shown.current) return;
     setPrev(shown.current); shown.current = stage; fade.current = 0; setBurst((b) => b + 1);
@@ -46,8 +47,8 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
     if (root.current) {
       root.current.rotation.z = Math.sin(sway.current) * WIND.strength * 0.5;
       const pop = THREE.MathUtils.lerp(0.9, 1, e);
-      const drop = cond === "Struggling" ? COMPANION.struggleDrop : 1;
-      root.current.scale.set(pop, THREE.MathUtils.lerp(root.current.scale.y / Math.max(pop, 0.01), drop, 0.08) * pop, pop);
+      drop.current = THREE.MathUtils.lerp(drop.current, cond === "Struggling" ? COMPANION.struggleDrop : 1, 0.08);
+      root.current.scale.set(pop, pop * drop.current, pop);
     }
     if (glowMat.current) glowMat.current.opacity = THREE.MathUtils.lerp(glowMat.current.opacity, GLOW[cond], 0.05);
   });
@@ -55,15 +56,19 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
   return (
     <group ref={root} position={[0, -COMPANION.sink, 0]}>
       <Billboard lockX lockZ>
-        <sprite position={[0, cur.y - cur.h * 0.05 + COMPANION.heights[stage]! * 0.5 - cur.y + 0.02, -0.02]} scale={[COMPANION.heights[stage]! * 1.6, COMPANION.heights[stage]! * 1.6, 1]} renderOrder={-1}>
+        <sprite position={[0, COMPANION.heights[stage]! * 0.5, -0.02]} scale={[COMPANION.heights[stage]! * 1.6, COMPANION.heights[stage]! * 1.6, 1]} renderOrder={-1}>
           <spriteMaterial ref={glowMat} map={glowTex} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
         </sprite>
         {prev !== stage && <mesh position={[old.x, old.y, 0]}><planeGeometry args={[old.w, old.h]} /><meshBasicMaterial ref={prevMat} map={texes[prev]} transparent alphaTest={0.02} depthWrite={false} toneMapped={false} /></mesh>}
-        <mesh position={[cur.x, cur.y, 0.001]}
-          onClick={(e) => { e.stopPropagation(); onWater(); }}
-          onPointerOver={(e) => { e.stopPropagation(); onHover(true); }} onPointerOut={() => onHover(false)}>
+        <mesh position={[cur.x, cur.y, 0.001]}>
           <planeGeometry args={[cur.w, cur.h]} />
           <meshBasicMaterial ref={curMat} map={texes[stage]} transparent alphaTest={0.02} toneMapped={false} />
+        </mesh>
+        <mesh position={[0, COMPANION.heights[stage]! * 0.5, 0.01]}
+          onClick={(e) => { e.stopPropagation(); onWater(); }}
+          onPointerOver={(e) => { e.stopPropagation(); onHover(true); }} onPointerOut={() => onHover(false)}>
+          <planeGeometry args={[COMPANION.heights[stage]! * 0.62, COMPANION.heights[stage]!]} />
+          <meshBasicMaterial transparent opacity={0} depthWrite={false} />
         </mesh>
       </Billboard>
       {burst > 0 && <PinkBurst key={burst} y={COMPANION.heights[stage]! * 0.5} />}

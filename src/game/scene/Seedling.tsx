@@ -3,10 +3,11 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Outlines } from "@react-three/drei";
 import { Plant } from "./Garden";
-import { LEAF, leafTexture } from "../plants/leaves";
 import { PALETTE, WIND } from "../config";
 import { SEEDLING_STAGES } from "../plants/growth";
 import { Sparkles } from "@react-three/drei";
+import { Suspense } from "react";
+import { PlantCompanion } from "./PlantCompanion";
 import type { PlantCare } from "../plants/care";
 
 const DROPS = 40;
@@ -55,11 +56,6 @@ export function Seedling({ onStageChange, care }: { onStageChange: (name: string
     if (cone.current) { const m = cone.current.material as THREE.MeshBasicMaterial; m.opacity = THREE.MathUtils.lerp(m.opacity, lit ? 0.18 : 0, 0.1); }
     grow.current = Math.min(1, grow.current + dt * 0.8);
     if (plant.current) {
-      const e = 1 - Math.pow(1 - grow.current, 3);
-      const k = THREE.MathUtils.lerp(prevHeight.current / s.height, 1, e);
-      plant.current.scale.setScalar(k);
-      const t = clock.elapsedTime * WIND.speed;
-      plant.current.rotation.z = Math.sin(t) * WIND.strength * 1.2;
     }
     if (drops.current) {
       const active = burst.current >= 0 && burst.current < 1.2;
@@ -82,17 +78,8 @@ export function Seedling({ onStageChange, care }: { onStageChange: (name: string
         <mesh geometry={heartTop} position={[0, 0.5, -0.1]} rotation-x={-Math.PI / 2} scale={0.9}><meshStandardMaterial color="#1f1510" roughness={1} /></mesh></group>
         <mesh position={[0, 0.05, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.36, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
         {[-0.22, -0.14, 0.14, 0.22].map((x, i) => <Plant key={x} kind={i % 3 === 0 ? "herb" : "rose"} position={[x, 0.5, -0.12 + (i % 2) * 0.1]} seed={40 + i} />)}
-        <group ref={plant} position={[0, 0.5, 0]}>
-          <mesh position={[0, s.height / 2, 0]}><cylinderGeometry args={[0.012, 0.02, s.height, 6]} /><meshStandardMaterial color="#3a9a4c" /></mesh>
-          {Array.from({ length: s.leaves }, (_, i) => {
-            const a = i * 2.4; const y = s.height * (0.45 + (i / s.leaves) * 0.55);
-            return <mesh key={`${stage}-${i}`} position={[0, y, 0]} geometry={LEAF.round} rotation={[-0.4, a, 0]} scale={s.leafSize * 2.2}>
-              <meshStandardMaterial map={leafTexture()} color="#6bd07a" emissive="#1f7a34" emissiveIntensity={0.2} roughness={0.5} side={THREE.DoubleSide} />
-            </mesh>;
-          })}
-        </group>
-        <mesh position={[0, 0.8, 0]}><cylinderGeometry args={[0.35, 0.35, 0.8, 8]} /><meshBasicMaterial transparent opacity={0} depthWrite={false} /></mesh>
       </group>
+      <group ref={plant} position={[0, 0.5, 0]}><Suspense fallback={null}><PlantCompanion stage={stage} care={care} onWater={water} onHover={setHover} /></Suspense></group>
       <instancedMesh ref={drops} args={[undefined, undefined, DROPS]}><sphereGeometry args={[0.03, 6, 5]} /><meshBasicMaterial color="#9fe8ff" toneMapped={false} /></instancedMesh>
       <mesh ref={ring} position={[0, 0.58, 0]} rotation-x={-Math.PI / 2}><ringGeometry args={[0.18, 0.24, 32]} /><meshBasicMaterial color={PALETTE.green} transparent opacity={0} toneMapped={false} /></mesh>
       <pointLight ref={glow} position={[0, 1.6, 0]} color="#ffc070" intensity={0} distance={3} />
