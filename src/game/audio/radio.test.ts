@@ -30,3 +30,11 @@ describe("radio volume", () => {
     r.setVolume(2); expect(r.getSnapshot().volume).toBe(1);
   });
 });
+
+describe("music volume memory", () => {
+  it("remembers the music volume", () => {
+    const r = createRadio(undefined, () => fakePlayer());
+    r.setVolume(0.25);
+    expect(createRadio(undefined, () => fakePlayer()).getSnapshot().volume).toBe(0.25);
+  });
+});
