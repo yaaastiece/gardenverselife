@@ -395,3 +395,61 @@
 .gv-care-confirm button { flex: 1; min-height: 32px; padding: 0.25rem; border: 1px solid var(--ink); border-radius: 5px; background: var(--neon); color: var(--ink); font-size: 0.65rem; font-weight: 700; cursor: pointer; }
 .gv-care-confirm button:last-child { background: transparent; color: var(--color-background); }
 @media (max-width: 420px) { .gv-pick-wrap { padding-left: 0.75rem; padding-right: 0.75rem; } .gv-pick { padding: 0.75rem; } .gv-pick-row { gap: 0.5rem; } .gv-pick-card { min-height: 168px; padding: 0.45rem; } }
+
+/* Welcome: full-bleed skyline, fairy and speech stay in separate layout tracks. */
+:root { --start-shade: oklch(0.1 0.01 320 / 0.76); --start-paper: oklch(0.96 0.02 350); --start-panel: oklch(0.16 0.02 320 / 0.85); --start-glow: drop-shadow(0 0 18px var(--neon)); }
+.gv-start { position: fixed; inset: 0; z-index: 30; height: 100dvh; color: var(--start-paper); font-family: var(--font-sans); opacity: 1; transition: opacity 1s linear; overflow: hidden; background: var(--ink); }
+.gv-start[data-leaving] { opacity: 0; pointer-events: none; }
+.gv-start-back, .gv-start-shade { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.gv-start-back { object-position: center; }
+.gv-start-shade { background: var(--start-shade); backdrop-filter: blur(2px); }
+.gv-start-content { position: relative; width: min(920px, 100%); height: 100%; margin: auto; padding: max(22px, env(safe-area-inset-top)) 32px max(24px, env(safe-area-inset-bottom)); display: grid; grid-template-rows: auto minmax(170px, 1fr) auto auto; gap: 18px; }
+.gv-start-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.gv-start-top h1 { font: 46px var(--font-display); color: var(--neon); margin: 0; }
+.gv-start-options { display: flex; gap: 8px; }
+.gv-start-options button { color: var(--start-paper); min-height: 44px; }
+.gv-start-welcome { display: grid; grid-template-columns: minmax(160px, 0.85fr) minmax(0, 1fr); gap: 28px; align-items: center; min-height: 0; max-height: 420px; align-self: center; }
+.gv-start-xion { height: 100%; max-height: 380px; width: 100%; min-height: 0; object-fit: contain; filter: var(--start-glow); animation: gv-start-bob 4s ease-in-out infinite; }
+.gv-start-speech { border-left: 3px solid var(--neon); padding: 18px 22px; background: var(--start-panel); border-radius: 0 8px 8px 0; }
+.gv-start-speech b { color: var(--neon); font: 28px var(--font-display); }
+.gv-start-speech p { margin: 8px 0 0; font-size: 19px; line-height: 1.65; min-height: 125px; }
+.gv-start-begin { background: var(--neon); color: var(--ink); height: 52px; margin-top: 14px; font-size: 17px; font-weight: 800; }
+.gv-start-cursor { display: inline-block; height: 1em; border-right: 2px solid var(--neon); margin-left: 3px; vertical-align: middle; }
+.gv-start-choice { min-height: 0; }
+.gv-start-choice h2 { text-align: center; font-size: 18px; margin: 0 0 12px; }
+.gv-start-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; max-width: 640px; margin: auto; }
+.gv-start-card { height: 215px; min-width: 0; padding: 12px; display: grid; grid-template-rows: minmax(0, 1fr) auto auto; gap: 5px; white-space: normal; border: 2px solid var(--start-paper); background: var(--start-panel); color: var(--start-paper); border-radius: 8px; }
+.gv-start-card img { width: 100%; height: 100%; object-fit: contain; }
+.gv-start-card b { font-size: 20px; }
+.gv-start-card span { font-size: 13px; line-height: 1.3; }
+.gv-start-card:hover:not(:disabled), .gv-start-card[aria-pressed="true"] { border-color: var(--neon-green); color: var(--start-paper); background: var(--start-panel); box-shadow: 0 0 16px var(--neon-green); }
+.gv-start-card:disabled { opacity: 0.6; }
+.gv-start-footer { display: grid; justify-items: center; gap: 6px; }
+.gv-start-enter { background: var(--neon-green); color: var(--ink); width: min(400px, 100%); height: 58px; font-size: 18px; font-weight: 800; }
+.gv-start-footer p { margin: 0; font-size: 13px; text-align: center; }
+@keyframes gv-start-bob { 50% { transform: translateY(-9px); } }
+@media (max-width: 767px) {
+  .gv-start-content { padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom)); gap: 10px; grid-template-rows: auto minmax(0, 1fr) auto auto; }
+  .gv-start-top h1 { font-size: 34px; }
+  .gv-start-options { gap: 0; }
+  .gv-start-options button { padding: 6px; font-size: 12px; }
+  .gv-start-welcome { grid-template-columns: 1fr; grid-template-rows: minmax(70px, 1fr) auto; gap: 6px; height: 100%; max-height: none; }
+  .gv-start-xion { max-height: 200px; }
+  .gv-start-speech { padding: 8px 12px; }
+  .gv-start-speech b { font-size: 20px; }
+  .gv-start-speech p { font-size: 14px; line-height: 1.45; min-height: 62px; margin-top: 2px; }
+  .gv-start-begin { height: 44px; font-size: 15px; margin-top: 5px; }
+  .gv-start-choice h2 { font-size: 15px; margin-bottom: 8px; }
+  .gv-start-cards { gap: 10px; }
+  .gv-start-card { height: 164px; padding: 8px; }
+  .gv-start-card b { font-size: 16px; }
+  .gv-start-card span { font-size: 11px; }
+  .gv-start-enter { height: 50px; font-size: 16px; }
+}
+@media (max-height: 620px) {
+  .gv-start-content { gap: 8px; padding-top: 8px; padding-bottom: 8px; }
+  .gv-start-card { height: 135px; }
+  .gv-start-speech p { font-size: 13px; min-height: 54px; }
+  .gv-start-xion { max-height: 130px; }
+}
+@media (prefers-reduced-motion: reduce) { .gv-start-xion { animation: none; } }

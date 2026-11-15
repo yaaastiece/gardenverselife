@@ -1,5 +1,7 @@
 import { PLANTLETS, chosenPlantlet, choosePlantlet, named, plantName, type PlantletId } from "./plants/plantlets";
 import { PlantletPicker } from "./ui/PlantletPicker";
+import { createStartScreen } from "./start";
+import { StartWorldPanel } from "./xr/StartWorldPanel";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
@@ -110,14 +112,26 @@ export function GardenScene() {
   const [bowlOpen, setBowlOpen] = useState(false);
   const [visualsOn, setVisualsOn] = useState(false);
   const [dockOpen, setDockOpen] = useDockOpen();
-  const [picking, setPicking] = useState(() => chosenPlantlet() === null);
+  const [picking, setPicking] = useState(true);
   const pickPlantlet = useCallback((id: PlantletId) => {
-    const first = chosenPlantlet() === null;
     choosePlantlet(id);
     setPlantletId(id);
-    setPicking(false);
-    if (first) interaction.say(`Welcome to the Gardenverse. ${PLANTLETS[id].name} is waiting for you. Water them and watch them grow.`);
-  }, [interaction]);
+  }, []);
+  const [start] = useState(() => createStartScreen({
+    speak, speechEnabled: xionSpeechEnabled,
+    enter: (id) => {
+      pickPlantlet(id);
+      if (!audio.current) audio.current = createAmbience();
+      audio.current.duck(radio.getSnapshot().playing);
+      void audio.current.setPlaying(true).then(() => setPlaying(true)).catch(() => setPlaying(false));
+    },
+    finish: () => setPicking(false),
+  }));
+  useEffect(() => {
+    if (!picking) return;
+    const timer = window.setInterval(() => start.tick(), 30);
+    return () => window.clearInterval(timer);
+  }, [start, picking]);
   const [cinematicGate] = useState(() => createCinematicGate((stage) => { void cinematic.advance(stage); }));
   const [meditation] = useState(() => createMeditation({
     move: (p) => interaction.move(p),
@@ -239,7 +253,7 @@ export function GardenScene() {
   const canvasPress = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, careStates, plantletId, beds, xr: xrStore, renderer: () => renderer.current, selection, cinematic, steering, radio, meditation, meditationVisuals };
+    const debug = { start, get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, careStates, plantletId, beds, xr: xrStore, renderer: () => renderer.current, selection, cinematic, steering, radio, meditation, meditationVisuals };
     Object.assign(window, { __game: debug });
     return () => { Reflect.deleteProperty(window, "__game"); };
   }, [interaction, care, careStates, plantletId, beds, xrStore, selection, cinematic, steering, radio, meditation, meditationVisuals]);
@@ -256,8 +270,10 @@ export function GardenScene() {
     setVRError("");
     try {
       const entering = xrStore.enterVR();
-      if (!audio.current) audio.current = createAmbience();
-      void audio.current.setPlaying(true).then(() => setPlaying(true)).catch(() => setVRError("Ambient sound could not start."));
+      if (!picking) {
+        if (!audio.current) audio.current = createAmbience();
+        void audio.current.setPlaying(true).then(() => setPlaying(true)).catch(() => setVRError("Ambient sound could not start."));
+      }
       await entering;
     } catch { setVRError("VR could not start. Open the published garden in the Quest browser and try again."); }
   };
@@ -301,7 +317,8 @@ export function GardenScene() {
         {!inVR && <XionCamera interaction={interaction} bubbleRef={bubbleRef} />}
         {!inVR && <PlantCardAnchor selection={selection} cardRef={cardRef} />}
         {!inVR && <PlantFxLayer selection={selection} />}
-        {inVR && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={exitVR} exit={exitVR} cinematic={cinematic} steering={steering} />}
+        {inVR && picking && <Suspense fallback={null}><StartWorldPanel start={start} /></Suspense>}
+        {inVR && !picking && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={exitVR} exit={exitVR} cinematic={cinematic} steering={steering} />}
         {inVR && bowlOpen && <BowlWorldPanel radio={radio} onMeditate={startMeditation} onClose={() => setBowlOpen(false)} />}
         {inVR && <MeditationWorldPanel meditation={meditation} />}
         <HelperTicker helper={helper} />
@@ -319,9 +336,9 @@ export function GardenScene() {
           {playing ? <Volume2 /> : <VolumeX />}{playing ? "Sound on" : "Play sound"}
         </Button>
       </header>
-      {!inVR && picking && <PlantletPicker canClose={chosenPlantlet() !== null} onClose={() => setPicking(false)} onChoose={pickPlantlet} />}
+      {!inVR && picking && <PlantletPicker start={start} onVR={vrSupported ? enterVR : undefined} vrError={vrError} />}
       {vrSupported && !inVR && !picking && <div className="gv-vr-entry"><Button variant="outline" onClick={enterVR}>Enter VR</Button>{vrError && <p role="status">{vrError}</p>}</div>}
-      <div className="gv-dock"><CarePanel care={care} onAction={careAction} onChangePlantlet={() => { care.reset(); setPicking(true); }} open={dockOpen} setOpen={setDockOpen} />{dockOpen && <MoonQuestCard quest={quest} onTask={doMoonTask} />}</div>
+      <div className="gv-dock"><CarePanel care={care} onAction={careAction} onChangePlantlet={() => { care.reset(); start.reset(); setPicking(true); void audio.current?.setPlaying(false); setPlaying(false); }} open={dockOpen} setOpen={setDockOpen} />{dockOpen && <MoonQuestCard quest={quest} onTask={doMoonTask} />}</div>
       {!inVR && bowlOpen && <SoundBowlCard radio={radio} onMeditate={startMeditation} visuals={visualsOn} setVisuals={setVisualsOn} onClose={() => setBowlOpen(false)} />}
       {!inVR && <MeditationOverlay meditation={meditation} visuals={meditationVisuals} />}
       <PlantCard beds={beds} selection={selection} cardRef={cardRef} />
