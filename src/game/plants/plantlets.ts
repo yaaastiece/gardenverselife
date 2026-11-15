@@ -4,6 +4,9 @@ import pepperSeedling from "@/assets/companion_1_seedling.png.asset.json";
 import pepperSprout from "@/assets/companion_2_sprout.png.asset.json";
 import pepperYoung from "@/assets/companion_3_young.png.asset.json";
 import pepperQueen from "@/assets/companion_4_queen.png.asset.json";
+import lumibudSprout from "@/assets/lumibud_sprout.png.asset.json";
+import lumibudLeafling from "@/assets/lumibud_leafling.png.asset.json";
+import lumibudBloom from "@/assets/lumibud_bloom.png.asset.json";
 
 export type PlantletId = "pepper" | "lumibud";
 export type Frame = { top: number; bottom: number; cx: number };
@@ -31,9 +34,7 @@ export type Plantlet = {
   burstColor: string;
 };
 
-// Temporary Lumibud art: one transparent, glowing teal orb, reused and scaled at each stage.
-// To swap in final art, import four cut-outs above and replace these four sprite URLs, then
-// update Lumibud's aspect and measured frame bounds below. No choice or care code changes.
+// Lumibud's Glow Seed has no artwork yet: a glowing teal orb with a first sprout peeking out.
 const LUMIBUD_ORB = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
     <defs>
@@ -42,6 +43,9 @@ const LUMIBUD_ORB = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
     </defs>
     <circle cx="256" cy="256" r="240" fill="url(#halo)"/>
     <circle cx="256" cy="256" r="126" fill="url(#orb)" stroke="#173f38" stroke-width="10"/>
+    <path d="M256 132 C256 110 256 96 256 84" stroke="#173f38" stroke-width="12" fill="none"/>
+    <path d="M256 92 C226 58 186 66 180 88 C206 110 240 108 256 92Z" fill="#9ee07a" stroke="#173f38" stroke-width="8"/>
+    <path d="M256 88 C286 48 334 58 338 82 C312 108 274 106 256 88Z" fill="#b6f08e" stroke="#173f38" stroke-width="8"/>
     <ellipse cx="216" cy="207" rx="35" ry="24" fill="#effff9" opacity=".72"/>
   </svg>
 `)}`;
@@ -93,7 +97,7 @@ export const PLANTLETS: Record<PlantletId, Plantlet> = {
     name: "Lumibud",
     tagline: "A little light that learned to grow.",
     stageNames: ["Glow Seed", "Sprout", "Leafling", "Bloom"],
-    sprites: [LUMIBUD_ORB, LUMIBUD_ORB, LUMIBUD_ORB, LUMIBUD_ORB],
+    sprites: [LUMIBUD_ORB, lumibudSprout.url, lumibudLeafling.url, lumibudBloom.url],
     glowColor: "#8fffd2",
     careProfile: {
       drift: { water: 0.65, sun: 0.15, soil: 0.15 },
@@ -122,9 +126,9 @@ export const PLANTLETS: Record<PlantletId, Plantlet> = {
     heights: [0.28, 0.42, 0.58, 0.76],
     frames: [
       { top: 0, bottom: 1, cx: 0.5 },
-      { top: 0, bottom: 1, cx: 0.5 },
-      { top: 0, bottom: 1, cx: 0.5 },
-      { top: 0, bottom: 1, cx: 0.5 },
+      { top: 0.036, bottom: 0.964, cx: 0.5 },
+      { top: 0.036, bottom: 0.964, cx: 0.5 },
+      { top: 0.036, bottom: 0.964, cx: 0.5 },
     ],
     queenGlow: 1.25,
     burstColor: "#8fffd2",

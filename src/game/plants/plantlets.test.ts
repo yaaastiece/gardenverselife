@@ -26,12 +26,13 @@ describe("plantlets", () => {
     expect(pepper.sprites.every((url) => url.includes("companion_"))).toBe(true);
     expect(pepper.glowColor).toBe("#ff5fb8");
   });
-  it("defines Lumibud with four scalable teal-orb placeholder stages", () => {
+  it("defines Lumibud with a teal-orb Glow Seed and real art for stages 2-4", () => {
     const lumibud = PLANTLETS.lumibud;
     expect(lumibud.tagline).toBe("A little light that learned to grow.");
     expect(lumibud.stageNames).toEqual(["Glow Seed", "Sprout", "Leafling", "Bloom"]);
     expect(lumibud.sprites).toHaveLength(4);
-    expect(new Set(lumibud.sprites).size).toBe(1);
+    expect(new Set(lumibud.sprites).size).toBe(4);
+    expect(lumibud.sprites.slice(1).every((u) => u.includes("lumibud_"))).toBe(true);
     expect(lumibud.sprites[0]).toMatch(/^data:image\/svg\+xml/);
     expect(lumibud.glowColor).toBe("#8fffd2");
     expect([...lumibud.heights].sort((a, b) => a - b)).toEqual([...lumibud.heights]);
