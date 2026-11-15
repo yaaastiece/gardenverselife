@@ -38,7 +38,7 @@ export function Weather({ weather }: { weather: WeatherState }) {
       rainRef.current.visible = a.rain > 0.01;
       (rainRef.current.material as THREE.LineBasicMaterial).opacity = 0.85 * a.rain;
       if (rainRef.current.visible) {
-        const p = rain.g.attributes.position as THREE.BufferAttribute; const arr = p.array as Float32Array;
+        const p = rain.g.getAttribute("position") as THREE.BufferAttribute; const arr = p.array as Float32Array;
         for (let i = 0; i < count; i++) {
           const o = i * 6; const dy = rain.speed[i]! * dt;
           arr[o + 1]! -= dy; arr[o + 4]! -= dy;
