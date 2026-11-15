@@ -63,3 +63,4 @@ use the editor.
 - `WorldPanel` paints crisp local canvas textures with world-meter hit targets; `GardenPanels` subscribes to existing state rather than implementing new care or quest rules.
 - Use floor-level `XROrigin`, no translation, head-pivot snap turns and unmounted desktop camera controls during sessions to preserve player-owned camera motion.
 - Queue growth cinematics during VR and flush only after session exit; Chat/Journal and Orbis remain normal-view presentation until VR part 2.
+- Dev-only `window.__game.xr`, `renderer()` and `selection` expose XR session/render state and plant selection for repeatable emulator checks; pointer visuals are excluded from both ray and near-grab filtering to avoid self-intersections.
