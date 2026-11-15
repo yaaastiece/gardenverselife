@@ -198,3 +198,12 @@
 .gv-bubble--fade { opacity: 0; }
 @keyframes gv-pop { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .gv-bubble { animation: none; } }
+
+.gv-quest { position: absolute; left: 1rem; bottom: 4rem; width: 230px; padding: 0.75rem 0.9rem; border-radius: 10px; background: var(--glass); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink), 0 0 14px var(--neon-green); backdrop-filter: blur(6px); }
+.gv-quest h2 { font-weight: 800; font-size: 1rem; margin: 0.15rem 0 0.4rem; }
+.gv-quest-kicker { font-size: 0.7rem; font-weight: 700; color: var(--neon-green); text-transform: uppercase; letter-spacing: 0.05em; }
+.gv-quest-dots { display: flex; gap: 4px; margin-bottom: 0.55rem; }
+.gv-quest-dots span { flex: 1; height: 5px; border-radius: 3px; background: color-mix(in oklab, var(--neon-green) 20%, transparent); }
+.gv-quest-dots span[data-done] { background: var(--neon-green); }
+.gv-quest-btn { width: 100%; min-height: 40px; border-radius: 8px; background: var(--neon-green); color: var(--ink); font-weight: 700; border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
+@media (max-width: 767px) { .gv-quest { left: 0.75rem; bottom: 3.6rem; width: 190px; padding: 0.6rem 0.7rem; } .gv-quest h2 { font-size: 0.85rem; } }

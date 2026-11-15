@@ -14,6 +14,9 @@ import { Garden } from "./scene/Garden";
 import { Seedling } from "./scene/Seedling";
 import { Lounge } from "./scene/Lounge";
 import { Xion } from "./scene/Xion";
+import { Moonflower, MOONFLOWER_POS } from "./scene/Moonflower";
+import { MoonQuestCard } from "./ui/MoonQuestCard";
+import { createMoonQuest } from "./plants/moonflower";
 import { createAmbience } from "./audio/ambience";
 import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
 
@@ -29,6 +32,14 @@ export function GardenScene() {
   const [playing, setPlaying] = useState(false);
   const audio = useRef<ReturnType<typeof createAmbience> | null>(null);
   const [interaction] = useState(() => createXionInteraction({ x: XION.position[0], y: XION.position[1], z: XION.position[2] }));
+  const [quest] = useState(createMoonQuest);
+  const [night, setNight] = useState(false);
+  useEffect(() => quest.subscribe((st) => setNight(st === "bloom")), [quest]);
+  const doMoonTask = useCallback(() => {
+    const lesson = quest.advance();
+    interaction.move({ x: MOONFLOWER_POS[0] - 0.35, y: 1.3, z: MOONFLOWER_POS[2] + 0.1 });
+    interaction.say(lesson);
+  }, [quest, interaction]);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const canvasPress = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
@@ -59,8 +70,8 @@ export function GardenScene() {
       }}>
       <Canvas camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={[1, 2]} onPointerMissed={() => interaction.dismiss()}>
         <color attach="background" args={[BACKDROP.fill]} />
-        <hemisphereLight args={["#ffd9ea", "#3a2a3a", 0.9]} />
-        <directionalLight position={[-20, 15, -30]} intensity={0.6} color="#ffe6f2" />
+        <hemisphereLight args={["#ffd9ea", "#3a2a3a", night ? 0.35 : 0.9]} />
+        <directionalLight position={[-20, 15, -30]} intensity={night ? 0.2 : 0.6} color={night ? "#b9c4ff" : "#ffe6f2"} />
         <Environment resolution={64}>
           <Lightformer intensity={1.5} color="#ffc6e0" position={[0, 5, 0]} scale={[10, 10, 1]} rotation-x={Math.PI / 2} />
           <Lightformer intensity={0.8} color="#8a6a8a" position={[-5, 1, -1]} rotation-y={Math.PI / 2} scale={[20, 1, 1]} />
@@ -74,6 +85,7 @@ export function GardenScene() {
         </group>
         <Suspense fallback={null}><Xion interaction={interaction} /></Suspense>
         <Seedling onStageChange={onStage} />
+        <Moonflower quest={quest} onTask={doMoonTask} />
         <XionCamera interaction={interaction} bubbleRef={bubbleRef} />
         <ReadySignal onReady={() => setReady(true)} />
       </Canvas>
@@ -86,8 +98,9 @@ export function GardenScene() {
           {playing ? <Volume2 /> : <VolumeX />}{playing ? "Sound on" : "Play sound"}
         </Button>
       </header>
+      <MoonQuestCard quest={quest} onTask={doMoonTask} />
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
-      <div className="gv-hint">Drag to look around · Click the seedling to water it</div>
+      <div className="gv-hint">Drag to look around · Tap the seedling or moonflower</div>
     </div>
   );
 }
