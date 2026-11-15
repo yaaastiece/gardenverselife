@@ -69,7 +69,7 @@ export function createDictation(onText: (text: string) => void, onState: (listen
       rec.onresult = (e) => { text = Array.from(e.results).map((r) => r[0]?.transcript ?? "").join(" "); onHeard?.(text.trim()); };
       rec.onend = () => { rec = null; onState(false); if (text.trim()) onText(text.trim()); };
       rec.onerror = (e) => { rec = null; onState(false); onError?.(e?.error === "not-allowed" || e?.error === "service-not-allowed" ? "Microphone is blocked. Allow mic access for this site (try opening the app in its own tab)." : e?.error === "no-speech" ? "I didn't hear anything, try again." : "Voice input stopped, try again or type."); };
-      try { rec.start(); onState(true); } catch { rec = null; onState(false); }
+      try { rec.start(); onState(true); } catch { rec = null; onState(false); onError?.("Voice input stopped, try again or type."); }
     },
     stop() { rec?.stop(); },
     get listening() { return rec !== null; },
