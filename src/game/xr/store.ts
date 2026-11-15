@@ -9,7 +9,7 @@ export function createGardenXRStore() {
   return createXRStore({
     emulate: false, offerSession: false, enterGrantedSession: false,
     customSessionInit: { requiredFeatures: [...VR.requiredFeatures], optionalFeatures: [...VR.optionalFeatures] },
-    frameRate: (rates) => rates.includes(VR.frameRate) ? VR.frameRate : Math.min(...rates), frameBufferScaling: 1, foveation: 1,
+    frameRate: (rates) => Array.from(rates).includes(VR.frameRate) ? VR.frameRate : Math.min(...Array.from(rates)), frameBufferScaling: 1, foveation: 1,
     controller: { rayPointer, grabPointer: { cursorModel }, teleportPointer: false },
     hand: { rayPointer, grabPointer: { cursorModel }, touchPointer: { cursorModel }, teleportPointer: false },
   });
