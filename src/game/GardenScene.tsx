@@ -32,6 +32,9 @@ import { createGardenHelper, report, HELP, type GardenHelper, type Patient } fro
 import { CARE } from "./plants/care";
 import { createAmbience } from "./audio/ambience";
 import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
+import { createGardenCinematic } from "./cinematic/session";
+import { captureGardenFrame } from "./cinematic/capture";
+import { CinematicOverlay } from "./ui/CinematicOverlay";
 
 // Which bed a plant type is tracked in (matches the bed names Xion uses).
 const BED_OF: Record<Exclude<PlantKey, "companion">, number> = { tomato: 0, herb: 0, lettuce: 0, strawberry: 1, pepper: 2, rose: 3 };
@@ -58,6 +61,21 @@ export function GardenScene() {
   const [interaction] = useState(() => createXionInteraction({ x: XION.position[0], y: XION.position[1], z: XION.position[2] }));
   const [quest] = useState(createMoonQuest);
   const [care] = useState(createPlantCare);
+  const gardenCanvas = useRef<HTMLCanvasElement | null>(null);
+  const [cinematic] = useState(() => createGardenCinematic(() => {
+    const canvas = gardenCanvas.current;
+    if (!canvas) return Promise.reject(new Error("Garden frame unavailable"));
+    return captureGardenFrame(canvas);
+  }));
+  useEffect(() => {
+    let lastStage = care.state.stage;
+    const unsubscribe = care.subscribe((state) => {
+      if (state.stage <= lastStage) return;
+      lastStage = state.stage;
+      void cinematic.advance(state.stage);
+    });
+    return () => { unsubscribe(); void cinematic.close(); };
+  }, [care, cinematic]);
   useEffect(() => care.onAlert((k) => interaction.say(ALERTS[k])), [care, interaction]);
   const careAction = useCallback((a: CareAction) => { care.act(a); }, [care]);
   const [beds] = useState(() => createBedCare());
@@ -132,7 +150,7 @@ export function GardenScene() {
         canvasPress.current = null;
         if (start && !interaction.state.pointerHandled && !isDrag(start, { x: e.clientX, y: e.clientY })) interaction.dismiss();
       }}>
-      <Canvas camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={[1, LOOK.maxDpr]} onPointerMissed={() => { interaction.dismiss(); selection.clear(); }}>
+      <Canvas gl={{ preserveDrawingBuffer: true }} onCreated={({ gl }) => { gardenCanvas.current = gl.domElement; }} camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={[1, LOOK.maxDpr]} onPointerMissed={() => { interaction.dismiss(); selection.clear(); }}>
         <color attach="background" args={[BACKDROP.fill]} />
         <hemisphereLight args={["#ffd9ea", "#3a2a3a", night ? 0.35 : 0.9]} />
         <directionalLight position={[-20, 15, -30]} intensity={night ? 0.2 : 0.6} color={night ? "#b9c4ff" : "#ffe6f2"} />
@@ -172,6 +190,7 @@ export function GardenScene() {
       {helper.state.busy && <div className="gv-helping" role="status">✨ Xion is helping · tap to stop</div>}
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
       <div className="gv-hint">Drag to look around · Tap the seedling or moonflower</div>
+      <CinematicOverlay session={cinematic} />
     </div>
   );
 }
