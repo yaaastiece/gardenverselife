@@ -284,11 +284,10 @@ export function GardenScene() {
   }, [quest, interaction]);
   const startMeditation = useCallback(() => {
     helper.stop(); interaction.dismiss(); setBowlOpen(false);
-    const vr = Boolean(xrStore.getState().session);
-    const withVisuals = visualsOn && !vr && !cinematic.getSnapshot().open;
+    const withVisuals = visualsOn && !cinematic.getSnapshot().open;
     meditation.start(interaction.state.position, withVisuals);
     if (withVisuals) void meditationVisuals.advance(0);
-  }, [helper, interaction, xrStore, visualsOn, cinematic, meditation, meditationVisuals]);
+  }, [helper, interaction, visualsOn, cinematic, meditation, meditationVisuals]);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const canvasPress = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
@@ -374,6 +373,7 @@ export function GardenScene() {
         {inVR && bowlOpen && <BowlWorldPanel radio={radio} onMeditate={startMeditation} onClose={() => setBowlOpen(false)} />}
         {inVR && <MeditationWorldPanel meditation={meditation} />}
         {inVR && <CinematicWorldPanel session={cinematic} />}
+        {inVR && <CinematicWorldPanel session={meditationVisuals} narrate={false} />}
         <HelperTicker helper={helper} />
         <MeditationTicker meditation={meditation} />
         <ReadySignal onReady={() => setReady(true)} />

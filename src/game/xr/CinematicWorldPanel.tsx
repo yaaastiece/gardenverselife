@@ -9,7 +9,7 @@ import { WorldPanel } from "./WorldPanel";
 const WIDTH = 2.2;
 
 // The Orbis video, shown as a big screen floating in the garden while you stay in VR.
-export function CinematicWorldPanel({ session }: { session: CinematicSession }) {
+export function CinematicWorldPanel({ session, narrate = true }: { session: CinematicSession; narrate?: boolean }) {
   const state = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
   const anchor = useRef<THREE.Group>(null);
   const placed = useRef(false);
@@ -25,10 +25,10 @@ export function CinematicWorldPanel({ session }: { session: CinematicSession }) 
 
   // Narration, same as the screen version.
   useEffect(() => {
-    if (!state.open) return;
+    if (!state.open || !narrate) return;
     if (xionSpeechEnabled()) speak(stageNarration(state.stage));
     return () => stopSpeaking();
-  }, [state.open, state.stage]);
+  }, [state.open, state.stage, narrate]);
 
   useEffect(() => {
     if (!state.stream) return;
