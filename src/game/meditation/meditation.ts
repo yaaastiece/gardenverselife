@@ -17,7 +17,7 @@ export const BREATH_IN_SECONDS = 4;
 export const BREATH_OUT_SECONDS = 6;
 /** Where Xion sits: the meditation pad's cushion (logic position; seated art is drawn at SEAT_Y). */
 export const PAD_SEAT: Point3 = { x: 1.8, y: 0.65, z: -2.22 };
-export const SEAT_Y = 0.36;
+export const SEAT_Y = 0.12;
 export const PAD_FACING = -0.4; // pad rotation; Xion faces +z rotated by this
 
 export function breathPhase(seconds: number) {
