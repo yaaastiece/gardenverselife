@@ -1,3 +1,4 @@
+import { plantName } from "../plants/plantlets";
 // Plain TS chat state; screen panel now, WebXR panel later.
 export type ChatMsg = { id: number; role: "user" | "assistant"; text: string; error?: boolean };
 export type AskFn = (messages: { role: "user" | "assistant"; text: string }[], context: string) => Promise<{ ok: true; text: string } | { ok: false; reason: "rate" | "credits" | "failed" }>;
@@ -27,7 +28,7 @@ export function createXionChat(ask: AskFn) {
       let reply: ChatMsg;
       try {
         const history = state.messages.filter((m) => !m.error).slice(-10).map(({ role, text: t }) => ({ role, text: t }));
-        const r = await ask(history, context);
+        const r = await ask(history, `Plant person in the center planter: ${plantName()}\n${context}`);
         reply = r.ok ? { id: ++id, role: "assistant", text: r.text } : { id: ++id, role: "assistant", text: ERRORS[r.reason], error: true };
       } catch {
         reply = { id: ++id, role: "assistant", text: ERRORS.failed, error: true };

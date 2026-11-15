@@ -108,6 +108,15 @@ export function GardenScene() {
   const [bowlOpen, setBowlOpen] = useState(false);
   const [visualsOn, setVisualsOn] = useState(false);
   const [dockOpen, setDockOpen] = useDockOpen();
+  const [picking, setPicking] = useState(() => chosenPlantlet() === null);
+  const pickPlantlet = useCallback((id: PlantletId) => {
+    const first = chosenPlantlet() === null, same = chosenPlantlet() === id;
+    choosePlantlet(id);
+    setPicking(false);
+    // Switching plantlets starts fresh at Seedling.
+    if (!first && !same) { window.location.reload(); return; }
+    if (first) interaction.say(`Welcome to the Gardenverse. ${PLANTLETS[id].name} is waiting for you. Water them and watch them grow.`);
+  }, [interaction]);
   const [cinematicGate] = useState(() => createCinematicGate((stage) => { void cinematic.advance(stage); }));
   const [meditation] = useState(() => createMeditation({
     move: (p) => interaction.move(p),
@@ -309,8 +318,9 @@ export function GardenScene() {
           {playing ? <Volume2 /> : <VolumeX />}{playing ? "Sound on" : "Play sound"}
         </Button>
       </header>
-      {vrSupported && !inVR && <div className="gv-vr-entry"><Button variant="outline" onClick={enterVR}>Enter VR</Button>{vrError && <p role="status">{vrError}</p>}</div>}
-      <div className="gv-dock"><CarePanel care={care} onAction={careAction} open={dockOpen} setOpen={setDockOpen} />{dockOpen && <MoonQuestCard quest={quest} onTask={doMoonTask} />}</div>
+      {!inVR && picking && <PlantletPicker canClose={chosenPlantlet() !== null} onClose={() => setPicking(false)} onChoose={pickPlantlet} />}
+      {vrSupported && !inVR && !picking && <div className="gv-vr-entry"><Button variant="outline" onClick={enterVR}>Enter VR</Button>{vrError && <p role="status">{vrError}</p>}</div>}
+      <div className="gv-dock"><CarePanel care={care} onAction={careAction} onChangePlantlet={() => setPicking(true)} open={dockOpen} setOpen={setDockOpen} />{dockOpen && <MoonQuestCard quest={quest} onTask={doMoonTask} />}</div>
       {!inVR && bowlOpen && <SoundBowlCard radio={radio} onMeditate={startMeditation} visuals={visualsOn} setVisuals={setVisualsOn} onClose={() => setBowlOpen(false)} />}
       {!inVR && <MeditationOverlay meditation={meditation} visuals={meditationVisuals} />}
       <PlantCard beds={beds} selection={selection} cardRef={cardRef} />
