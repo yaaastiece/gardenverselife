@@ -463,5 +463,5 @@
 .gv-bowl-songs { display: flex; flex-direction: column; gap: 2px; max-height: 150px; overflow-y: auto; margin: 4px 0; }
 .gv-bowl-songs button { text-align: left; font-size: 12px; padding: 4px 8px; border-radius: 6px; color: inherit; background: transparent; }
 .gv-bowl-songs button[aria-current="true"] { background: color-mix(in oklab, var(--neon) 25%, transparent); color: var(--neon); }
-.gv-volpop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; min-width: 240px; padding: 10px 12px; border-radius: 10px; background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); box-shadow: 0 8px 24px color-mix(in oklab, var(--background) 60%, transparent); }
+.gv-volpop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: 240px; padding: 0.65rem 0.8rem; border-radius: 10px; background: var(--glass); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink), 0 0 14px var(--neon); backdrop-filter: blur(6px); font-size: 0.8rem; }
 .gv-meditate-vol { position: absolute; left: 16px; bottom: 16px; width: 220px; padding: 8px 10px; border-radius: 10px; background: color-mix(in oklab, var(--background) 70%, transparent); z-index: 2; }
