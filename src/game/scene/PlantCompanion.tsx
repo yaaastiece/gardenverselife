@@ -2,13 +2,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useLoader } from "@react-three/fiber";
 import { Billboard, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
-import s1 from "@/assets/companion_1_seedling.png.asset.json";
-import s2 from "@/assets/companion_2_sprout.png.asset.json";
-import s3 from "@/assets/companion_3_young.png.asset.json";
-import s4 from "@/assets/companion_4_queen.png.asset.json";
-import l1 from "@/assets/lumibud_1.png.asset.json";
-import l2 from "@/assets/lumibud_2.png.asset.json";
-import l3 from "@/assets/lumibud_3.png.asset.json";
 import { currentPlantlet } from "../plants/plantlets";
 import { COMPANION, GLOW, SWAY_SPEED, companionLayout } from "../plants/companion";
 import { status, type PlantCare } from "../plants/care";
@@ -20,10 +13,9 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
   const inVR = useXR((s) => Boolean(s.session));
   const [hovered, setHovered] = useState(false);
   const plantlet = currentPlantlet();
-  const art = useLoader(THREE.TextureLoader, plantlet.id === "lumibud" ? [l1.url, l2.url, l3.url] : [s1.url, s2.url, s3.url, s4.url]);
-  const texes = plantlet.art.map((i) => art[i]!);
+  const texes = useLoader(THREE.TextureLoader, [...plantlet.sprites]);
   const H = plantlet.heights;
-  art.forEach((t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; });
+  texes.forEach((t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; });
   const [prev, setPrev] = useState(stage);
   const [burst, setBurst] = useState(0);
   const fade = useRef(1);
@@ -41,9 +33,9 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
   const glowTex = useMemo(() => {
     const c = document.createElement("canvas"); c.width = c.height = 64;
     const g = c.getContext("2d");
-    if (g) { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, PALETTE.pink); r.addColorStop(1, "transparent"); g.fillStyle = r; g.fillRect(0, 0, 64, 64); }
+    if (g) { const r = g.createRadialGradient(32, 32, 0, 32, 32, 32); r.addColorStop(0, plantlet.glowColor); r.addColorStop(1, "transparent"); g.fillStyle = r; g.fillRect(0, 0, 64, 64); }
     return new THREE.CanvasTexture(c);
-  }, []);
+  }, [plantlet.glowColor]);
   const cur = companionLayout(stage), old = companionLayout(prev);
 
   useFrame((_, delta) => {
@@ -81,14 +73,14 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
           <meshBasicMaterial transparent opacity={inVR && hovered ? 0.12 : 0} color={PALETTE.green} depthWrite={false} />
         </mesh>
       </Billboard>
-      {burst > 0 && <PinkBurst key={burst} y={H[stage]! * 0.5} />}
+      {burst > 0 && <CompanionBurst key={burst} y={H[stage]! * 0.5} color={plantlet.burstColor} />}
     </group>
   );
 }
 
-function PinkBurst({ y }: { y: number }) {
+function CompanionBurst({ y, color }: { y: number; color: string }) {
   const inVR = useXR((s) => Boolean(s.session));
   const [on, setOn] = useState(true);
   useEffect(() => { const t = setTimeout(() => setOn(false), 1600); return () => clearTimeout(t); }, []);
-  return on ? <Sparkles position={[0, y, 0]} count={inVR ? 8 : 40} scale={[0.7, 0.8, 0.7]} size={5} speed={1.2} color={PALETTE.pinkSoft} /> : null;
+  return on ? <Sparkles position={[0, y, 0]} count={inVR ? 8 : 40} scale={[0.7, 0.8, 0.7]} size={5} speed={1.2} color={color} /> : null;
 }

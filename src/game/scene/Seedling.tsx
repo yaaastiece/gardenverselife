@@ -4,7 +4,7 @@ import * as THREE from "three";
 import { Outlines } from "@react-three/drei";
 import { Plant } from "./Garden";
 import { PALETTE } from "../config";
-import { SEEDLING_STAGES } from "../plants/growth";
+import { companionStages } from "../plants/growth";
 import { Sparkles } from "@react-three/drei";
 import { Suspense } from "react";
 import { PlantCompanion } from "./PlantCompanion";
@@ -15,12 +15,13 @@ const DROPS = 40;
 // Round pedestal table planter.
 const tableBody = new THREE.CylinderGeometry(0.42, 0.34, 0.5, 48);
 const tableTop = new THREE.CircleGeometry(0.38, 48);
-export function Seedling({ onStageChange, care }: { onStageChange: (name: string) => void; care: PlantCare }) {
+export function Seedling({ onStageChange, care, paused = false }: { onStageChange: (name: string) => void; care: PlantCare; paused?: boolean }) {
   const [stage, setStage] = useState(care.state.stage);
   const [compost, setCompost] = useState(-1);
+  const stages = companionStages();
   const glow = useRef<THREE.PointLight>(null);
   const cone = useRef<THREE.Mesh>(null);
-  useEffect(() => care.subscribe((st) => { setStage((p) => { if (st.stage !== p) { prevHeight.current = SEEDLING_STAGES[p]!.height; grow.current = 0; } return st.stage; }); setCompost(st.compostAt); }), [care]);
+  useEffect(() => care.subscribe((st) => { setStage((p) => { if (st.stage !== p) { prevHeight.current = stages[p]!.height; grow.current = 0; } return st.stage; }); setCompost(st.compostAt); }), [care]);
   const [hover, setHover] = useState(false);
   const grow = useRef(1); // 0..1 tween toward current stage
   const plant = useRef<THREE.Group>(null);
@@ -29,8 +30,8 @@ export function Seedling({ onStageChange, care }: { onStageChange: (name: string
   const ring = useRef<THREE.Mesh>(null);
   const dummy = useMemo(() => new THREE.Object3D(), []);
   const dirs = useMemo(() => Array.from({ length: DROPS }, (_, i) => { const a = (i / DROPS) * Math.PI * 2; return new THREE.Vector3(Math.cos(a) * (0.3 + (i % 3) * 0.2), 1.2 + (i % 5) * 0.25, Math.sin(a) * (0.3 + (i % 3) * 0.2)); }), []);
-  const prevHeight = useRef(SEEDLING_STAGES[0]!.height);
-  const s = SEEDLING_STAGES[stage]!;
+  const prevHeight = useRef(stages[0]!.height);
+  const s = stages[stage]!;
 
   useEffect(() => { onStageChange(s.name); }, [s.name, onStageChange]);
   useEffect(() => { document.body.style.cursor = hover ? "pointer" : "auto"; return () => { document.body.style.cursor = "auto"; }; }, [hover]);
@@ -42,7 +43,7 @@ export function Seedling({ onStageChange, care }: { onStageChange: (name: string
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
-    care.tick(dt);
+    if (!paused) care.tick(dt);
     const lit = care.state.time < care.state.lightUntil;
     if (glow.current) glow.current.intensity = THREE.MathUtils.lerp(glow.current.intensity, lit ? 6 : 0, 0.1);
     if (cone.current) { const m = cone.current.material as THREE.MeshBasicMaterial; m.opacity = THREE.MathUtils.lerp(m.opacity, lit ? 0.18 : 0, 0.1); }

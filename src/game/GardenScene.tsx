@@ -21,7 +21,7 @@ import { Moonflower, MOONFLOWER_POS } from "./scene/Moonflower";
 import { MoonQuestCard } from "./ui/MoonQuestCard";
 import { createMoonQuest } from "./plants/moonflower";
 import { CarePanel } from "./ui/CarePanel";
-import { ALERTS, createPlantCare, type CareAction } from "./plants/care";
+import { ALERTS, createCompanionCareStates, type CareAction } from "./plants/care";
 import { BEDS, createBedCare, createPlantSelection } from "./plants/beds";
 import { PlantCard } from "./ui/PlantCard";
 import { PlantCardAnchor, PlantFxLayer } from "./scene/PlantCardAnchor";
@@ -29,7 +29,7 @@ import { XionPanel } from "./ui/XionPanel";
 import { createXionChat } from "./xion/chat";
 import { createJournal, type PlantKey, type Snapshot } from "./xion/journal";
 import { askXion } from "@/lib/xion.functions";
-import { SEEDLING_STAGES } from "./plants/growth";
+import { companionStages } from "./plants/growth";
 import { createGardenHelper, report, HELP, type GardenHelper, type Patient } from "./xion/helper";
 import { CARE } from "./plants/care";
 import { createAmbience } from "./audio/ambience";
@@ -90,7 +90,9 @@ export function GardenScene() {
   const audio = useRef<ReturnType<typeof createAmbience> | null>(null);
   const [interaction] = useState(() => createXionInteraction({ x: XION.position[0], y: XION.position[1], z: XION.position[2] }));
   const [quest] = useState(createMoonQuest);
-  const [care] = useState(createPlantCare);
+  const [careStates] = useState(createCompanionCareStates);
+  const [plantletId, setPlantletId] = useState<PlantletId>(() => chosenPlantlet() ?? "pepper");
+  const care = careStates[plantletId];
   const gardenCanvas = useRef<HTMLCanvasElement | null>(null);
   const renderer = useRef<RootState | null>(null);
   const captureFrame = useCallback(() => {
@@ -110,11 +112,10 @@ export function GardenScene() {
   const [dockOpen, setDockOpen] = useDockOpen();
   const [picking, setPicking] = useState(() => chosenPlantlet() === null);
   const pickPlantlet = useCallback((id: PlantletId) => {
-    const first = chosenPlantlet() === null, same = chosenPlantlet() === id;
+    const first = chosenPlantlet() === null;
     choosePlantlet(id);
+    setPlantletId(id);
     setPicking(false);
-    // Switching plantlets starts fresh at Seedling.
-    if (!first && !same) { window.location.reload(); return; }
     if (first) interaction.say(`Welcome to the Gardenverse. ${PLANTLETS[id].name} is waiting for you. Water them and watch them grow.`);
   }, [interaction]);
   const [cinematicGate] = useState(() => createCinematicGate((stage) => { void cinematic.advance(stage); }));
@@ -192,11 +193,11 @@ export function GardenScene() {
   const [chatPlant, setChatPlant] = useState<PlantKey>("companion");
   useEffect(() => selection.subscribe(() => { const k = selection.state.selected?.kind; if (k) setChatPlant(k); }), [selection]);
   const snapshot = useCallback((p: PlantKey): Snapshot => {
-    if (p === "companion") return { stage: SEEDLING_STAGES[care.state.stage]?.name ?? "Seedling", water: care.state.water, sun: care.state.sun, soil: care.state.soil };
+    if (p === "companion") return { stage: companionStages()[care.state.stage]?.name ?? PLANTLETS[plantletId].stageNames[0], water: care.state.water, sun: care.state.sun, soil: care.state.soil };
     const b = beds.beds[BED_OF[p]];
     if (!b) return { stage: "Mature", water: 0, sun: 0, soil: 0 };
     return { stage: "Mature", water: b.water, sun: b.sun, soil: b.soil };
-  }, [care, beds]);
+  }, [care, beds, plantletId]);
   const [, setHelpTick] = useState(0);
   const [helper] = useState(() => createGardenHelper({
     move: (p) => interaction.move(p), position: () => interaction.state.position, say: (t) => interaction.say(t),
@@ -238,10 +239,10 @@ export function GardenScene() {
   const canvasPress = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, beds, xr: xrStore, renderer: () => renderer.current, selection, cinematic, steering, radio, meditation, meditationVisuals };
+    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, careStates, plantletId, beds, xr: xrStore, renderer: () => renderer.current, selection, cinematic, steering, radio, meditation, meditationVisuals };
     Object.assign(window, { __game: debug });
     return () => { Reflect.deleteProperty(window, "__game"); };
-  }, [interaction, care, beds, xrStore, selection, cinematic, steering, radio, meditation, meditationVisuals]);
+  }, [interaction, care, careStates, plantletId, beds, xrStore, selection, cinematic, steering, radio, meditation, meditationVisuals]);
   useEffect(() => () => audio.current?.dispose(), []);
   const toggleSound = async () => {
     if (!audio.current) { audio.current = createAmbience(); audio.current.duck(radio.getSnapshot().playing); }
@@ -295,7 +296,7 @@ export function GardenScene() {
         </group>
         <SoundBowl radio={radio} meditation={meditation} onOpen={() => setBowlOpen(true)} />
         <Suspense fallback={null}><Xion interaction={interaction} meditation={meditation} /></Suspense>
-        <Seedling onStageChange={onStage} care={care} />
+        <Seedling key={plantletId} onStageChange={onStage} care={care} paused={picking} />
         <Moonflower quest={quest} onTask={doMoonTask} />
         {!inVR && <XionCamera interaction={interaction} bubbleRef={bubbleRef} />}
         {!inVR && <PlantCardAnchor selection={selection} cardRef={cardRef} />}
@@ -320,13 +321,13 @@ export function GardenScene() {
       </header>
       {!inVR && picking && <PlantletPicker canClose={chosenPlantlet() !== null} onClose={() => setPicking(false)} onChoose={pickPlantlet} />}
       {vrSupported && !inVR && !picking && <div className="gv-vr-entry"><Button variant="outline" onClick={enterVR}>Enter VR</Button>{vrError && <p role="status">{vrError}</p>}</div>}
-      <div className="gv-dock"><CarePanel care={care} onAction={careAction} onChangePlantlet={() => setPicking(true)} open={dockOpen} setOpen={setDockOpen} />{dockOpen && <MoonQuestCard quest={quest} onTask={doMoonTask} />}</div>
+      <div className="gv-dock"><CarePanel care={care} onAction={careAction} onChangePlantlet={() => { care.reset(); setPicking(true); }} open={dockOpen} setOpen={setDockOpen} />{dockOpen && <MoonQuestCard quest={quest} onTask={doMoonTask} />}</div>
       {!inVR && bowlOpen && <SoundBowlCard radio={radio} onMeditate={startMeditation} visuals={visualsOn} setVisuals={setVisualsOn} onClose={() => setBowlOpen(false)} />}
       {!inVR && <MeditationOverlay meditation={meditation} visuals={meditationVisuals} />}
       <PlantCard beds={beds} selection={selection} cardRef={cardRef} />
       <XionPanel chat={chat} journal={journal} plant={chatPlant} setPlant={setChatPlant} snapshot={snapshot} onReply={(t) => interaction.say(t)} onCheck={checkGarden} helper={helper} onHelp={acceptHelp} />
       {helper.state.busy && <div className="gv-helping" role="status">✨ Xion is helping · tap to stop</div>}
-      <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
+      {!picking && <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />}
       <div className="gv-hint">Drag to look around · Tap {plantName()}, the moonflower or the sound bowl</div>
       {!inVR && <CinematicOverlay session={cinematic} steering={steering} />}
     </div>
