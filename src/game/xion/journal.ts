@@ -1,7 +1,7 @@
 // Plain TS garden journal; persists to localStorage when available, in memory otherwise.
 export type PlantKey = "companion" | "tomato" | "herb" | "rose" | "lettuce" | "strawberry" | "pepper";
 export const PLANT_KEYS: PlantKey[] = ["companion", "tomato", "herb", "rose", "lettuce", "strawberry", "pepper"];
-export const PLANT_LABELS: Record<PlantKey, string> = { companion: "Plant companion", tomato: "Tomato", herb: "Herbs", rose: "Rose", lettuce: "Lettuce", strawberry: "Strawberry", pepper: "Pepper" };
+export const PLANT_LABELS: Record<PlantKey, string> = { companion: "Pepper Peony", tomato: "Tomato", herb: "Herbs", rose: "Rose", lettuce: "Lettuce", strawberry: "Strawberry", pepper: "Pepper" };
 export const TAGS = ["Pests", "Too wet", "Too dry", "Needs sun", "Soil", "Doing great"];
 export type Snapshot = { stage: string; water: number; sun: number; soil: number };
 export type JournalEntry = { id: string; plant: PlantKey; text: string; tags: string[]; at: number; source: "player" | "xion" } & Snapshot;

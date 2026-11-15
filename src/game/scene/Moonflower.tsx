@@ -7,7 +7,7 @@ import { PALETTE } from "../config";
 import { LEAF, leafTexture } from "../plants/leaves";
 import { moonVisual, type MoonQuest, type MoonStep } from "../plants/moonflower";
 
-export const MOONFLOWER_POS: [number, number, number] = [1.15, 0, -1.0];
+export const MOONFLOWER_POS: [number, number, number] = [1.65, 0, -1.0];
 const TRELLIS_H = 1.3;
 
 // Draws quest state only; tapping completes the current task (pointer now, hand pinch later).

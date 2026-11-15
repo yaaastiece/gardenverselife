@@ -166,7 +166,7 @@ export function GardenScene() {
   const tipIndex = useRef(0);
   const checkGarden = useCallback(() => {
     const patients: Patient[] = [
-      { id: "companion", label: "plant companion", stats: care.state, tooWet: care.state.water > CARE.overwater, perch: { x: -0.35, y: 1.25, z: -1.15 }, fx: { x: 0, y: 1.2, z: -1.4 } },
+      { id: "companion", label: "Pepper Peony", stats: care.state, tooWet: care.state.water > CARE.overwater, perch: { x: -0.35, y: 1.25, z: -1.15 }, fx: { x: 0, y: 1.2, z: -1.4 } },
       ...beds.beds.map((b, i): Patient => {
         const c = BED_SPOTS[i] ?? { x: 0, y: 0.6, z: 0 };
         return { id: String(i), label: BED_LABELS[i] ?? "garden", stats: b, tooWet: b.water > BEDS.overwater, perch: { x: c.x, y: c.y + 0.6, z: c.z }, fx: { x: c.x, y: c.y + 0.7, z: c.z } };
@@ -268,7 +268,7 @@ export function GardenScene() {
       <XionPanel chat={chat} journal={journal} plant={chatPlant} setPlant={setChatPlant} snapshot={snapshot} onReply={(t) => interaction.say(t)} onCheck={checkGarden} helper={helper} onHelp={acceptHelp} />
       {helper.state.busy && <div className="gv-helping" role="status">✨ Xion is helping · tap to stop</div>}
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
-      <div className="gv-hint">Drag to look around · Tap the seedling or moonflower</div>
+      <div className="gv-hint">Drag to look around · Tap Pepper Peony or the moonflower</div>
       {!inVR && <CinematicOverlay session={cinematic} steering={steering} />}
     </div>
   );

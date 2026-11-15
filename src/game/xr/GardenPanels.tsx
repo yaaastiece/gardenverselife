@@ -29,10 +29,10 @@ export function GardenPanels({ care, beds, selection, quest, interaction, onMoon
   const bed = pick ? beds.beds[pick.bed] : undefined;
   const task = MOON_TASKS[quest.state.step];
   return <>
-    <WorldPanel position={[-0.9, 1.28, -0.85]} title={`Care · ${status(care.state)}`} bars={stats(care.state)}
+    <WorldPanel position={[-0.9, 1.28, -0.85]} title={`Pepper Peony · ${status(care.state)}`} bars={stats(care.state)}
       lines={[...(care.state.water > 90 ? ["Too much water"] : []), SEEDLING_STAGES.map((stage, i) => `${i === care.state.stage ? "● " : ""}${stage.name}`).join(" · ")]}
       buttons={[{ label: "Water", action: () => care.act("water") }, { label: "Sun", action: () => care.act("sun") }, { label: "Feed soil", action: () => care.act("soil") }, { label: `Snap turn 30°: ${snap ? "On" : "Off"}`, action: () => setSnap(!snap) }, { label: "Exit VR", action: exit }]} />
-    <WorldPanel position={[0.95, 1.25, -0.85]} title="Moonflower" lines={[task.task]} buttons={[{ label: task.action, action: onMoon }]} />
+    <WorldPanel position={[1.45, 1.25, -0.85]} title="Moonflower" lines={[task.task]} buttons={[{ label: task.action, action: onMoon }]} />
     {pick && bed && <WorldPanel position={[pick.pos.x, pick.pos.y + 0.35, pick.pos.z]} title={`${PLANT_INFO[pick.kind].name} · ${bedStatus(bed)}`} bars={stats(bed)}
       lines={[...(bed.water > 90 ? ["Too much water"] : []), PLANT_INFO[pick.kind].likes]}
       buttons={(["water", "sun", "soil"] as const).map((action) => ({ label: action === "soil" ? "Feed soil" : action === "sun" ? "Sun" : "Water", action: () => { beds.act(pick.bed, action); selection.effect(action); } })).concat([{ label: "Close", action: () => selection.clear() }])} />}

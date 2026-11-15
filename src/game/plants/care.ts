@@ -13,12 +13,12 @@ export const CARE = {
   alertCooldown: 30, lightSeconds: 5, sampleEvery: 5, historyLen: 36,
 };
 export const ALERTS: Record<AlertKey, string> = {
-  water: "Your plant is thirsty. Water when the top inch of soil feels dry.",
-  sun: "Your plant needs more light. Most herbs and veggies want 6 or more hours of sun.",
+  water: "Pepper Peony is thirsty. Water when the top inch of soil feels dry.",
+  sun: "Pepper Peony needs more light. Most herbs and veggies want 6 or more hours of sun.",
   soil: "The soil is tired. Mix in compost to bring nutrients back.",
   tooWet: "Too much water can rot roots. Let the soil dry a little before watering again.",
 };
-export const STAGE_NOTES = ["", "Your sprout is growing strong", "Your young plant is thriving", "Your plant is a Queen now!"];
+export const STAGE_NOTES = ["", "Pepper Peony is a sprout now", "Pepper Peony is thriving", "Pepper Peony is a Queen now!"];
 
 export type CareState = { water: number; sun: number; soil: number; points: number; stage: number; time: number; history: number[]; lightUntil: number; compostAt: number; note: string | null; noteAt: number };
 const clamp = (v: number) => Math.max(0, Math.min(100, v));

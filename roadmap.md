@@ -1,4 +1,6 @@
 # Garden updates
+- [x] Name the plant person Pepper Peony across labels, tips, chat and story
+- [x] Move the moonflower right so the meditation pad shows
 - [x] Add shared four-chip steering, rotating Xion suggestions and hold-to-talk transcript rules
 - [x] Add chest-height VR steering panel using the existing cinematic handoff
 - [x] Test suggestion rotation, voice fallback, shared safety/cooldown and normal views
