@@ -29,6 +29,18 @@
 - The video uses the same Orbis window, steering and 15-second timer as the plantlet growth videos. Each run plays only once.
 - If a growth video is already playing, during meditation or in VR, the moonflower video waits its turn, like the growth videos do now.
 
+## 5. Meditation video: Xion stretches through changing scenery
+- In the meditation Orbis video, Xion (the pink-winged fairy) does slow, gentle stretches that follow the script: arms rising on the breath in, a side bend, a forward fold, then she sits back down.
+- The scenery changes with each part of the meditation:
+  - **Settle in:** her moonlit neon rooftop garden.
+  - **Breathing:** a calm beach at twilight, with waves rolling in time with the breath.
+  - **Letting the city go:** a soft, glowing cityscape at night, seen from above.
+  - **Roots:** a misty forest, with moss and glowing ferns.
+  - **Calm:** a high-tech rooftop garden with glass planters, LED vines and the moon. Your chosen plantlet glows here.
+  - **Waking up:** back to her own garden at dawn.
+- The video changes smoothly from scene to scene without restarting. The colors stay in the garden's pink, green and gray style.
+- This replaces the five calm garden scenes from the last update. The meditation script, timing and voice stay the same.
+
 ## Unchanged
 Art style, plants elsewhere, care rules, growth stages, Orbis, meditation script, VR controls.
 
@@ -37,4 +49,5 @@ Art style, plants elsewhere, care rules, growth stages, Orbis, meditation script
 - Planter: `Seedling` group position z -1.4 to about -1.0, scale 1.2. Update the planter target and seat constants used by `interaction.ts`, the helper and `XionCamera`. Ring of `Plant`s generated around a radius. Add a companion y-offset (in `companion.ts`) to lift the feet above the bush.
 - Hint: a `BowlHint` drei `Html` or sprite label above the bowl. The "seen" flag lives in plain TS.
 - Moonflower: `MOONFLOWER_STORY` (narration and prompts) goes in `cinematic/prompts.ts`. The cinematic gate gets a "moonflower" entry that fires once when the quest step becomes `bloom`, and it reuses `cinematic.advance` with a story override.
-- Tests: moonflower fires once on bloom and waits in VR/meditation; volume clamping and persistence; voice volume applied; planter target matches new position.
+- Meditation: rewrite `MEDITATION_SCENES`/`MEDITATION_STEP_SCENES` in `prompts.ts` as stretch-and-location prompts per step. The steering already exists.
+- Tests: every step has a location and stretch; moonflower fires once on bloom and waits in VR/meditation; volume clamping and persistence; voice volume applied; planter target matches new position.
