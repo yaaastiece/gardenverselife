@@ -48,6 +48,8 @@ export function createRadio(tracks: Track[] = TRACKS, makePlayer: () => RadioPla
       set({ playing: true, error: null });
       try { await p.play(); } catch { set({ playing: false, error: "Tap play to start the music." }); }
     },
+    /** Call inside a real tap (like Enter VR) so the music can start later from a controller press. */
+    unlock() { const p = ensure(); applyVolume(p, state.volume); },
     /** Music volume 0..1, applied right away. */
     setVolume(v: number) { const volume = clampVolume(v); if (player) applyVolume(player, volume); saveVolume(MUSIC_VOLUME_KEY, volume); set({ volume }); },
     pause() { player?.pause(); set({ playing: false }); },

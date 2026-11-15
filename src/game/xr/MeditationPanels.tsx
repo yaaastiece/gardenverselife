@@ -7,7 +7,7 @@ import { WorldPanel } from "./WorldPanel";
 // VR presentation of the sound bowl and meditation; rules stay in radio.ts and meditation.ts.
 export function BowlWorldPanel({ radio, onMeditate, onClose }: { radio: Radio; onMeditate: () => void; onClose: () => void }) {
   const r = useSyncExternalStore(radio.subscribe, radio.getSnapshot, radio.getSnapshot);
-  return <WorldPanel position={[BOWL_POS[0], 1.2, BOWL_POS[2] + 0.3]} width={0.5} title="Sound bowl" lines={[radio.track?.title ?? ""]}
+  return <WorldPanel position={[BOWL_POS[0], 1.2, BOWL_POS[2] + 0.3]} width={0.5} title="Sound bowl" lines={[radio.track?.title ?? "", ...(r.error ? [r.error] : [])]}
     buttons={[{ label: r.playing ? "Pause" : "Play", action: () => void radio.toggle() }, { label: "Next song", action: () => void radio.next() }, ...TRACKS.map((t, i) => ({ label: (i === r.index ? "♪ " : "") + t.title, action: () => void radio.select(i) })), { label: "Meditate with Xion", action: onMeditate }, { label: "Close", action: onClose }]} />;
 }
 export function MeditationWorldPanel({ meditation }: { meditation: Meditation }) {
