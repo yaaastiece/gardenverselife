@@ -59,10 +59,10 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
         <sprite position={[0, COMPANION.heights[stage]! * 0.5, -0.02]} scale={[COMPANION.heights[stage]! * 1.6, COMPANION.heights[stage]! * 1.6, 1]} renderOrder={-1}>
           <spriteMaterial ref={glowMat} map={glowTex} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
         </sprite>
-        {prev !== stage && <mesh position={[old.x, old.y, 0]}><planeGeometry args={[old.w, old.h]} /><meshBasicMaterial ref={prevMat} map={texes[prev]} transparent alphaTest={0.02} depthWrite={false} toneMapped={false} /></mesh>}
+        {prev !== stage && <mesh position={[old.x, old.y, 0]}><planeGeometry args={[old.w, old.h]} /><meshBasicMaterial ref={prevMat} map={texes[prev] ?? null} transparent alphaTest={0.02} depthWrite={false} toneMapped={false} /></mesh>}
         <mesh position={[cur.x, cur.y, 0.001]}>
           <planeGeometry args={[cur.w, cur.h]} />
-          <meshBasicMaterial ref={curMat} map={texes[stage]} transparent alphaTest={0.02} toneMapped={false} />
+          <meshBasicMaterial ref={curMat} map={texes[stage] ?? null} transparent alphaTest={0.02} toneMapped={false} />
         </mesh>
         <mesh position={[0, COMPANION.heights[stage]! * 0.5, 0.01]}
           onClick={(e) => { e.stopPropagation(); onWater(); }}
