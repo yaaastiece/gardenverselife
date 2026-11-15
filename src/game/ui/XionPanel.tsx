@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { MessageCircle, Mic, Send, Square, Volume2, VolumeX, Trash2, BookmarkPlus, X } from "lucide-react";
 import { SUGGESTIONS, type XionChat } from "../xion/chat";
 import { PLANT_KEYS, PLANT_LABELS, TAGS, type Journal, type PlantKey, type Snapshot } from "../xion/journal";
 import { CHECK_INTENT, type GardenHelper } from "../xion/helper";
-import { createDictation, onSpeaking, speak, stopSpeaking, VOICE_UNSUPPORTED } from "../xion/voice";
+import { createDictation, onSpeaking, onXionSpeechPreference, setXionSpeechEnabled, speak, stopSpeaking, VOICE_UNSUPPORTED, xionSpeechEnabled } from "../xion/voice";
 
 type Props = {
   chat: XionChat; journal: Journal;
@@ -58,7 +58,7 @@ function ChatTab(p: Props) {
   const { chat } = p;
   useSub(chat.subscribe);
   const [text, setText] = useState("");
-  const [voiceOn, setVoiceOn] = useState(true);
+  const voiceOn = useSyncExternalStore(onXionSpeechPreference, xionSpeechEnabled, xionSpeechEnabled);
   const [speaking, setSpeaking] = useState(false);
   const [saved, setSaved] = useState<Set<number>>(new Set());
   useEffect(() => onSpeaking(setSpeaking), []);
@@ -89,7 +89,7 @@ function ChatTab(p: Props) {
       <button type="submit" className="gv-xp-icon" aria-label="Send" disabled={!text.trim() || chat.state.thinking}><Send size={15} /></button>
     </form>
     <div className="gv-xp-row">
-      <button type="button" className="gv-xp-pill" aria-pressed={voiceOn} onClick={() => { if (voiceOn) stopSpeaking(); else speak("Hi, I'm Xion."); setVoiceOn(!voiceOn); }}>{voiceOn ? <Volume2 size={13} /> : <VolumeX size={13} />}Xion speaks</button>
+      <button type="button" className="gv-xp-pill" aria-pressed={voiceOn} onClick={() => { if (voiceOn) stopSpeaking(); else speak("Hi, I'm Xion."); setXionSpeechEnabled(!voiceOn); }}>{voiceOn ? <Volume2 size={13} /> : <VolumeX size={13} />}Xion speaks</button>
       {speaking && <button type="button" className="gv-xp-pill" onClick={stopSpeaking}><Square size={12} />Stop</button>}
     </div>
   </div>;
