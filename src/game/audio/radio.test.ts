@@ -38,3 +38,18 @@ describe("music volume memory", () => {
     expect(createRadio(undefined, () => fakePlayer()).getSnapshot().volume).toBe(0.25);
   });
 });
+
+import { TRACKS as ALL } from "./radio";
+describe("playlist order and picking", () => {
+  it("Take Me to the Moon plays first and all 7 songs are listed", () => {
+    expect(ALL[0]!.title).toBe("Take Me to the Moon");
+    expect(ALL.length).toBe(7);
+  });
+  it("select jumps to a song and plays it", async () => {
+    const p = { src: "", volume: 1, play: async () => {}, pause() {}, onended: null };
+    const r = createRadio(ALL, () => p);
+    await r.select(4);
+    expect(r.getSnapshot()).toMatchObject({ index: 4, playing: true });
+    expect(p.src).toBe(ALL[4]!.url);
+  });
+});
