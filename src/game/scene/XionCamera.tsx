@@ -46,5 +46,5 @@ export function XionCamera({ interaction, bubbleRef }: { interaction: XionIntera
       bubble.style.top = `${Math.max(150 + bubble.offsetHeight, Math.min(size.height - 30, y - 18))}px`;
     }
   });
-  return <OrbitControls ref={controls} target={[0, 0.82, -1.4]} enableZoom={false} enablePan={false} rotateSpeed={-0.35} minPolarAngle={LOOK.polarMin} maxPolarAngle={LOOK.polarMax} minAzimuthAngle={-LOOK.yaw} maxAzimuthAngle={LOOK.yaw} />;
+  return <OrbitControls ref={controls} target={[0, 0.82, -1.4]} enableZoom={false} enablePan={false} rotateSpeed={-0.35} minPolarAngle={LOOK.polarMin} maxPolarAngle={LOOK.polarMax} minAzimuthAngle={-LOOK.yaw} maxAzimuthAngle={LOOK.yaw}  />;
 }
