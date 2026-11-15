@@ -19,12 +19,12 @@ function MicButton({ onText, label }: { onText: (t: string) => void; label: stri
   const [listening, setListening] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const dict = useRef<ReturnType<typeof createDictation> | undefined>(undefined);
-  const get = () => { if (dict.current === undefined) dict.current = createDictation(onText, setListening); return dict.current; };
-  const down = (e: React.PointerEvent) => { e.preventDefault(); const d = get(); if (!d) { setMsg(VOICE_UNSUPPORTED); return; } setMsg(null); d.start(); };
-  const up = () => get()?.stop();
+  const get = () => { if (dict.current === undefined) dict.current = createDictation(onText, setListening, setMsg); return dict.current; };
+  const toggle = () => { const d = get(); if (!d) { setMsg(VOICE_UNSUPPORTED); return; } setMsg(null); if (d.listening) d.stop(); else d.start(); };
   return <>
-    <button type="button" className="gv-xp-icon" data-on={listening ? "" : undefined} aria-label={listening ? "Listening, release to stop" : label} title="Hold to talk"
-      onPointerDown={down} onPointerUp={up} onPointerLeave={up} onPointerCancel={up}><Mic size={15} /></button>
+    <button type="button" className="gv-xp-icon" data-on={listening ? "" : undefined} aria-label={listening ? "Listening, tap to send" : label} title={listening ? "Listening… tap to send" : "Tap to talk"}
+      onClick={toggle}><Mic size={15} /></button>
+    {listening && <p className="gv-xp-note" aria-live="polite">Listening… tap the mic again to send.</p>}
     {msg && <p className="gv-xp-note" role="alert">{msg}</p>}
   </>;
 }
@@ -58,7 +58,7 @@ function ChatTab(p: Props) {
   const { chat } = p;
   useSub(chat.subscribe);
   const [text, setText] = useState("");
-  const [voiceOn, setVoiceOn] = useState(false);
+  const [voiceOn, setVoiceOn] = useState(true);
   const [speaking, setSpeaking] = useState(false);
   const [saved, setSaved] = useState<Set<number>>(new Set());
   useEffect(() => onSpeaking(setSpeaking), []);
@@ -85,11 +85,11 @@ function ChatTab(p: Props) {
     </div>
     <form className="gv-xp-row" onSubmit={(e) => { e.preventDefault(); void send(text); }}>
       <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Ask Xion…" aria-label="Message Xion" maxLength={500} />
-      <MicButton label="Hold to talk to Xion" onText={(t) => void send(t)} />
+      <MicButton label="Tap to talk to Xion" onText={(t) => void send(t)} />
       <button type="submit" className="gv-xp-icon" aria-label="Send" disabled={!text.trim() || chat.state.thinking}><Send size={15} /></button>
     </form>
     <div className="gv-xp-row">
-      <button type="button" className="gv-xp-pill" aria-pressed={voiceOn} onClick={() => { if (voiceOn) stopSpeaking(); setVoiceOn(!voiceOn); }}>{voiceOn ? <Volume2 size={13} /> : <VolumeX size={13} />}Xion speaks</button>
+      <button type="button" className="gv-xp-pill" aria-pressed={voiceOn} onClick={() => { if (voiceOn) stopSpeaking(); else speak("Hi, I'm Xion."); setVoiceOn(!voiceOn); }}>{voiceOn ? <Volume2 size={13} /> : <VolumeX size={13} />}Xion speaks</button>
       {speaking && <button type="button" className="gv-xp-pill" onClick={stopSpeaking}><Square size={12} />Stop</button>}
     </div>
   </div>;
@@ -105,7 +105,7 @@ function JournalTab(p: Props) {
   return <div className="gv-xp-body">
     <label className="gv-xp-note">Plant <select value={p.plant} onChange={(e) => p.setPlant(e.target.value as PlantKey)}>{PLANT_KEYS.map((k) => <option key={k} value={k}>{PLANT_LABELS[k]}</option>)}</select></label>
     <div className="gv-xp-row"><textarea value={text} onChange={(e) => setText(e.target.value)} rows={2} placeholder="What did you notice?" aria-label="Journal note" maxLength={1000} />
-      <MicButton label="Hold to dictate a note" onText={(t) => setText((x) => (x ? `${x} ${t}` : t))} /></div>
+      <MicButton label="Tap to dictate a note" onText={(t) => setText((x) => (x ? `${x} ${t}` : t))} /></div>
     <div className="gv-xp-chips">{TAGS.map((t) => <button key={t} type="button" aria-pressed={tags.includes(t)} onClick={() => setTags(tags.includes(t) ? tags.filter((x) => x !== t) : [...tags, t])}>{t}</button>)}</div>
     <button type="button" className="gv-xp-primary" onClick={save} disabled={!text.trim() && !tags.length}>Save to journal</button>
     <label className="gv-xp-note">Show <select value={filter} onChange={(e) => setFilter(e.target.value as PlantKey | "all")}><option value="all">All plants</option>{PLANT_KEYS.map((k) => <option key={k} value={k}>{PLANT_LABELS[k]}</option>)}</select></label>

@@ -11,18 +11,9 @@ import { PlantCompanion } from "./PlantCompanion";
 import type { PlantCare } from "../plants/care";
 
 const DROPS = 40;
-function heartShape() {
-  const h = new THREE.Shape(); const k = 0.62;
-  h.moveTo(0, -0.42 * k / 0.62 * 0.62);
-  h.bezierCurveTo(-0.15, -0.3, -0.62, -0.05, -0.55, 0.3); h.bezierCurveTo(-0.5, 0.6, -0.08, 0.62, 0, 0.32);
-  h.bezierCurveTo(0.08, 0.62, 0.5, 0.6, 0.55, 0.3); h.bezierCurveTo(0.62, -0.05, 0.15, -0.3, 0, -0.42);
-  return h;
-}
-// Point of the heart faces the camera.
-const heart = new THREE.ExtrudeGeometry(heartShape(), { depth: 0.44, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.04, bevelSegments: 3, curveSegments: 24 });
-heart.rotateZ(Math.PI); heart.translate(0, 0, 0.0);
-const heartTop = new THREE.ShapeGeometry(heartShape(), 24); heartTop.rotateZ(Math.PI);
-
+// Round pedestal table planter.
+const tableBody = new THREE.CylinderGeometry(0.42, 0.34, 0.5, 48);
+const tableTop = new THREE.CircleGeometry(0.38, 48);
 export function Seedling({ onStageChange, care }: { onStageChange: (name: string) => void; care: PlantCare }) {
   const [stage, setStage] = useState(care.state.stage);
   const [compost, setCompost] = useState(-1);
@@ -72,10 +63,11 @@ export function Seedling({ onStageChange, care }: { onStageChange: (name: string
   return (
     <group position={[0, 0, -1.4]}>
       <group onClick={(e) => { e.stopPropagation(); water(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
-        <group scale={[0.72, 1, 0.72]}><mesh geometry={heart} position={[0, 0, -0.1]} rotation-x={-Math.PI / 2}><meshStandardMaterial color="#a8a5ae" metalness={0.85} roughness={0.32} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
-        <mesh geometry={heartTop} position={[0, 0.5, -0.1]} rotation-x={-Math.PI / 2} scale={0.9}><meshStandardMaterial color="#1f1510" roughness={1} /></mesh></group>
-        <mesh position={[0, 0.05, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.36, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
-        {[-0.22, -0.14, 0.14, 0.22].map((x, i) => <Plant key={x} kind={i % 3 === 0 ? "herb" : "rose"} position={[x, 0.5, -0.12 + (i % 2) * 0.1]} seed={40 + i} />)}
+        <group><mesh geometry={tableBody} position={[0, 0.25, 0]}><meshStandardMaterial color="#a8a5ae" metalness={0.85} roughness={0.32} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
+        <mesh position={[0, 0.5, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.4, 0.03, 10, 48]} /><meshStandardMaterial color="#b4b1ba" metalness={0.85} roughness={0.28} /></mesh>
+        <mesh geometry={tableTop} position={[0, 0.49, 0]} rotation-x={-Math.PI / 2}><meshStandardMaterial color="#1f1510" roughness={1} /></mesh></group>
+        <mesh position={[0, 0.05, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.38, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
+        {[-0.22, -0.14, 0.14, 0.22].map((x, i) => <Plant key={x} kind={i % 3 === 0 ? "herb" : "rose"} position={[x, 0.5, -0.12 + (i % 2) * 0.24]} seed={40 + i} />)}
       </group>
       <group ref={plant} position={[0, 0.5, 0]}><Suspense fallback={null}><PlantCompanion stage={stage} care={care} onWater={water} onHover={setHover} /></Suspense></group>
       <instancedMesh ref={drops} args={[undefined, undefined, DROPS]}><sphereGeometry args={[0.03, 6, 5]} /><meshBasicMaterial color="#9fe8ff" toneMapped={false} /></instancedMesh>
