@@ -65,3 +65,6 @@ use the editor.
 - Use floor-level `XROrigin`, no translation, head-pivot snap turns and unmounted desktop camera controls during sessions to preserve player-owned camera motion.
 - Queue growth cinematics during VR and flush only after session exit; Chat/Journal and the Orbis video remain normal-view presentation, while a world-anchored steering panel shares the cinematic controller and carries validated requests through the exit handoff.
 - Dev-only `window.__game.xr`, `renderer()` and `selection` expose XR session/render state and plant selection for repeatable emulator checks; pointer visuals are excluded from both ray and near-grab filtering to avoid self-intersections.
+
+## Sound bowl and meditation
+- Keep playlist, LED color, meditation script/timing, breath phases and Xion seat/return in plain TS (`audio/radio.ts`, `meditation/meditation.ts`); screen cards and XR WorldPanels only subscribe, and meditation visuals use a separate non-auto-ending cinematic session while growth cinematics wait in the gate.
