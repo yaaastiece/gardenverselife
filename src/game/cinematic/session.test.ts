@@ -20,6 +20,56 @@ function setup() {
 }
 
 describe("cinematic lifecycle", () => {
+  it("auto-closes only after first frames, 15 seconds and a one-second fade, stopping and disconnecting", async () => {
+    vi.useFakeTimers();
+    const { session, client } = setup();
+    try {
+      await session.advance(1);
+      await vi.advanceTimersByTimeAsync(40000);
+      expect(session.getSnapshot().open).toBe(true);
+      session.framesArrived();
+      await vi.advanceTimersByTimeAsync(15000);
+      expect(session.timer.getSnapshot().fading).toBe(true);
+      expect(session.getSnapshot().open).toBe(true);
+      await vi.advanceTimersByTimeAsync(1000);
+      expect(session.getSnapshot().open).toBe(false);
+      expect(client.sendCommand).toHaveBeenLastCalledWith("stop", {});
+      expect(client.disconnect).toHaveBeenCalledTimes(1);
+    } finally { await session.close(); vi.useRealTimers(); }
+  });
+  it("stage changes and steering each reset the countdown without another image or connection", async () => {
+    vi.useFakeTimers();
+    const { session, client, capture } = setup();
+    try {
+      await session.advance(1);
+      session.framesArrived();
+      await vi.advanceTimersByTimeAsync(10000);
+      await session.advance(2);
+      expect(session.timer.getSnapshot().remainingMs).toBe(15000);
+      await vi.advanceTimersByTimeAsync(10000);
+      await session.steer("stage prompt Then: gentle petals.");
+      expect(session.timer.getSnapshot().remainingMs).toBe(15000);
+      await vi.advanceTimersByTimeAsync(10000);
+      session.resetCountdown();
+      expect(session.timer.getSnapshot().remainingMs).toBe(15000);
+      expect(client.connect).toHaveBeenCalledTimes(1);
+      expect(capture).toHaveBeenCalledTimes(1);
+    } finally { await session.close(); vi.useRealTimers(); }
+  });
+  it("manual close cancels a countdown immediately and never disconnects twice later", async () => {
+    vi.useFakeTimers();
+    const { session, client } = setup();
+    try {
+      await session.advance(1);
+      session.framesArrived();
+      await vi.advanceTimersByTimeAsync(12000);
+      await session.close();
+      expect(session.getSnapshot().open).toBe(false);
+      expect(session.timer.getSnapshot().running).toBe(false);
+      await vi.advanceTimersByTimeAsync(30000);
+      expect(client.disconnect).toHaveBeenCalledTimes(1);
+    } finally { await session.close(); vi.useRealTimers(); }
+  });
   it("starts muted presentation loading, with resolution, one seed image, start prompt, then the second-stage prompt", async () => {
     const { session, client, capture } = setup();
     await session.advance(1);
