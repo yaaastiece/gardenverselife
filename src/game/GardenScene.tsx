@@ -160,10 +160,10 @@ export function GardenScene() {
   const canvasPress = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, beds };
+    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, beds, xr: xrStore, renderer: () => renderer.current, selection };
     Object.assign(window, { __game: debug });
     return () => { Reflect.deleteProperty(window, "__game"); };
-  }, [interaction, care, beds]);
+  }, [interaction, care, beds, xrStore, selection]);
   useEffect(() => () => audio.current?.dispose(), []);
   const toggleSound = async () => {
     if (!audio.current) audio.current = createAmbience();
