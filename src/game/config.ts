@@ -22,8 +22,8 @@ export const LOOK = { yaw: 0.55, polarMin: 1.3, polarMax: 1.78, fov: 55 };
 export const EYE_HEIGHT = 1.6;
 // Xion, the welcoming fairy: fairy-sized (~30 cm), hovering beside the seedling planter.
 export const XION = {
-  position: [-0.62, 0, -1.15] as [number, number, number],
-  height: 0.3, hover: 0.62, bobAmount: 0.03, bobSpeed: 1.4,
+  position: [-0.25, 0.98, -0.85] as [number, number, number],
+  height: 0.48, hover: 0.98, bobAmount: 0.025, bobSpeed: 1.4,
   bubbleMs: 6000, fadeMs: 1000,
   welcome: "Welcome to the Gardenverse. Here's your first seedling. Water it and watch it grow.",
 };
