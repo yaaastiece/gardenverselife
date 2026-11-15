@@ -5,10 +5,10 @@ import { SKY } from "../config";
 import { skyShader } from "./skyShader";
 
 // Night sky dome over the whole scene: covers the open top of the painted skyline ring.
-const vert = `varying vec3 vDir; void main(){ vDir = normalize(position); gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
+const vert = `varying vec3 vDir; void main(){ vDir = (modelMatrix*vec4(position,1.)).xyz; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
 const frag = `${skyShader} varying vec3 vDir;
 void main(){
-  gl_FragColor = vec4(skyColor(vDir), 1.0);
+  gl_FragColor = vec4(skyColor(vDir-cameraPosition), 1.0);
   #include <colorspace_fragment>
 }`;
 const lin = (hex: string) => new THREE.Color(hex);

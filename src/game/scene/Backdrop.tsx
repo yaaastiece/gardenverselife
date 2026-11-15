@@ -18,7 +18,7 @@ void main(){
   c *= 1.0 + sky * smoothstep(0.55, 0.85, lum) * (tw - 0.45) * 0.9;
   float edge = smoothstep(0.0, edgeFade, min(s, 1.0-s));
   float top = 1.0-smoothstep(0.9, 1.0, vUv.y);
-  c = mix(skyColor(vDir), c, edge * top);
+  c = mix(skyColor(vDir-cameraPosition), c, edge * top);
   gl_FragColor = vec4(c, 1.0);
   #include <colorspace_fragment>
 }`;
