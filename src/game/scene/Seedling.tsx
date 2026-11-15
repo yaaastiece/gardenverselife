@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { Outlines } from "@react-three/drei";
 import { Plant } from "./Garden";
-import { PALETTE, WIND } from "../config";
+import { PALETTE } from "../config";
 import { SEEDLING_STAGES } from "../plants/growth";
 import { Sparkles } from "@react-three/drei";
 import { Suspense } from "react";
@@ -48,15 +48,13 @@ export function Seedling({ onStageChange, care }: { onStageChange: (name: string
     care.act("water");
   };
 
-  useFrame(({ clock }, delta) => {
+  useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
     care.tick(dt);
     const lit = care.state.time < care.state.lightUntil;
     if (glow.current) glow.current.intensity = THREE.MathUtils.lerp(glow.current.intensity, lit ? 6 : 0, 0.1);
     if (cone.current) { const m = cone.current.material as THREE.MeshBasicMaterial; m.opacity = THREE.MathUtils.lerp(m.opacity, lit ? 0.18 : 0, 0.1); }
     grow.current = Math.min(1, grow.current + dt * 0.8);
-    if (plant.current) {
-    }
     if (drops.current) {
       const active = burst.current >= 0 && burst.current < 1.2;
       if (active) burst.current += dt;
