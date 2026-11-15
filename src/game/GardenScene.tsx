@@ -7,6 +7,7 @@ import { createXionInteraction, isDrag } from "./interaction";
 import { XionCamera } from "./scene/XionCamera";
 import { XionSpeech } from "./ui/XionSpeech";
 import { Backdrop } from "./scene/Backdrop";
+import { SkyDome } from "./scene/SkyDome";
 import { FlyingCars } from "./scene/FlyingCars";
 import { Suspense } from "react";
 import { Deck } from "./scene/Deck";
@@ -82,6 +83,7 @@ export function GardenScene() {
           <Lightformer intensity={0.8} color="#8a6a8a" position={[-5, 1, -1]} rotation-y={Math.PI / 2} scale={[20, 1, 1]} />
         </Environment>
         <group onClick={() => interaction.dismiss()}>
+          <SkyDome />
           <Suspense fallback={null}><Backdrop /></Suspense>
           <FlyingCars />
           <Deck />

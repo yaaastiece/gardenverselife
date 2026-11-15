@@ -27,6 +27,8 @@ export function XionCamera({ interaction, bubbleRef }: { interaction: XionIntera
       const aspect = size.width / size.height;
       const distance = Math.max(3, 2.05 / (2 * Math.tan(THREE.MathUtils.degToRad(LOOK.fov / 2)) * aspect));
       vectors.position.set(0, 1.6, -1.4 + distance);
+      // Look around in place (full 360): pivot sits just in front of the eye, aimed at the seedling.
+      vectors.target.sub(vectors.position).setLength(0.05).add(vectors.position);
     }
     orbit.enabled = !state.dragging && !moving.current && !state.focused;
     if (moving.current || state.focused) {
@@ -46,5 +48,5 @@ export function XionCamera({ interaction, bubbleRef }: { interaction: XionIntera
       bubble.style.top = `${Math.max(150 + bubble.offsetHeight, Math.min(size.height - 30, y - 18))}px`;
     }
   });
-  return <OrbitControls ref={controls} target={[0, 0.82, -1.4]} enableZoom={false} enablePan={false} rotateSpeed={-0.35} minPolarAngle={LOOK.polarMin} maxPolarAngle={LOOK.polarMax} minAzimuthAngle={-LOOK.yaw} maxAzimuthAngle={LOOK.yaw} />;
+  return <OrbitControls ref={controls} target={[0, 0.82, -1.4]} enableZoom={false} enablePan={false} rotateSpeed={-0.35} minPolarAngle={LOOK.polarMin} maxPolarAngle={LOOK.polarMax} minAzimuthAngle={-LOOK.yaw} maxAzimuthAngle={LOOK.yaw}  />;
 }

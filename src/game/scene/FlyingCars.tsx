@@ -31,9 +31,9 @@ function Car() {
   );
 }
 
-type Lane = { y: number; depth: number; dir: number; start: number; dur: number };
+type Lane = { y: number; depth: number; dir: number; start: number; dur: number; phase: number };
 function newLane(i: number, now: number, r = Math.random): Lane {
-  return { y: CARS.minY + r() * (CARS.maxY - CARS.minY), depth: BACKDROP.radius - 3 - r() * 4, dir: r() > 0.5 ? 1 : -1, start: now + i * 0 + r() * CARS.gap, dur: CARS.minCross + r() * (CARS.maxCross - CARS.minCross) };
+  return { y: CARS.minY + r() * (CARS.maxY - CARS.minY), depth: BACKDROP.radius - 3 - r() * 4, dir: r() > 0.5 ? 1 : -1, start: now + i * 0 + r() * CARS.gap, dur: (CARS.minCross + r() * (CARS.maxCross - CARS.minCross)) * 3, phase: r() * Math.PI * 2 };
 }
 
 export function FlyingCars() {
@@ -46,9 +46,10 @@ export function FlyingCars() {
       let t = (now - l.start) / l.dur;
       if (t > 1) { lanes.current[i] = newLane(i, now); t = 0; }
       g.visible = t >= 0;
-      const half = Math.tan(BACKDROP.arc / 2) * l.depth * 0.9;
-      g.position.set(THREE.MathUtils.lerp(-half, half, Math.max(0, t)) * l.dir, l.y + Math.sin(now * 0.8 + i) * 0.12, -l.depth);
-      g.rotation.y = l.dir > 0 ? 0 : Math.PI;
+      // Fly a full lap around the skyline ring (counter/clockwise per lane).
+      const ang = l.phase + Math.max(0, t) * Math.PI * 2 * l.dir;
+      g.position.set(Math.sin(ang) * l.depth, l.y + Math.sin(now * 0.8 + i) * 0.12, -Math.cos(ang) * l.depth);
+      g.rotation.y = -ang + (l.dir > 0 ? 0 : Math.PI);
     });
   });
   return <group>{Array.from({ length: CARS.count }, (_, i) => <group key={i} ref={(el) => { refs.current[i] = el; }}><Car /></group>)}</group>;
