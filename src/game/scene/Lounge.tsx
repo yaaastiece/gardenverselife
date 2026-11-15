@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Outlines, RoundedBox } from "@react-three/drei";
+import { Outlines } from "@react-three/drei";
 import * as THREE from "three";
 import { PALETTE } from "../config";
 
