@@ -27,6 +27,11 @@ export function VRRig({ snap }: { snap: boolean }) {
     // Emissive neon stays intact; ambient + directional + image lighting light the garden.
     scene.traverse((object) => {
       if (object instanceof THREE.PointLight && object.visible) { hiddenLights.current.add(object); object.visible = false; }
+      // XR's cursor/ray meshes must not become targets of their own pointers.
+      if (object instanceof THREE.Mesh && !Array.isArray(object.material) &&
+        (object.material.constructor.name === "PointerRayMaterial" || object.material.constructor.name === "PointerCursorMaterial")) {
+        object.raycast = () => {};
+      }
     });
     const controller = [...session.inputSources].find((s) => s.handedness === "right" && s.gamepad)
       ?? [...session.inputSources].find((s) => s.gamepad);
@@ -40,6 +45,6 @@ export function VRRig({ snap }: { snap: boolean }) {
     pose.offset.copy(rig.position).sub(pose.pivot).applyAxisAngle(THREE.Object3D.DEFAULT_UP, turn.radians);
     rig.position.copy(pose.pivot).add(pose.offset);
     rig.rotation.y += turn.radians;
-  });
+  }, -60);
   return session ? <XROrigin ref={origin} position={VR.origin} /> : null;
 }
