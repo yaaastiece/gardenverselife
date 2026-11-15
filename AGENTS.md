@@ -49,3 +49,4 @@ use the editor.
 ## Plant companion
 - The heart-planter plant is a 4-frame billboard sprite (`scene/PlantCompanion.tsx`); per-stage heights and frame bounds live in `plants/companion.ts` so feet anchoring and sizes stay data-driven.
 - Garden-bed health and plant hover/selection live in plain TS `plants/beds.ts`; `PlantCard` (screen) and `PlantCardAnchor`/`PlantFxLayer` (scene) only present it, so WebXR panels can reuse the state.
+- Xion chat and journal state live in plain TS `src/game/xion/` (chat, journal, voice with a single `speak(text)`); `ui/XionPanel.tsx` only presents it. AI replies come from the `askXion` server function in `src/lib/xion.functions.ts`, so no key reaches the browser.

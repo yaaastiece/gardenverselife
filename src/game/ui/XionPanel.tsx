@@ -30,7 +30,6 @@ function MicButton({ onText, label }: { onText: (t: string) => void; label: stri
 export function XionPanel(p: Props) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"chat" | "journal">("chat");
-  useEffect(() => { if (!window.matchMedia("(max-width: 767px)").matches) setOpen(false); }, []);
   return (
     <>
       <button type="button" className="gv-xp-toggle" aria-expanded={open} aria-controls="gv-xion-panel" onClick={() => setOpen(!open)}>
