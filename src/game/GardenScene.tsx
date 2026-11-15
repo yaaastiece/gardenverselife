@@ -56,6 +56,7 @@ import { MeditationOverlay } from "./ui/MeditationOverlay";
 import { BowlWorldPanel, MeditationWorldPanel } from "./xr/MeditationPanels";
 import { useDockOpen } from "./ui/useDockOpen";
 import { meditationPrompt, MOON_STAGE } from "./cinematic/prompts";
+import { createCinematicMusic } from "./audio/cinematicMusic";
 import type { Meditation } from "./meditation/meditation";
 
 // Which bed a plant type is tracked in (matches the bed names Xion uses).
@@ -145,6 +146,12 @@ export function GardenScene() {
       if (!xrStore.getState().session) requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); });
     },
   }));
+  const [cinematicMusic] = useState(() => createCinematicMusic(radio));
+  useEffect(() => {
+    const sync = () => { if (cinematic.getSnapshot().open && !meditation.getSnapshot().active) cinematicMusic.start(); else cinematicMusic.stop(); };
+    const off = cinematic.subscribe(sync);
+    return () => { off(); cinematicMusic.stop(); };
+  }, [cinematic, cinematicMusic, meditation]);
   useEffect(() => radio.subscribe(() => audio.current?.duck(radio.getSnapshot().playing)), [radio]);
   useEffect(() => () => { meditation.stop(); radio.dispose(); void meditationVisuals.close(); }, [meditation, radio, meditationVisuals]);
   useEffect(() => {
