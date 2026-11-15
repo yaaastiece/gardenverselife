@@ -78,6 +78,14 @@ export function createBedCare(count = BEDS.starts.length) {
       });
       emit();
     },
+    /** Xion's help: lifts a low bar to `to`, never to full. */
+    assist(i: number, a: CareAction, to: number) {
+      const b = beds[i]; if (!b || b[a] >= to) return false;
+      b[a] = clamp(to);
+      if (a === "sun") b.lightUntil = time + BEDS.lightSeconds;
+      if (a === "soil") b.compostAt = time;
+      emit(); return true;
+    },
     act(i: number, a: CareAction) {
       const b = beds[i]; if (!b) return;
       b[a] = clamp(b[a] + BEDS.boost[a]);
@@ -104,6 +112,7 @@ export function createPlantSelection() {
     hover(p: PlantPick | null) { state.hover = p; emit(); },
     select(p: PlantPick | null) { state.selected = p; emit(); },
     clear() { if (state.selected || state.hover) { state.selected = null; state.hover = null; emit(); } },
+    effectAt(pos: PlantPick["pos"], action: CareAction) { state.fx = { pos, action, id: ++fxId }; emit(); },
     effect(action: CareAction) { if (state.selected) { state.fx = { pos: state.selected.pos, action, id: ++fxId }; emit(); } },
   };
 }

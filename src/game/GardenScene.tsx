@@ -20,7 +20,7 @@ import { MoonQuestCard } from "./ui/MoonQuestCard";
 import { createMoonQuest } from "./plants/moonflower";
 import { CarePanel } from "./ui/CarePanel";
 import { ALERTS, createPlantCare, type CareAction } from "./plants/care";
-import { createBedCare, createPlantSelection } from "./plants/beds";
+import { BEDS, createBedCare, createPlantSelection } from "./plants/beds";
 import { PlantCard } from "./ui/PlantCard";
 import { PlantCardAnchor, PlantFxLayer } from "./scene/PlantCardAnchor";
 import { XionPanel } from "./ui/XionPanel";
@@ -28,11 +28,21 @@ import { createXionChat } from "./xion/chat";
 import { createJournal, type PlantKey, type Snapshot } from "./xion/journal";
 import { askXion } from "@/lib/xion.functions";
 import { SEEDLING_STAGES } from "./plants/growth";
+import { createGardenHelper, report, HELP, type GardenHelper, type Patient } from "./xion/helper";
+import { CARE } from "./plants/care";
 import { createAmbience } from "./audio/ambience";
 import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
 
 // Which bed a plant type is tracked in (matches the bed names Xion uses).
 const BED_OF: Record<Exclude<PlantKey, "companion">, number> = { tomato: 0, herb: 0, lettuce: 0, strawberry: 1, pepper: 2, rose: 3 };
+
+// World-space bed centers at soil height; labels match the bed names Xion uses.
+const BED_SPOTS = [{ x: -2.6, y: 0.65, z: -1.2 }, { x: -1.3, y: 0.58, z: -3.4 }, { x: 1.4, y: 0.7, z: -3.4 }, { x: 2.8, y: 0.62, z: -1.7 }];
+const BED_LABELS = ["tomatoes", "strawberries", "peppers", "roses"];
+function HelperTicker({ helper }: { helper: GardenHelper }) {
+  useFrame((_, d) => helper.tick(Math.min(d, 0.05)));
+  return null;
+}
 
 function ReadySignal({ onReady }: { onReady: () => void }) {
   const n = useRef(0);
@@ -63,6 +73,29 @@ export function GardenScene() {
     const b = beds.beds[BED_OF[p]]!;
     return { stage: "Mature", water: b.water, sun: b.sun, soil: b.soil };
   }, [care, beds]);
+  const [, setHelpTick] = useState(0);
+  const [helper] = useState(() => createGardenHelper({
+    move: (p) => interaction.move(p), position: () => interaction.state.position, say: (t) => interaction.say(t),
+    fix: (n) => {
+      const a = n.stat;
+      if (n.patient.id === "companion") care.assist(a, HELP.target); else beds.assist(Number(n.patient.id), a, HELP.target);
+      selection.effectAt(n.patient.fx, a);
+    },
+    onState: () => setHelpTick((x) => x + 1),
+  }));
+  const tipIndex = useRef(0);
+  const checkGarden = useCallback(() => {
+    const patients: Patient[] = [
+      { id: "companion", label: "plant companion", stats: care.state, tooWet: care.state.water > CARE.overwater, perch: { x: -0.35, y: 1.25, z: -1.15 }, fx: { x: 0, y: 1.2, z: -1.4 } },
+      ...beds.beds.map((b, i): Patient => {
+        const c = BED_SPOTS[i]!;
+        return { id: String(i), label: BED_LABELS[i]!, stats: b, tooWet: b.water > BEDS.overwater, perch: { x: c.x, y: c.y + 0.6, z: c.z }, fx: { x: c.x, y: c.y + 0.7, z: c.z } };
+      }),
+    ];
+    const r = report(patients, tipIndex.current++);
+    interaction.say(r.text); chat.push("assistant", r.text); helper.setOffer(r.needs);
+  }, [care, beds, interaction, chat, helper]);
+  const acceptHelp = useCallback(() => { helper.start(); }, [helper]);
   const [night, setNight] = useState(false);
   useEffect(() => quest.subscribe((st) => setNight(st === "bloom")), [quest]);
   const doMoonTask = useCallback(() => {
@@ -74,10 +107,10 @@ export function GardenScene() {
   const canvasPress = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say };
+    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, beds };
     Object.assign(window, { __game: debug });
     return () => { Reflect.deleteProperty(window, "__game"); };
-  }, [interaction]);
+  }, [interaction, care, beds]);
   useEffect(() => () => audio.current?.dispose(), []);
   const toggleSound = async () => {
     if (!audio.current) audio.current = createAmbience();
@@ -89,6 +122,7 @@ export function GardenScene() {
   return (
     <div className="gv-stage" data-scene-ready={ready ? "" : undefined}
       onPointerDownCapture={(e) => {
+        if (helper.state.busy) helper.stop();
         if (!(e.target instanceof HTMLCanvasElement)) return;
         canvasPress.current = { x: e.clientX, y: e.clientY };
         interaction.state.pointerHandled = false;
@@ -120,6 +154,7 @@ export function GardenScene() {
         <XionCamera interaction={interaction} bubbleRef={bubbleRef} />
         <PlantCardAnchor selection={selection} cardRef={cardRef} />
         <PlantFxLayer selection={selection} />
+        <HelperTicker helper={helper} />
         <ReadySignal onReady={() => setReady(true)} />
       </Canvas>
 
@@ -133,7 +168,8 @@ export function GardenScene() {
       </header>
       <div className="gv-dock"><CarePanel care={care} onAction={careAction} /><MoonQuestCard quest={quest} onTask={doMoonTask} /></div>
       <PlantCard beds={beds} selection={selection} cardRef={cardRef} />
-      <XionPanel chat={chat} journal={journal} plant={chatPlant} setPlant={setChatPlant} snapshot={snapshot} onReply={(t) => interaction.say(t)} />
+      <XionPanel chat={chat} journal={journal} plant={chatPlant} setPlant={setChatPlant} snapshot={snapshot} onReply={(t) => interaction.say(t)} onCheck={checkGarden} helper={helper} onHelp={acceptHelp} />
+      {helper.state.busy && <div className="gv-helping" role="status">✨ Xion is helping · tap to stop</div>}
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
       <div className="gv-hint">Drag to look around · Tap the seedling or moonflower</div>
     </div>

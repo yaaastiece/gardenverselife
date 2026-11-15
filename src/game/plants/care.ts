@@ -61,6 +61,14 @@ export function createPlantCare() {
       if (sampleT >= CARE.sampleEvery) { sampleT = 0; state.history = [...state.history, health(state)].slice(-CARE.historyLen); }
       checkAlerts(); emit();
     },
+    /** Xion's help: lifts a low bar to `to` with the usual effect, but earns no growth points. */
+    assist(a: CareAction, to: number) {
+      if (state[a] >= to) return false;
+      state[a] = clamp(to);
+      if (a === "sun") state.lightUntil = state.time + CARE.lightSeconds;
+      if (a === "soil") state.compostAt = state.time;
+      emit(); return true;
+    },
     /** Returns true when the plant advanced a stage. */
     act(a: CareAction) {
       const healthy = state.water > CARE.growMin && state.sun > CARE.growMin && state.soil > CARE.growMin;

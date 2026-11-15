@@ -16,6 +16,8 @@ export function createXionChat(ask: AskFn) {
   return {
     state,
     subscribe(f: () => void) { subs.add(f); return () => { subs.delete(f); }; },
+    /** Adds a local message (e.g. a garden check report) without calling the AI. */
+    push(role: "user" | "assistant", text: string) { state.messages = [...state.messages, { id: ++id, role, text }]; emit(); },
     /** Sends a question; resolves with Xion's reply text (or a friendly error text). */
     async send(text: string, context: string): Promise<ChatMsg | null> {
       const q = text.trim();

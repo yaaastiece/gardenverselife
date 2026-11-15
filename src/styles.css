@@ -294,3 +294,4 @@
   .gv-xp { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 45vh; height: 45vh; border-radius: 14px 14px 0 0; z-index: 9; }
   .gv-xp-toggle[aria-expanded="true"] { bottom: calc(45vh + 0.5rem); }
 }
+.gv-helping { position: absolute; left: 50%; top: 5.5rem; transform: translateX(-50%); z-index: 8; padding: 0.3rem 0.8rem; border-radius: 999px; background: var(--glass); border: 1.5px solid var(--neon-green); color: var(--neon-green); font-weight: 700; font-size: 0.78rem; pointer-events: none; box-shadow: 0 0 10px var(--neon-green); }
