@@ -36,7 +36,7 @@ export function Xion({ interaction, meditation }: { interaction: XionInteraction
     return new THREE.CanvasTexture(canvas);
   }, []);
   const down = (e: ThreeEvent<PointerEvent>) => {
-    if (gesture.current) return;
+    if (gesture.current || meditation?.getSnapshot().seated) return;
     e.stopPropagation();
     plane.constant = -interaction.state.position.y;
     const spatial = inVR && "pointerPosition" in e;
