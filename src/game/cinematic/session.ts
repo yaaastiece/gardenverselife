@@ -1,5 +1,6 @@
 import type { Reactor, ReactorMessage } from "@reactor-team/js-sdk";
 import { stagePrompt } from "./prompts";
+import { createCinematicTimer } from "./timer";
 
 export type CinematicState = { open: boolean; stage: number; phase: "idle" | "loading" | "playing" | "error"; error: string | null; stream: MediaStream | null };
 type Client = Pick<Reactor, "connect" | "disconnect" | "sendCommand" | "uploadFile" | "on" | "off">;
@@ -23,7 +24,8 @@ export function createCinematicSession(deps: Dependencies) {
   let lockTask: Promise<unknown> | null = null;
   let trackCleanup: (() => void) | null = null;
   const update = (patch: Partial<CinematicState>) => { state = { ...state, ...patch }; listeners.forEach((f) => f()); };
-  const fail = () => update({ phase: "error", error: "This cinematic couldn’t play. You can skip it and return to your garden." });
+  const timer = createCinematicTimer(() => { void controller.close(); });
+  const fail = () => { timer.stop(); update({ phase: "error", error: "This cinematic couldn’t play. You can skip it and return to your garden." }); };
   const command = async (c: Client, name: string, data: object) => {
     const reply = await c.sendCommand(name, data);
     if (reply?.type === "command_error") throw new Error("Cinematic command refused");
@@ -53,9 +55,11 @@ export function createCinematicSession(deps: Dependencies) {
     }
   };
   const controller = {
+    timer,
+    resetCountdown() { if (state.open && state.phase === "playing") timer.reset(); },
     getSnapshot: () => state,
     subscribe(f: () => void) { listeners.add(f); return () => { listeners.delete(f); }; },
-    framesArrived() { if (state.open && state.phase === "loading") update({ phase: "playing" }); },
+    framesArrived() { if (state.open && state.phase === "loading") { timer.start(); update({ phase: "playing" }); } },
     playbackFailed: fail,
     advance(stage: number) {
       stagePrompt(stage);
@@ -63,7 +67,7 @@ export function createCinematicSession(deps: Dependencies) {
       const id = generation;
       const first = !active;
       if (first) { active = true; abort = new AbortController(); update({ open: true, stage, phase: "loading", error: null, stream: null }); }
-      else update({ stage });
+      else { if (stage !== state.stage) timer.reset(); update({ stage }); }
       lifecycle = lifecycle.then(async () => {
         if (id !== generation || !state.open || state.phase === "error") return;
         const check = () => { if (id !== generation || !state.open) throw new Error("Cinematic cancelled"); };
@@ -100,6 +104,7 @@ export function createCinematicSession(deps: Dependencies) {
       return lifecycle;
     },
     steer(prompt: string) {
+      controller.resetCountdown();
       const id = generation;
       const request = lifecycle.then(async () => {
         if (id !== generation || !state.open || state.phase === "error" || !client) throw new Error("Cinematic stream is not ready");
@@ -110,6 +115,7 @@ export function createCinematicSession(deps: Dependencies) {
       return request;
     },
     close() {
+      timer.stop();
       generation++; abort?.abort(); abort = null;
       update({ open: false, stage: 0, phase: "idle", error: null, stream: null });
       lifecycle = lifecycle.then(cleanup).catch(() => undefined);

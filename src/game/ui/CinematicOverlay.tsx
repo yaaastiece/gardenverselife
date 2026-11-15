@@ -28,7 +28,11 @@ function CinematicSteeringPanel({ session, stage, ready }: { session: CinematicS
 
   const remaining = steering.remaining();
   const blocked = !ready || steeringState.sending || remaining > 0;
-  const submit = async (text: string) => { if (await steering.submit(stage, text)) setDraft(""); };
+  const submit = async (text: string) => {
+    if (blocked) return;
+    session.resetCountdown();
+    if (await steering.submit(stage, text)) setDraft("");
+  };
   const toggleDictation = () => {
     if (dictation.current === undefined) {
       dictation.current = createDictation(
@@ -69,6 +73,7 @@ function CinematicSteeringPanel({ session, stage, ready }: { session: CinematicS
 
 export function CinematicOverlay({ session }: { session: CinematicSession }) {
   const state = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  const countdown = useSyncExternalStore(session.timer.subscribe, session.timer.getSnapshot, session.timer.getSnapshot);
   const video = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
   useEffect(() => { if (!state.open) setMuted(true); }, [state.open]);
@@ -98,8 +103,9 @@ export function CinematicOverlay({ session }: { session: CinematicSession }) {
   }, [session, state.open, state.phase]);
 
   return <Dialog open={state.open} onOpenChange={(open) => { if (!open) void session.close(); }}>
-    <DialogContent className="gv-cinematic" aria-describedby={undefined}>
+    <DialogContent className="gv-cinematic" data-ending={countdown.fading ? "" : undefined} aria-describedby={undefined}>
       <DialogTitle className="sr-only">Gardenverse cinematic</DialogTitle>
+      {countdown.running && <progress className="gv-cinematic-progress" max={1} value={countdown.progress} aria-label="Cinematic time remaining" />}
       <video ref={video} className="gv-cinematic-video" autoPlay playsInline muted={muted}
         onLoadedData={() => session.framesArrived()} onPlaying={() => {
           if (video.current && video.current.readyState >= 2 && video.current.videoWidth > 0) session.framesArrived();
