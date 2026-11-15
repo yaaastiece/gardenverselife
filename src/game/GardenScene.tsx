@@ -54,11 +54,13 @@ export function GardenScene() {
           <Lightformer intensity={1.5} color="#ffc6e0" position={[0, 5, 0]} scale={[10, 10, 1]} rotation-x={Math.PI / 2} />
           <Lightformer intensity={0.8} color="#8a6a8a" position={[-5, 1, -1]} rotation-y={Math.PI / 2} scale={[20, 1, 1]} />
         </Environment>
-        <Suspense fallback={null}><Backdrop /></Suspense>
-        <FlyingCars />
-        <Deck />
-        <Garden />
-        <Lounge />
+        <group onClick={() => interaction.dismiss()}>
+          <Suspense fallback={null}><Backdrop /></Suspense>
+          <FlyingCars />
+          <Deck />
+          <Garden />
+          <Lounge />
+        </group>
         <Suspense fallback={null}><Xion interaction={interaction} /></Suspense>
         <Seedling onStageChange={onStage} />
         <XionCamera interaction={interaction} bubbleRef={bubbleRef} />
