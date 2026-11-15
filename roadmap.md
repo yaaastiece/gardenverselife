@@ -1,4 +1,5 @@
 # Garden updates
+- [ ] Soft ethereal music under Orbis videos
 - [ ] Bowl meditation hint; working music + voice volume
 - [ ] Bigger, more central planter; full bush; plantlet above it
 - [ ] Moonflower story Orbis video on bloom
