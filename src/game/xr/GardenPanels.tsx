@@ -10,6 +10,7 @@ import { FADE_MS, SPEECH_MS, type XionInteraction } from "../interaction";
 import type { CinematicSession } from "../cinematic/session";
 import type { CinematicSteering } from "../cinematic/steering";
 import { WorldPanel, type PanelButton } from "./WorldPanel";
+import { HeadAnchored } from "./HeadAnchored";
 import { weather, WEATHER_LABEL } from "../weather/weather";
 
 function useRefresh(subscribe: (cb: () => void) => () => void) {
@@ -40,7 +41,7 @@ export function GardenPanels({ care, beds, selection, quest, interaction, onMoon
       lines={[...(bed.water > 90 ? ["Too much water"] : []), PLANT_INFO[pick.kind].likes]}
       buttons={(["water", "sun", "soil"] as const).map((action) => ({ label: action === "soil" ? "Feed soil" : action === "sun" ? "Sun" : "Water", action: () => { beds.act(pick.bed, action); selection.effect(action); } })).concat([{ label: "Close", action: () => selection.clear() }])} />}
     <XionWorldSpeech interaction={interaction} />
-    {cin.open && cin.phase === "playing" && <SteeringWorldPanel stage={cin.stage} cinematic={cinematic} steering={steering} playCinematic={playCinematic} />}
+    <HeadAnchored active={cin.open && cin.phase === "playing"} distance={0.9} drop={0.3}>{cin.open && cin.phase === "playing" && <SteeringWorldPanel stage={cin.stage} cinematic={cinematic} steering={steering} playCinematic={playCinematic} />}</HeadAnchored>
   </>;
 }
 
@@ -79,7 +80,7 @@ function SteeringWorldPanel({ stage, cinematic, steering, playCinematic }: {
     { label: remaining > 0 ? `Send heard request · ${remaining}s` : "Send heard request", disabled: blocked || !heard, action: () => submit() },
     { label: "Skip cinematic", action: playCinematic },
   );
-  return <WorldPanel position={[0.35, 0.95, -0.95]} width={0.86} title="Steer the cinematic"
+  return <WorldPanel width={0.86} title="Steer the cinematic"
     lines={["Xion suggests · two fresh ideas every 8 seconds", ...(heard && !state.listening ? [`Heard: ${heard}`] : []), statusLine]}
     buttons={buttons} />;
 }
