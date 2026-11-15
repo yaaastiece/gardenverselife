@@ -1,13 +1,24 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { RoundedBox } from "@react-three/drei";
+import { Outlines } from "@react-three/drei";
 import { Plant } from "./Garden";
 import { LEAF, leafTexture } from "../plants/leaves";
 import { PALETTE, WIND } from "../config";
 import { SEEDLING_STAGES, nextStage } from "../plants/growth";
 
 const DROPS = 40;
+function heartShape() {
+  const h = new THREE.Shape(); const k = 0.62;
+  h.moveTo(0, -0.42 * k / 0.62 * 0.62);
+  h.bezierCurveTo(-0.15, -0.3, -0.62, -0.05, -0.55, 0.3); h.bezierCurveTo(-0.5, 0.6, -0.08, 0.62, 0, 0.32);
+  h.bezierCurveTo(0.08, 0.62, 0.5, 0.6, 0.55, 0.3); h.bezierCurveTo(0.62, -0.05, 0.15, -0.3, 0, -0.42);
+  return h;
+}
+// Point of the heart faces the camera.
+const heart = new THREE.ExtrudeGeometry(heartShape(), { depth: 0.44, bevelEnabled: true, bevelThickness: 0.05, bevelSize: 0.04, bevelSegments: 3, curveSegments: 24 });
+heart.rotateZ(Math.PI); heart.translate(0, 0, 0.0);
+const heartTop = new THREE.ShapeGeometry(heartShape(), 24); heartTop.rotateZ(Math.PI);
 
 export function Seedling({ onStageChange }: { onStageChange: (name: string) => void }) {
   const [stage, setStage] = useState(0);
@@ -58,15 +69,11 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
   return (
     <group position={[0, 0, -1.4]}>
       <group onClick={(e) => { e.stopPropagation(); water(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
-        <RoundedBox args={[1.6, 0.3, 0.9]} radius={0.08} position={[0, 0.15, 0]}><meshPhysicalMaterial color="#f6dcea" roughness={0.08} transparent opacity={0.6} clearcoat={1} /></RoundedBox>
-        <mesh position={[0, 0.08, 0.456]}><boxGeometry args={[1.45, 0.035, 0.01]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
-        <mesh position={[0, 0.301, 0]} rotation-x={-Math.PI / 2}><planeGeometry args={[1.5, 0.8]} /><meshStandardMaterial color="#3d2a22" roughness={1} /></mesh>
-        {[-0.55, -0.4, 0.4, 0.55].map((x, i) => <Plant key={x} kind={i < 2 ? "herb" : "rose"} position={[x, 0.3, (i % 2) * 0.15 - 0.05]} seed={40 + i} />)}
-        <mesh position={[0, 0.35, 0]}><sphereGeometry args={[0.3, 32, 16, 0, Math.PI * 2, Math.PI * 0.35, Math.PI * 0.65]} /><meshPhysicalMaterial color="#d8fff4" transparent opacity={0.3} roughness={0.05} side={THREE.DoubleSide} depthWrite={false} emissive="#5dffd0" emissiveIntensity={hover ? 0.3 : 0.08} /></mesh>
-        <mesh position={[0, 0.3, 0]}><cylinderGeometry args={[0.22, 0.12, 0.25, 24]} /><meshStandardMaterial color="#3d2a22" roughness={1} /></mesh>
-        <mesh position={[0, 0.55, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.24, 0.012, 6, 48]} /><meshBasicMaterial color="#7dffd8" toneMapped={false} /></mesh>
-        <mesh position={[0, 0.555, 0]} rotation-x={-Math.PI / 2}><circleGeometry args={[0.235, 24]} /><meshStandardMaterial color="#3d2a22" /></mesh>
-        <group ref={plant} position={[0, 0.56, 0]}>
+        <group scale={[0.72, 1, 0.72]}><mesh geometry={heart} position={[0, 0, -0.1]} rotation-x={-Math.PI / 2}><meshStandardMaterial color="#a8a5ae" metalness={0.85} roughness={0.32} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
+        <mesh geometry={heartTop} position={[0, 0.5, -0.1]} rotation-x={-Math.PI / 2} scale={0.9}><meshStandardMaterial color="#1f1510" roughness={1} /></mesh></group>
+        <mesh position={[0, 0.05, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.36, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
+        {[-0.22, -0.14, 0.14, 0.22].map((x, i) => <Plant key={x} kind={i % 3 === 0 ? "herb" : "rose"} position={[x, 0.5, -0.12 + (i % 2) * 0.1]} seed={40 + i} />)}
+        <group ref={plant} position={[0, 0.5, 0]}>
           <mesh position={[0, s.height / 2, 0]}><cylinderGeometry args={[0.012, 0.02, s.height, 6]} /><meshStandardMaterial color="#3a9a4c" /></mesh>
           {Array.from({ length: s.leaves }, (_, i) => {
             const a = i * 2.4; const y = s.height * (0.45 + (i / s.leaves) * 0.55);

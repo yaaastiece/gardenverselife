@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Outlines, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
@@ -7,21 +7,52 @@ import { LEAF, leafTexture } from "../plants/leaves";
 
 export type PlantKind = "herb" | "tomato" | "strawberry" | "lettuce" | "pepper" | "rose";
 
-export function Planter({ position, size = [1.4, 0.5, 0.6], children }: { position: [number, number, number]; size?: [number, number, number]; children?: React.ReactNode }) {
+const METAL = { color: "#9a97a0", metalness: 0.85, roughness: 0.38 };
+
+// Deep brushed-metal raised bed: thick rounded rim, soil just below it, pink LED strip at the base.
+export function Planter({ position, size = [1.4, 0.75, 0.8], children }: { position: [number, number, number]; size?: [number, number, number]; children?: React.ReactNode }) {
   const [w, h, d] = size;
+  const rim = 0.07;
   return (
     <group position={position}>
-      <RoundedBox args={[w, h, d]} radius={0.1} smoothness={3} position={[0, h / 2, 0]}><meshPhysicalMaterial color="#f6dcea" roughness={0.08} metalness={0.1} transparent opacity={0.55} clearcoat={1} /><Outlines thickness={0.02} color={PALETTE.ink} /></RoundedBox>
-      <mesh position={[0, h * 0.25, d / 2 + 0.006]}><boxGeometry args={[w * 0.85, 0.035, 0.01]} /><meshBasicMaterial color={PALETTE.pink} toneMapped={false} /></mesh>
-      <mesh position={[0, 0.02, d / 2 + 0.006]}><boxGeometry args={[w * 0.85, 0.02, 0.01]} /><meshBasicMaterial color={PALETTE.pink} toneMapped={false} /></mesh>
-      <pointLight position={[0, 0.1, d / 2 + 0.25]} color={PALETTE.pink} intensity={0.8} distance={1.2} />
-      <mesh position={[0, h + 0.005, 0]}><boxGeometry args={[w * 0.94, 0.02, d * 0.9]} /><meshStandardMaterial color="#3d2a22" roughness={1} /></mesh>
-      {[-1, 1].map((s) => (
-        <mesh key={s} position={[s * (w / 2 - 0.08), h * 0.65, d / 2 + 0.008]}><circleGeometry args={[0.025, 10]} /><meshBasicMaterial color={s > 0 ? PALETTE.green : PALETTE.pinkSoft} toneMapped={false} /></mesh>
-      ))}
-      <group position={[0, h, 0]}>{children}</group>
+      <RoundedBox args={[w, h - rim, d]} radius={0.04} smoothness={2} position={[0, (h - rim) / 2, 0]}><meshStandardMaterial {...METAL} map={brushedTexture()} /><Outlines thickness={0.018} color={PALETTE.ink} /></RoundedBox>
+      <RoundedBox args={[w + 0.08, rim, d + 0.08]} radius={0.034} smoothness={3} position={[0, h - rim / 2, 0]}><meshStandardMaterial {...METAL} color="#b4b1ba" roughness={0.28} /><Outlines thickness={0.015} color={PALETTE.ink} /></RoundedBox>
+      <mesh position={[0, h - 0.035, 0]}><boxGeometry args={[w - 0.04, 0.02, d - 0.04]} /><meshStandardMaterial color="#1f1510" roughness={1} /></mesh>
+      <mesh position={[0, 0.05, d / 2 + 0.004]}><boxGeometry args={[w * 0.92, 0.03, 0.01]} /><meshBasicMaterial color={PALETTE.pink} toneMapped={false} /></mesh>
+      <pointLight position={[0, 0.06, d / 2 + 0.25]} color={PALETTE.pink} intensity={0.8} distance={1.2} />
+      <group position={[0, h - 0.03, 0]}>{children}</group>
     </group>
   );
+}
+
+let brushed: THREE.CanvasTexture | null = null;
+function brushedTexture() {
+  if (brushed) return brushed;
+  const c = document.createElement("canvas"); c.width = 256; c.height = 64;
+  const g = c.getContext("2d")!; g.fillStyle = "#c8c6cc"; g.fillRect(0, 0, 256, 64);
+  for (let i = 0; i < 400; i++) { g.fillStyle = `rgba(${Math.random() > 0.5 ? "255,255,255" : "40,40,48"},${0.05 + Math.random() * 0.08})`; g.fillRect(Math.random() * 256, Math.random() * 64, 30 + Math.random() * 120, 1); }
+  brushed = new THREE.CanvasTexture(c); brushed.colorSpace = THREE.SRGBColorSpace; brushed.wrapS = brushed.wrapT = THREE.RepeatWrapping;
+  return brushed;
+}
+
+/** Leaves spilling over the rim on all four sides, one instanced draw. */
+function Spill({ w, d, seed }: { w: number; d: number; seed: number }) {
+  const ref = useRef<THREE.InstancedMesh>(null);
+  const count = Math.round((w + d) * 9);
+  useEffect(() => {
+    const m = ref.current; if (!m) return; const r = rng(seed + 77); const o = new THREE.Object3D(); const c = new THREE.Color();
+    for (let i = 0; i < count; i++) {
+      const t = r(); const side = i % 4; const along = side < 2 ? (t - 0.5) * w : (t - 0.5) * d;
+      const out = (side < 2 ? d : w) / 2 + 0.02;
+      const x = side < 2 ? along : side === 2 ? out : -out; const z = side < 2 ? (side === 0 ? out : -out) : along;
+      o.position.set(x, -0.02 - r() * 0.05, z); o.rotation.set(0, Math.atan2(x - x * 0.5 * (side >= 2 ? 1 : 0), z) , 0);
+      o.lookAt(x * 3, -0.6, z * 3); o.rotateX(-0.3 - r() * 0.6); o.rotateZ((r() - 0.5) * 1.2);
+      o.scale.setScalar(0.16 + r() * 0.12); o.updateMatrix(); m.setMatrixAt(i, o.matrix);
+      m.setColorAt(i, c.set(["#3f8f45", "#5aa84a", "#2f7a3c", "#77c25a"][i % 4]!));
+    }
+    m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  }, [w, d, seed, count]);
+  return <instancedMesh ref={ref} args={[LEAF.serrated, undefined, count]}><meshStandardMaterial map={leafTexture()} side={THREE.DoubleSide} roughness={0.6} /></instancedMesh>;
 }
 
 function Sway({ children, seed }: { children: React.ReactNode; seed: number }) {
@@ -84,6 +115,7 @@ export function Plant({ kind, position, seed }: { kind: PlantKind; position: [nu
   return (
     <group position={position}>
       <Sway seed={seed}>
+        {kind === "tomato" && <><mesh position={[0.05, 0.4, -0.04]}><cylinderGeometry args={[0.009, 0.011, 0.8, 5]} /><meshStandardMaterial color="#a9875a" roughness={0.9} /></mesh>{[0.25, 0.5].map((y) => <mesh key={y} position={[0.05, y, -0.04]}><torusGeometry args={[0.022, 0.004, 4, 10]} /><meshStandardMaterial color="#d8c7a0" /></mesh>)}</>}
         {parts.stems.map((st, i) => <mesh key={i} position={[Math.sin(-st.tilt[2]) * st.h / 2, st.h / 2, Math.sin(st.tilt[0]) * st.h / 2]} rotation={st.tilt}><cylinderGeometry args={[0.006, 0.011, st.h, 5]} /><meshStandardMaterial color="#3d6b2f" roughness={0.8} /></mesh>)}
         {parts.leaves.map((l, i) => <Leaf key={i} {...l} />)}
         {parts.fruit.map((f, i) => <group key={i} position={f.pos}><mesh scale={[1, 0.85, 1]}><sphereGeometry args={[f.r, 14, 10]} /><meshPhysicalMaterial color={f.c} roughness={0.25} clearcoat={0.8} /></mesh><mesh position={[0, f.r * 0.85, 0]}><coneGeometry args={[f.r * 0.5, f.r * 0.3, 5]} /><meshStandardMaterial color="#2f6a2a" /></mesh></group>)}
@@ -94,28 +126,28 @@ export function Plant({ kind, position, seed }: { kind: PlantKind; position: [nu
 }
 
 type Row = { pos: [number, number, number]; rot: number; size: [number, number, number]; kinds: PlantKind[]; bowls?: boolean };
+// Varied lengths, heights and mixes; positions match CARE_TARGETS in interaction.ts.
 const ROWS: Row[] = [
-  // long left planter: tomatoes + herbs
-  { pos: [-2.6, 0, -1.2], rot: Math.PI / 2, size: [4.6, 0.55, 0.8], kinds: ["herb", "lettuce", "herb", "tomato", "tomato", "tomato", "herb", "tomato"] },
-  // back-left: fruit bowls
-  { pos: [-1.2, 0, -3.4], rot: 0, size: [1.8, 0.5, 0.6], kinds: ["tomato", "herb"], bowls: true },
-  // back-right + right: flowers
-  { pos: [1.4, 0, -3.4], rot: 0, size: [2.2, 0.5, 0.6], kinds: ["lettuce", "rose", "rose", "rose"] },
-  { pos: [2.8, 0, -1.6], rot: -Math.PI / 2, size: [2.8, 0.55, 0.7], kinds: ["rose", "rose", "herb", "rose", "rose"] },
+  { pos: [-2.6, 0, -1.2], rot: Math.PI / 2, size: [4.6, 0.75, 0.85], kinds: ["herb", "lettuce", "herb", "tomato", "lettuce", "tomato", "herb", "tomato", "lettuce", "rose"] },
+  { pos: [-1.3, 0, -3.4], rot: 0, size: [1.6, 0.68, 0.7], kinds: ["tomato", "herb", "lettuce", "strawberry"] },
+  { pos: [1.4, 0, -3.4], rot: 0, size: [2.4, 0.8, 0.75], kinds: ["lettuce", "rose", "herb", "rose", "rose", "pepper"] },
+  { pos: [2.8, 0, -1.7], rot: -Math.PI / 2, size: [2.2, 0.72, 0.75], kinds: ["rose", "herb", "rose", "rose", "lettuce"] },
 ];
 
 export function Garden() {
   return (
     <group>
       {ROWS.map((r, i) => {
-        const step = (r.size[0] - 0.4) / Math.max(1, r.kinds.length - 1);
+        const [w, , d] = r.size;
+        const n = r.kinds.length; const step = (w - 0.3) / Math.max(1, n - 1);
         return (
           <group key={i} position={r.pos} rotation-y={r.rot}>
             <Planter position={[0, 0, 0]} size={r.size}>
-              {r.kinds.map((k, j) => <Plant key={j} kind={k} position={[-r.size[0] / 2 + 0.2 + j * step, 0, 0]} seed={i * 7 + j} />)}
+              {r.kinds.map((k, j) => <group key={j} position={[-w / 2 + 0.15 + j * step, 0, (j % 2 ? -1 : 1) * d * 0.18]} scale={1.35}><Plant kind={k} position={[0, 0, 0]} seed={i * 11 + j} /></group>)}
+              {r.kinds.map((k, j) => j < n - 1 && <group key={`f${j}`} position={[-w / 2 + 0.15 + (j + 0.5) * step, 0, (j % 2 ? 1 : -1) * d * 0.22]} scale={1.1}><Plant kind={k === "tomato" ? "herb" : "lettuce"} position={[0, 0, 0]} seed={i * 11 + j + 50} /></group>)}
+              <Spill w={w - 0.04} d={d - 0.04} seed={i} />
             </Planter>
-            {r.bowls && [-0.3, 0.45].map((x) => <group key={x} position={[x, r.size[1] + 0.06, 0.05]}><mesh><sphereGeometry args={[0.14, 14, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2]} /><meshStandardMaterial color="#f4e6ee" side={THREE.DoubleSide} /></mesh>{[0, 1, 2].map((k) => <mesh key={k} position={[(k - 1) * 0.06, -0.02, 0]}><sphereGeometry args={[0.045, 8, 6]} /><meshStandardMaterial color={["#e8423a", "#ffb02e", "#ff3b6b"][k]!} /></mesh>)}</group>)}
-            <pointLight position={[0, 0.9, 0.4]} color="#ffd6ec" intensity={1.2} distance={2.5} />
+            <pointLight position={[0, 1.2, 0.5]} color="#ffd6ec" intensity={1.2} distance={2.5} />
           </group>
         );
       })}
