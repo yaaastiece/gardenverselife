@@ -53,9 +53,9 @@ function RearWall() {
   const z = SIZE / 2 + 0.9;
   return (
     <group position={[0, 0, z]} rotation-y={Math.PI}>
-      <mesh position={[0, 1.6, 0.4]}><boxGeometry args={[6, 3.6, 0.6]} /><meshToonMaterial color={PALETTE.wallLight} /><Edges color={PALETTE.ink} /></mesh>
-      <mesh position={[0, 0.1, 0.9]}><boxGeometry args={[6, 0.2, 1.2]} /><meshToonMaterial color={PALETTE.wallMid} /><Edges color={PALETTE.ink} /></mesh>
-      <mesh position={[0, 3.45, 0.2]}><boxGeometry args={[6.3, 0.15, 1]} /><meshToonMaterial color={PALETTE.wallMid} /><Edges color={PALETTE.ink} /></mesh>
+      <mesh position={[0, 1.6, -0.3]}><boxGeometry args={[6, 3.6, 0.6]} /><meshToonMaterial color={PALETTE.wallLight} /><Edges color={PALETTE.ink} /></mesh>
+      <mesh position={[0, 0.05, 0.4]}><boxGeometry args={[6, 0.1, 0.8]} /><meshToonMaterial color={PALETTE.wallMid} /><Edges color={PALETTE.ink} /></mesh>
+      <mesh position={[0, 3.45, -0.2]}><boxGeometry args={[6.3, 0.15, 1]} /><meshToonMaterial color={PALETTE.wallMid} /><Edges color={PALETTE.ink} /></mesh>
       <mesh position={[0, 1.05, 0.08]}><boxGeometry args={[1.1, 2.1, 0.08]} /><meshToonMaterial color="#3a3238" /><Edges color={PALETTE.ink} /></mesh>
       <mesh position={[0.35, 1.0, 0.03]}><sphereGeometry args={[0.04, 8, 6]} /><meshStandardMaterial color="#c9c6cf" metalness={0.9} /></mesh>
       <mesh position={[0, 1.6, 0.03]}><planeGeometry args={[0.5, 0.6]} /><meshBasicMaterial color="#ffb3d6" toneMapped={false} /></mesh>
@@ -64,14 +64,14 @@ function RearWall() {
         {[-0.28, 0, 0.28].map((x, i) => <mesh key={i} position={[x, 0, 0.03]}><boxGeometry args={[0.16, 0.26, 0.02]} /><meshBasicMaterial color={PALETTE.pink} toneMapped={false} /></mesh>)}
       </group>
       {[-1.9, 1.9].map((x) => (
-        <group key={x} position={[x, 0, -0.2]}>
+        <group key={x} position={[x, 0, 0.45]}>
           <mesh position={[0, 0.25, 0]}><cylinderGeometry args={[0.28, 0.22, 0.5, 16]} /><meshToonMaterial color="#5b5660" /><Edges color={PALETTE.ink} /></mesh>
           {Array.from({ length: 7 }, (_, k) => <mesh key={k} position={[Math.sin(k * 2.4) * 0.12, 0.75 + (k % 3) * 0.12, Math.cos(k * 2.4) * 0.12]} rotation={[Math.cos(k) * 0.5, k, Math.sin(k) * 0.5]} scale={[0.12, 0.38, 0.04]}><sphereGeometry args={[1, 8, 6]} /><meshToonMaterial color={k % 2 ? "#3f8a4a" : "#2f6e3c"} /></mesh>)}
         </group>
       ))}
-      {Array.from({ length: 14 }, (_, i) => { const x = -2.8 + i * 0.43; return <mesh key={i} position={[x, 3.15 - Math.sin(((i % 7) / 7) * Math.PI) * 0.25, -0.05]}><sphereGeometry args={[0.05, 8, 6]} /><meshBasicMaterial color="#ffd9a8" toneMapped={false} /></mesh>; })}
-      <pointLight position={[0, 2.6, -0.8]} color={PALETTE.pink} intensity={3} distance={5} />
-      <pointLight position={[0, 3, -0.6]} color="#ffd9a8" intensity={2} distance={5} />
+      {Array.from({ length: 14 }, (_, i) => { const x = -2.8 + i * 0.43; return <mesh key={i} position={[x, 3.15 - Math.sin(((i % 7) / 7) * Math.PI) * 0.25, 0.08]}><sphereGeometry args={[0.05, 8, 6]} /><meshBasicMaterial color="#ffd9a8" toneMapped={false} /></mesh>; })}
+      <pointLight position={[0, 2.6, 0.8]} color={PALETTE.pink} intensity={3} distance={5} />
+      <pointLight position={[0, 3, 0.6]} color="#ffd9a8" intensity={2} distance={5} />
     </group>
   );
 }
