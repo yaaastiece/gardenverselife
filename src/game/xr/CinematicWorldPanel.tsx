@@ -1,18 +1,20 @@
-import { useEffect, useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import type { CinematicSession } from "../cinematic/session";
 import { stageNarration } from "../cinematic/prompts";
 import { speak, stopSpeaking, xionSpeechEnabled } from "../xion/voice";
 import { WorldPanel } from "./WorldPanel";
-import { HeadAnchored } from "./HeadAnchored";
 
-const WIDTH = 4.6;
-// A cinema screen just beyond the balcony rail, so the whole video can be taken in from the deck.
-const SCREEN: [number, number, number] = [0, 2.35, -4.7];
+const WIDTH = 2.2;
 
 // The Orbis video, shown as a big screen floating in the garden while you stay in VR.
 export function CinematicWorldPanel({ session, narrate = true }: { session: CinematicSession; narrate?: boolean }) {
   const state = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  const anchor = useRef<THREE.Group>(null);
+  const placed = useRef(false);
+  const { gl } = useThree();
+  const pose = useMemo(() => ({ position: new THREE.Vector3(), direction: new THREE.Vector3() }), []);
   const video = useMemo(() => {
     const element = document.createElement("video");
     element.muted = true; element.playsInline = true; element.autoplay = true; element.crossOrigin = "anonymous";
@@ -49,16 +51,26 @@ export function CinematicWorldPanel({ session, narrate = true }: { session: Cine
     return () => clearTimeout(timeout);
   }, [session, state.open, state.phase]);
 
+  useEffect(() => { if (!state.open) placed.current = false; }, [state.open]);
+  useFrame(() => {
+    const group = anchor.current; if (!group) return;
+    group.visible = state.open;
+    if (!state.open || placed.current) return;
+    const camera = gl.xr.getCamera(); camera.getWorldPosition(pose.position); camera.getWorldDirection(pose.direction);
+    pose.direction.y = 0; pose.direction.normalize();
+    if (pose.position.y < 0.3) return;
+    // Float it in front of you, a little above eye height so the garden stays visible below.
+    group.position.copy(pose.position).addScaledVector(pose.direction, 2.4); group.position.y = pose.position.y + 0.25;
+    group.rotation.y = Math.atan2(-pose.direction.x, -pose.direction.z);
+    placed.current = true;
+  });
+
   const playing = state.phase === "playing";
-  return <>
-    <group position={SCREEN} visible={state.open && playing}>
-      <mesh raycast={() => {}}><planeGeometry args={[WIDTH, WIDTH * 9 / 16]} /><meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} /></mesh>
-    </group>
-    <HeadAnchored active={state.open && !playing} distance={1} drop={0.35}>
-      <WorldPanel width={0.7}
-        title={state.phase === "error" ? "Xion" : "Orbis cinematic"}
-        lines={state.phase === "error" ? [state.error ?? "This cinematic couldn’t play."] : ["Xion is weaving the garden into a moving dream…"]}
-        buttons={[{ label: state.phase === "error" ? "Back to the garden" : "Skip", action: () => void session.close() }]} />
-    </HeadAnchored>
-  </>;
+  return <group ref={anchor} visible={false}>
+    {playing && <mesh raycast={() => {}}><planeGeometry args={[WIDTH, WIDTH * 9 / 16]} /><meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} /></mesh>}
+    <WorldPanel position={[0, playing ? -WIDTH * 9 / 32 - 0.16 : 0, 0.02]} width={0.7}
+      title={state.phase === "error" ? "Xion" : "Orbis cinematic"}
+      lines={state.phase === "error" ? [state.error ?? "This cinematic couldn’t play."] : playing ? [] : ["Xion is weaving the garden into a moving dream…"]}
+      buttons={[{ label: state.phase === "error" ? "Back to the garden" : "Skip", action: () => void session.close() }]} />
+  </group>;
 }
