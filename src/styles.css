@@ -453,3 +453,7 @@
   .gv-start-xion { max-height: 130px; }
 }
 @media (prefers-reduced-motion: reduce) { .gv-start-xion { animation: none; } }
+
+.gv-bowl-volume { display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; margin: 0.4rem 0; }
+.gv-bowl-volume input { flex: 1; min-height: 28px; accent-color: var(--primary); }
+.gv-bowl-volume span:last-child { width: 2ch; text-align: right; opacity: 0.8; }

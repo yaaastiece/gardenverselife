@@ -13,16 +13,16 @@ export const BOWL_COLORS = ["#ff5fb8", "#5dff8f", "#b47cff"] as const;
 export const BOWL_CYCLE_SECONDS = 12;
 
 export type RadioPlayer = { src: string; volume: number; play(): Promise<void>; pause(): void; onended: (() => void) | null };
-export type RadioState = { playing: boolean; index: number; error: string | null };
+export type RadioState = { playing: boolean; index: number; error: string | null; volume: number };
 
 /** Playlist radio for the sound bowl: plays in order and loops; screen and XR panels only subscribe. */
 export function createRadio(tracks: Track[] = TRACKS, makePlayer: () => RadioPlayer = () => new Audio() as unknown as RadioPlayer) {
-  let state: RadioState = { playing: false, index: 0, error: null };
+  let state: RadioState = { playing: false, index: 0, error: null, volume: 0.7 };
   let player: RadioPlayer | null = null;
   const subs = new Set<() => void>();
   const set = (patch: Partial<RadioState>) => { state = { ...state, ...patch }; subs.forEach((f) => f()); };
   const ensure = () => {
-    if (!player) { player = makePlayer(); player.volume = 0.7; player.onended = () => { void radio.next(); }; }
+    if (!player) { player = makePlayer(); player.volume = state.volume; player.onended = () => { void radio.next(); }; }
     const want = tracks[state.index]?.url ?? "";
     if (!player.src.endsWith(want)) player.src = want;
     return player;
@@ -36,6 +36,8 @@ export function createRadio(tracks: Track[] = TRACKS, makePlayer: () => RadioPla
       set({ playing: true, error: null });
       try { await p.play(); } catch { set({ playing: false, error: "Tap play to start the music." }); }
     },
+    /** Music volume 0..1, applied right away. */
+    setVolume(v: number) { const volume = Math.min(1, Math.max(0, v)); if (player) player.volume = volume; set({ volume }); },
     pause() { player?.pause(); set({ playing: false }); },
     toggle() { return state.playing ? (radio.pause(), Promise.resolve()) : radio.play(); },
     async next() {

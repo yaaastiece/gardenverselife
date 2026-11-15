@@ -15,6 +15,11 @@ export function SoundBowlCard({ radio, onMeditate, visuals, setVisuals, onClose 
         <button type="button" aria-label={r.playing ? "Pause music" : "Play music"} onClick={() => void radio.toggle()}>{r.playing ? <Pause size={16} /> : <Play size={16} />}</button>
         <button type="button" aria-label="Next song" onClick={() => void radio.next()}><SkipForward size={16} /></button>
       </div>
+      <label className="gv-bowl-volume">
+        <span>Volume</span>
+        <input type="range" min={0} max={100} step={1} value={Math.round(r.volume * 100)} aria-label="Music volume" onChange={(e) => radio.setVolume(Number(e.target.value) / 100)} />
+        <span>{Math.round(r.volume * 100)}</span>
+      </label>
       {r.error && <p className="gv-bowl-note">{r.error}</p>}
       <button type="button" className="gv-bowl-meditate" onClick={onMeditate}><Sparkles size={14} /> Meditate with Xion</button>
       <label className="gv-bowl-check"><input type="checkbox" checked={visuals} onChange={(e) => setVisuals(e.target.checked)} /> Show Orbis visuals</label>

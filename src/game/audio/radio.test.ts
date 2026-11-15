@@ -22,3 +22,11 @@ describe("sound bowl radio", () => {
     expect(bowlLight(0, false).intensity).toBeLessThan(bowlLight(0, true, 1).intensity);
   });
 });
+
+describe("radio volume", () => {
+  it("sets and clamps music volume", async () => {
+    const fp = fakePlayer(); const r = createRadio(undefined, () => fp);
+    await r.play(); r.setVolume(0.3); expect(fp.volume).toBe(0.3);
+    r.setVolume(2); expect(r.getSnapshot().volume).toBe(1);
+  });
+});
