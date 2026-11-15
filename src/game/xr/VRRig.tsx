@@ -37,7 +37,7 @@ export function VRRig({ snap, onRestart }: { snap: boolean; onRestart?: () => vo
       latched.current = false;
     };
   }, [session, camera, gl, pose]);
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!session) return;
     // Emissive neon stays intact; ambient + directional + image lighting light the garden.
     scene.traverse((object) => {
@@ -53,6 +53,19 @@ export function VRRig({ snap, onRestart }: { snap: boolean; onRestart?: () => vo
     const lowerPressed = [...session.inputSources].filter((s) => s.gamepad?.buttons[5]?.pressed).length;
     if (lowerPressed >= 2 && !restartHeld.current) { restartHeld.current = true; onRestart?.(); }
     if (lowerPressed < 2) restartHeld.current = false;
+    // Walk with the left thumbstick, relative to where the head is facing.
+    const walker = [...session.inputSources].find((s) => s.handedness === "left" && s.gamepad);
+    const walk = walker?.gamepad?.axes;
+    const sx = walk?.[walk.length >= 4 ? 2 : 0] ?? 0, sy = walk?.[walk.length >= 4 ? 3 : 1] ?? 0;
+    const body = origin.current;
+    if (body && (Math.abs(sx) > VR.walkDeadzone || Math.abs(sy) > VR.walkDeadzone)) {
+      gl.xr.getCamera().getWorldDirection(pose.offset);
+      const length = Math.hypot(pose.offset.x, pose.offset.z) || 1;
+      const fx = pose.offset.x / length, fz = pose.offset.z / length;
+      const step = VR.walkSpeed * Math.min(delta, 0.05), ahead = -sy * step, right = sx * step;
+      body.position.x = THREE.MathUtils.clamp(body.position.x + fx * ahead - fz * right, VR.walkBounds.minX, VR.walkBounds.maxX);
+      body.position.z = THREE.MathUtils.clamp(body.position.z + fz * ahead + fx * right, VR.walkBounds.minZ, VR.walkBounds.maxZ);
+    }
     const controller = [...session.inputSources].find((s) => s.handedness === "right" && s.gamepad)
       ?? [...session.inputSources].find((s) => s.gamepad);
     const axes = controller?.gamepad?.axes;
