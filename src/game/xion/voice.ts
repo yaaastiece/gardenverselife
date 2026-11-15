@@ -57,7 +57,7 @@ export function speechInputSupported() {
   return Boolean(w["SpeechRecognition"] || w["webkitSpeechRecognition"]);
 }
 /** Push-to-talk: call start() on press, stop() on release; onText gets the final transcript. */
-export function createDictation(onText: (text: string) => void, onState: (listening: boolean) => void, onError?: (msg: string) => void) {
+export function createDictation(onText: (text: string) => void, onState: (listening: boolean) => void, onError?: (msg: string) => void, onHeard?: (text: string) => void) {
   const w = window as unknown as Record<string, (new () => Rec) | undefined>;
   const Ctor = w["SpeechRecognition"] ?? w["webkitSpeechRecognition"];
   if (!Ctor) return null;
@@ -65,8 +65,8 @@ export function createDictation(onText: (text: string) => void, onState: (listen
   return {
     start() {
       if (rec) return; text = "";
-      rec = new Ctor(); rec.lang = "en-US"; rec.interimResults = false; rec.continuous = true;
-      rec.onresult = (e) => { text = Array.from(e.results).map((r) => r[0]?.transcript ?? "").join(" "); };
+      rec = new Ctor(); rec.lang = "en-US"; rec.interimResults = Boolean(onHeard); rec.continuous = true;
+      rec.onresult = (e) => { text = Array.from(e.results).map((r) => r[0]?.transcript ?? "").join(" "); onHeard?.(text.trim()); };
       rec.onend = () => { rec = null; onState(false); if (text.trim()) onText(text.trim()); };
       rec.onerror = (e) => { rec = null; onState(false); onError?.(e?.error === "not-allowed" || e?.error === "service-not-allowed" ? "Microphone is blocked. Allow mic access for this site (try opening the app in its own tab)." : e?.error === "no-speech" ? "I didn't hear anything, try again." : "Voice input stopped, try again or type."); };
       try { rec.start(); onState(true); } catch { rec = null; onState(false); }
