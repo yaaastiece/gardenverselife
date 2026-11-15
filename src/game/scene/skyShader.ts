@@ -12,7 +12,8 @@ vec3 skyColor(vec3 direction){
   float s = hash(cell);
   if(s > 0.995){
     float tw = 0.65 + 0.35*sin(time*(0.7+hash(cell+1.0)*1.8) + s*40.0);
-    c += vec3(0.32) * tw * smoothstep(0.15, 0.5, h) * (s-0.995)*200.0;
+    float point = 1.0-smoothstep(0.03, 0.16, length(fract(d*260.0)-0.5));
+    c += vec3(0.32) * point * tw * smoothstep(0.15, 0.5, h) * (s-0.995)*200.0;
   }
   return c;
 }`;

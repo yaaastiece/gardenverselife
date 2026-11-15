@@ -17,7 +17,7 @@ void main(){
   float tw = 0.5 + 0.5*sin(time*(0.8 + hash(vec3(cell,0.0))*1.6) + hash(vec3(cell+3.1,0.0))*6.283);
   c *= 1.0 + sky * smoothstep(0.55, 0.85, lum) * (tw - 0.45) * 0.9;
   float edge = smoothstep(0.0, edgeFade, min(s, 1.0-s));
-  float top = 1.0-smoothstep(0.96, 1.0, vUv.y);
+  float top = 1.0-smoothstep(0.9, 1.0, vUv.y);
   c = mix(skyColor(vDir), c, edge * top);
   gl_FragColor = vec4(c, 1.0);
   #include <colorspace_fragment>
