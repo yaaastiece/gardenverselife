@@ -1,5 +1,5 @@
 // All of Xion's speaking goes through speak(); swap this file's body for ElevenLabs later.
-type Rec = { lang: string; interimResults: boolean; continuous: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null };
+type Rec = { lang: string; interimResults: boolean; continuous: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: ((e: { error?: string }) => void) | null };
 
 const subs = new Set<(speaking: boolean) => void>();
 const notify = (v: boolean) => subs.forEach((f) => f(v));
@@ -11,9 +11,10 @@ function pickVoice() {
   return voices.find((v) => soft.test(v.name)) ?? voices[0];
 }
 
+if (typeof window !== "undefined" && "speechSynthesis" in window) { window.speechSynthesis.getVoices(); window.speechSynthesis.addEventListener?.("voiceschanged", () => window.speechSynthesis.getVoices()); }
 export function speak(text: string) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
+  window.speechSynthesis.cancel(); window.speechSynthesis.resume();
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice(); if (v) u.voice = v;
   u.pitch = 1.25; u.rate = 0.98; u.volume = 0.9;
@@ -28,7 +29,7 @@ export function speechInputSupported() {
   return Boolean(w["SpeechRecognition"] || w["webkitSpeechRecognition"]);
 }
 /** Push-to-talk: call start() on press, stop() on release; onText gets the final transcript. */
-export function createDictation(onText: (text: string) => void, onState: (listening: boolean) => void) {
+export function createDictation(onText: (text: string) => void, onState: (listening: boolean) => void, onError?: (msg: string) => void) {
   const w = window as unknown as Record<string, (new () => Rec) | undefined>;
   const Ctor = w["SpeechRecognition"] ?? w["webkitSpeechRecognition"];
   if (!Ctor) return null;
@@ -39,9 +40,10 @@ export function createDictation(onText: (text: string) => void, onState: (listen
       rec = new Ctor(); rec.lang = "en-US"; rec.interimResults = false; rec.continuous = true;
       rec.onresult = (e) => { text = Array.from(e.results).map((r) => r[0]?.transcript ?? "").join(" "); };
       rec.onend = () => { rec = null; onState(false); if (text.trim()) onText(text.trim()); };
-      rec.onerror = () => { rec = null; onState(false); };
+      rec.onerror = (e) => { rec = null; onState(false); onError?.(e?.error === "not-allowed" || e?.error === "service-not-allowed" ? "Microphone is blocked. Allow mic access for this site (try opening the app in its own tab)." : e?.error === "no-speech" ? "I didn't hear anything, try again." : "Voice input stopped, try again or type."); };
       try { rec.start(); onState(true); } catch { rec = null; onState(false); }
     },
     stop() { rec?.stop(); },
+    get listening() { return rec !== null; },
   };
 }
