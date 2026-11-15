@@ -1,0 +1,1 @@
+- Plantlet poke/squeeze noises are synthesized in `plantVoice.ts` (gesture rule + cooldown) using the garden volume from `mixer.ts`, so no audio files are needed.

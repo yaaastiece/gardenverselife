@@ -6,7 +6,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
 import { Button } from "@/components/ui/button";
-import { Volume2, VolumeX } from "lucide-react";
+import { SlidersHorizontal, Volume2, VolumeX } from "lucide-react";
+import { VolumeSliders } from "./ui/VolumeSliders";
 import { createXionInteraction, isDrag } from "./interaction";
 import { XionCamera } from "./scene/XionCamera";
 import { XionSpeech } from "./ui/XionSpeech";
@@ -292,6 +293,7 @@ export function GardenScene() {
     return () => { Reflect.deleteProperty(window, "__game"); };
   }, [interaction, care, careStates, plantletId, beds, xrStore, selection, cinematic, steering, radio, meditation, meditationVisuals]);
   useEffect(() => () => audio.current?.dispose(), []);
+  const [volOpen, setVolOpen] = useState(false);
   const toggleSound = async () => {
     if (!audio.current) { audio.current = createAmbience(); audio.current.duck(radio.getSnapshot().playing); }
     await audio.current.setPlaying(!playing);
@@ -366,15 +368,19 @@ export function GardenScene() {
         <div className="min-w-0"><div className="gv-title"><h1 className="truncate">Gardenverse</h1><p>Rooftop garden · dusk</p></div>
           <div className="gv-chip" aria-live="polite">🌱 {stageName}</div>
         </div>
-        <Button variant="ghost" className="gv-sound shrink-0" onClick={toggleSound} aria-label={playing ? "Mute ambience" : "Play ambience"}>
-          {playing ? <Volume2 /> : <VolumeX />}{playing ? "Sound on" : "Play sound"}
-        </Button>
+        <div className="relative flex shrink-0 gap-1">
+          <Button variant="ghost" className="gv-sound" onClick={toggleSound} aria-label={playing ? "Mute ambience" : "Play ambience"}>
+            {playing ? <Volume2 /> : <VolumeX />}{playing ? "Sound on" : "Play sound"}
+          </Button>
+          <Button variant="ghost" className="gv-sound" aria-label="Volume" aria-expanded={volOpen} onClick={() => setVolOpen((v) => !v)}><SlidersHorizontal /></Button>
+          {volOpen && <div className="gv-volpop" role="dialog" aria-label="Volume controls"><VolumeSliders radio={radio} garden /></div>}
+        </div>
       </header>
       {!inVR && picking && <PlantletPicker start={start} onVR={vrSupported ? enterVR : undefined} vrError={vrError} />}
       {vrSupported && !inVR && !picking && <div className="gv-vr-entry"><Button variant="outline" onClick={enterVR}>Enter VR</Button>{vrError && <p role="status">{vrError}</p>}</div>}
       <div className="gv-dock"><CarePanel care={care} onAction={careAction} onChangePlantlet={() => { care.reset(); start.reset(); setPicking(true); void audio.current?.setPlaying(false); setPlaying(false); }} open={dockOpen} setOpen={setDockOpen} />{dockOpen && <MoonQuestCard quest={quest} onTask={doMoonTask} />}</div>
       {!inVR && bowlOpen && <SoundBowlCard radio={radio} onMeditate={startMeditation} visuals={visualsOn} setVisuals={setVisualsOn} onClose={() => setBowlOpen(false)} />}
-      {!inVR && <MeditationOverlay meditation={meditation} visuals={meditationVisuals} />}
+      {!inVR && <MeditationOverlay meditation={meditation} visuals={meditationVisuals} radio={radio} />}
       <PlantCard beds={beds} selection={selection} cardRef={cardRef} />
       <XionPanel chat={chat} journal={journal} plant={chatPlant} setPlant={setChatPlant} snapshot={snapshot} onReply={(t) => interaction.say(t)} onCheck={checkGarden} helper={helper} onHelp={acceptHelp} />
       {helper.state.busy && <div className="gv-helping" role="status">✨ Xion is helping · tap to stop</div>}

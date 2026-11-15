@@ -404,7 +404,7 @@
 .gv-start-back { object-position: center; }
 .gv-start-shade { background: var(--start-shade); backdrop-filter: blur(2px); }
 .gv-start-content { position: relative; width: min(920px, 100%); height: 100%; margin: auto; padding: max(22px, env(safe-area-inset-top)) 32px max(24px, env(safe-area-inset-bottom)); display: grid; grid-template-rows: auto minmax(170px, 1fr) auto auto; gap: 18px; }
-.gv-start-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.gv-start-top { position: relative; z-index: 3; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .gv-start-top h1 { font: 46px var(--font-display); color: var(--neon); margin: 0; }
 .gv-start-options { display: flex; gap: 8px; }
 .gv-start-options button { color: var(--start-paper); min-height: 44px; }
@@ -460,3 +460,8 @@
 .gv-bowl-volume-num { width: 3ch; text-align: right; opacity: 0.85; color: var(--moon, #fff3f8); }
 .gv-bowl-meditate { font-size: 0.95rem !important; min-height: 44px; width: 100%; margin-top: 0.5rem; }
 .gv-bowl-sub { margin: 0.25rem 0 0.35rem; font-size: 0.72rem; opacity: 0.8; text-align: center; }
+.gv-bowl-songs { display: flex; flex-direction: column; gap: 2px; max-height: 150px; overflow-y: auto; margin: 4px 0; }
+.gv-bowl-songs button { text-align: left; font-size: 12px; padding: 4px 8px; border-radius: 6px; color: inherit; background: transparent; }
+.gv-bowl-songs button[aria-current="true"] { background: color-mix(in oklab, var(--neon) 25%, transparent); color: var(--neon); }
+.gv-volpop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; width: 240px; padding: 0.65rem 0.8rem; border-radius: 10px; background: var(--glass); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink), 0 0 14px var(--neon); backdrop-filter: blur(6px); font-size: 0.8rem; }
+.gv-meditate-vol { position: absolute; left: 16px; bottom: 16px; width: 220px; padding: 8px 10px; border-radius: 10px; background: color-mix(in oklab, var(--background) 70%, transparent); z-index: 2; }
