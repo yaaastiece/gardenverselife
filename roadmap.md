@@ -1,4 +1,8 @@
 # Garden updates
+- [ ] Bowl meditation hint; working music + voice volume
+- [ ] Bigger, more central planter; full bush; plantlet above it
+- [ ] Moonflower story Orbis video on bloom
+- [ ] Meditation video: Xion stretches through beach, city, forest, tech rooftop
 - [x] Xion said like "Zion" in her voice; lore in her chat
 - [x] Orbis meditation video on by default, following each part of the meditation
 - [x] Expand the welcome with Xion, tap-to-begin voice, selected cards and a one-second entrance
