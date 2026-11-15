@@ -218,7 +218,7 @@
 .gv-dock { position: absolute; left: 1rem; bottom: 4rem; display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start; max-height: calc(100% - 9rem); }
 .gv-dock .gv-quest { position: static; }
 .gv-care-wrap { display: flex; flex-direction: column; gap: 0.4rem; align-items: flex-start; min-height: 0; }
-.gv-care-toggle { display: none; align-items: center; gap: 0.3rem; padding: 0.3rem 0.7rem; border-radius: 8px; background: var(--glass); border: 1.5px solid var(--neon-green); color: var(--neon-green); font-weight: 700; font-size: 0.8rem; cursor: pointer; }
+.gv-care-toggle { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.7rem; border-radius: 8px; background: var(--glass); border: 1.5px solid var(--neon-green); color: var(--neon-green); font-weight: 700; font-size: 0.8rem; cursor: pointer; }
 .gv-care { width: 230px; padding: 0.65rem 0.8rem; border-radius: 10px; background: var(--glass); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink), 0 0 14px var(--neon); backdrop-filter: blur(6px); font-size: 0.75rem; overflow: auto; }
 .gv-care-head { display: flex; justify-content: space-between; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--neon); margin: 0.1rem 0 0.3rem; }
 .gv-care-head b[data-status="Thriving"] { color: var(--neon-green); } .gv-care-head b[data-status="Struggling"] { color: var(--neon); }
@@ -353,3 +353,28 @@
 .gv-vr-entry { position: absolute; right: 1.5rem; top: 5rem; z-index: 10; }
 .gv-vr-entry p { max-width: 260px; background: var(--ink); color: var(--neon); padding: 0.5rem; font-size: 14px; }
 @media (max-width: 767px) { .gv-vr-entry { right: 0.75rem; top: 5.5rem; } }
+
+/* Sound bowl radio card */
+.gv-bowl { position: absolute; right: 1rem; bottom: 4rem; z-index: 7; width: 220px; padding: 0.65rem 0.8rem; border-radius: 10px; background: var(--glass); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink), 0 0 14px var(--neon); backdrop-filter: blur(6px); font-size: 0.8rem; }
+.gv-bowl-head { display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: var(--neon); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.7rem; }
+.gv-bowl-head button { background: none; border: none; color: inherit; cursor: pointer; padding: 0.2rem; }
+.gv-bowl-track { font-weight: 800; font-size: 1rem; margin: 0.25rem 0 0.45rem; }
+.gv-bowl-row { display: flex; gap: 0.4rem; margin-bottom: 0.5rem; }
+.gv-bowl-row button { flex: 1; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--neon); color: var(--ink); border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
+.gv-bowl-meditate { width: 100%; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; border-radius: 8px; background: var(--neon-green); color: var(--ink); font-weight: 700; border: 2px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); cursor: pointer; }
+.gv-bowl-check { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; font-size: 0.75rem; cursor: pointer; }
+.gv-bowl-check input { accent-color: var(--neon); width: 16px; height: 16px; }
+.gv-bowl-note { color: var(--neon-green); font-size: 0.72rem; margin-bottom: 0.4rem; }
+@media (max-width: 767px) { .gv-bowl { right: 0.75rem; bottom: 3.6rem; width: min(220px, 60vw); } }
+
+/* Guided meditation */
+.gv-meditate { position: absolute; inset: 0; z-index: 9; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 4.25rem; gap: 0.5rem; }
+.gv-meditate-visuals { position: absolute; inset: 0; background: var(--ink); }
+.gv-meditate-visuals video { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
+.gv-meditate-status { position: absolute; top: 45%; width: 100%; text-align: center; font-weight: 700; color: var(--neon); }
+.gv-breath { position: relative; width: 64px; height: 64px; border-radius: 999px; border: 2px solid var(--neon); background: color-mix(in oklab, var(--neon) 25%, transparent); box-shadow: 0 0 24px var(--neon); transition: transform 0.12s linear; }
+.gv-breath-label { position: relative; font-weight: 700; color: var(--neon-green); font-size: 0.85rem; letter-spacing: 0.05em; text-transform: uppercase; }
+.gv-meditate-caption { position: relative; max-width: min(560px, 92vw); padding: 0.6rem 0.9rem; border-radius: 10px; background: var(--glass); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink), 0 0 14px var(--neon); backdrop-filter: blur(6px); font-size: 0.95rem; line-height: 1.4; }
+.gv-meditate-caption b { display: block; color: var(--neon); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.15rem; }
+.gv-meditate-stop { position: relative; pointer-events: auto; display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.8rem; min-height: 36px; border-radius: 999px; background: var(--glass); border: 1.5px solid var(--neon); color: var(--neon); font-weight: 700; font-size: 0.8rem; cursor: pointer; }
+.gv-stage[data-vr] .gv-bowl, .gv-stage[data-vr] .gv-meditate { display: none; }
