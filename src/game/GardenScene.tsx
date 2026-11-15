@@ -20,6 +20,9 @@ import { MoonQuestCard } from "./ui/MoonQuestCard";
 import { createMoonQuest } from "./plants/moonflower";
 import { CarePanel } from "./ui/CarePanel";
 import { ALERTS, createPlantCare, type CareAction } from "./plants/care";
+import { createBedCare, createPlantSelection } from "./plants/beds";
+import { PlantCard } from "./ui/PlantCard";
+import { PlantCardAnchor, PlantFxLayer } from "./scene/PlantCardAnchor";
 import { createAmbience } from "./audio/ambience";
 import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
 
@@ -39,6 +42,10 @@ export function GardenScene() {
   const [care] = useState(createPlantCare);
   useEffect(() => care.onAlert((k) => interaction.say(ALERTS[k])), [care, interaction]);
   const careAction = useCallback((a: CareAction) => { care.act(a); }, [care]);
+  const [beds] = useState(() => createBedCare());
+  const [selection] = useState(createPlantSelection);
+  const cardRef = useRef<HTMLDivElement>(null);
+  useEffect(() => beds.onAlert((a) => interaction.say(a.text)), [beds, interaction]);
   const [night, setNight] = useState(false);
   useEffect(() => quest.subscribe((st) => setNight(st === "bloom")), [quest]);
   const doMoonTask = useCallback(() => {
@@ -74,7 +81,7 @@ export function GardenScene() {
         canvasPress.current = null;
         if (start && !interaction.state.pointerHandled && !isDrag(start, { x: e.clientX, y: e.clientY })) interaction.dismiss();
       }}>
-      <Canvas camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={[1, LOOK.maxDpr]} onPointerMissed={() => interaction.dismiss()}>
+      <Canvas camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={[1, LOOK.maxDpr]} onPointerMissed={() => { interaction.dismiss(); selection.clear(); }}>
         <color attach="background" args={[BACKDROP.fill]} />
         <hemisphereLight args={["#ffd9ea", "#3a2a3a", night ? 0.35 : 0.9]} />
         <directionalLight position={[-20, 15, -30]} intensity={night ? 0.2 : 0.6} color={night ? "#b9c4ff" : "#ffe6f2"} />
@@ -82,18 +89,20 @@ export function GardenScene() {
           <Lightformer intensity={1.5} color="#ffc6e0" position={[0, 5, 0]} scale={[10, 10, 1]} rotation-x={Math.PI / 2} />
           <Lightformer intensity={0.8} color="#8a6a8a" position={[-5, 1, -1]} rotation-y={Math.PI / 2} scale={[20, 1, 1]} />
         </Environment>
-        <group onClick={() => interaction.dismiss()}>
+        <group onClick={() => { interaction.dismiss(); selection.clear(); }}>
           <SkyDome />
           <Suspense fallback={null}><Backdrop /></Suspense>
           <FlyingCars />
           <Deck />
-          <Garden />
+          <Garden beds={beds} selection={selection} />
           <Lounge />
         </group>
         <Suspense fallback={null}><Xion interaction={interaction} /></Suspense>
         <Seedling onStageChange={onStage} care={care} />
         <Moonflower quest={quest} onTask={doMoonTask} />
         <XionCamera interaction={interaction} bubbleRef={bubbleRef} />
+        <PlantCardAnchor selection={selection} cardRef={cardRef} />
+        <PlantFxLayer selection={selection} />
         <ReadySignal onReady={() => setReady(true)} />
       </Canvas>
 
@@ -106,6 +115,7 @@ export function GardenScene() {
         </Button>
       </header>
       <div className="gv-dock"><CarePanel care={care} onAction={careAction} /><MoonQuestCard quest={quest} onTask={doMoonTask} /></div>
+      <PlantCard beds={beds} selection={selection} cardRef={cardRef} />
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
       <div className="gv-hint">Drag to look around · Tap the seedling or moonflower</div>
     </div>
