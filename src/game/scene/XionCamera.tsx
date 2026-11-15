@@ -55,7 +55,7 @@ const TOP_LIMIT = 130; // keep clear of the header
 function placeBubble(bubble: HTMLDivElement, state: XionInteraction["state"], camera: THREE.Camera, size: { width: number; height: number }, v: THREE.Vector3) {
   const st = bubble.style;
   if (state.focused && !state.dragging) {
-    bubble.dataset.mode = "dock";
+    bubble.dataset["mode"] = "dock";
     const stage = bubble.parentElement?.getBoundingClientRect();
     const hint = bubble.parentElement?.querySelector(".gv-hint")?.getBoundingClientRect();
     let limit = hint ? hint.top : size.height - 60;
@@ -74,7 +74,7 @@ function placeBubble(bubble: HTMLDivElement, state: XionInteraction["state"], ca
   const w = bubble.offsetWidth, h = bubble.offsetHeight;
   const clampX = (x: number) => Math.max(w / 2 + 12, Math.min(size.width - w / 2 - 12, x));
   if (head.y - GAP - 12 - h >= TOP_LIMIT) {
-    bubble.dataset.mode = "above";
+    bubble.dataset["mode"] = "above";
     const left = clampX(head.x);
     st.left = `${left}px`; st.top = `${head.y - GAP}px`;
     bubble.style.setProperty("--tail-x", `${Math.max(16, Math.min(w - 16, head.x - left + w / 2))}px`);
@@ -83,7 +83,7 @@ function placeBubble(bubble: HTMLDivElement, state: XionInteraction["state"], ca
   const midY = (head.y + feet.y) / 2;
   const roomRight = size.width - (head.x + spriteHalfW + GAP + 12);
   const right = roomRight >= w || roomRight >= head.x - spriteHalfW - GAP - 12;
-  bubble.dataset.mode = right ? "right" : "left";
+  bubble.dataset["mode"] = right ? "right" : "left";
   const x = right ? head.x + spriteHalfW + GAP + 10 : head.x - spriteHalfW - GAP - 10 - w;
   st.left = `${Math.max(12, Math.min(size.width - w - 12, x))}px`;
   st.top = `${Math.max(TOP_LIMIT, Math.min(size.height - h - 30, midY - h / 2))}px`;
