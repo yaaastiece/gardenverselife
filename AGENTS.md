@@ -64,7 +64,7 @@ use the editor.
 - Dev-only `window.__game.xr`, `renderer()` and `selection` expose XR session/render state and plant selection for repeatable emulator checks; pointer visuals are excluded from both ray and near-grab filtering to avoid self-intersections.
 
 ## Sound bowl and meditation
-- Keep playlist, LED color, meditation script/timing, breath phases and Xion seat/return in plain TS (`audio/radio.ts`, `meditation/meditation.ts`); screen cards and XR WorldPanels only subscribe, and meditation visuals use a separate non-auto-ending cinematic session while growth cinematics wait in the gate.
+- Keep playlist, LED color, meditation script/timing, breath phases and Xion seat/return in plain TS (`audio/radio.ts`, `meditation/meditation.ts`); screen cards and XR WorldPanels only subscribe, and meditation visuals use a separate non-auto-ending cinematic session steered per script step (prompts.ts) while growth cinematics wait in the gate.
 
 ## Plantlets
 - Keep welcome copy, tap/selection gating and one-second entrance in plain TS `src/game/start.ts`; screen and chest-height XR presentations share this controller so neither duplicates entry rules.
