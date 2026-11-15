@@ -31,6 +31,11 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
   const tools = useMemo(() => ({ raycaster: new THREE.Raycaster(), matrix: new THREE.Matrix4(), from: new THREE.Vector3(), dir: new THREE.Vector3() }), []);
   const interaction = useRef<THREE.Object3D[]>([]);
   const dots = useRef<(THREE.Mesh | null)[]>([]);
+  const glows = useRef<(THREE.Group | null)[]>([]);
+  const box = useMemo(() => new THREE.Box3(), []);
+  const m4 = useMemo(() => new THREE.Matrix4(), []);
+  const size = useMemo(() => new THREE.Vector3(), []);
+  const center = useMemo(() => new THREE.Vector3(), []);
   const state = useRef<{ interaction: THREE.Object3D[] } | null>(null);
 
   const fire = (chain: R3FObject[], name: string, pointer: Pointer, hit: Hit | null) => {
@@ -81,6 +86,7 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
     interaction.current = state.current.interaction.filter((object) => visible(object));
     const originMatrix = origin.current?.matrixWorld;
     dots.current.forEach((dot) => { if (dot) dot.visible = false; });
+    glows.current.forEach((glow) => { if (glow) glow.visible = false; });
     let slot = 0;
     for (const source of session.inputSources) {
       if (!source.targetRaySpace) continue;
@@ -100,6 +106,30 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
       // A green dot shows where each controller is pointing at something tappable.
       const dot = dots.current[slot++];
       if (dot && first && chain.length) { dot.visible = true; dot.position.copy(first.point); }
+      // A soft green box glows around whatever is being pointed at.
+      const glow = glows.current[slot - 1];
+      const target = chain[0];
+      if (glow && target) {
+        const mesh = target as unknown as THREE.Mesh;
+        const geometry = mesh.isMesh ? mesh.geometry : null;
+        let ok = false;
+        if (geometry) {
+          if (!geometry.boundingBox) geometry.computeBoundingBox();
+          box.copy(geometry.boundingBox as THREE.Box3); m4.copy(mesh.matrixWorld); ok = true;
+        } else {
+          box.setFromObject(target); m4.identity(); ok = !box.isEmpty();
+        }
+        if (ok) {
+          box.getSize(size); box.getCenter(center);
+          const w = (m4.elements[0] ** 2 + m4.elements[1] ** 2 + m4.elements[2] ** 2) ** 0.5;
+          const big = size.x * w > 3 || size.y * w > 3 || size.z * w > 3;
+          if (!big) {
+            size.set(Math.max(size.x, 0.03 / w), Math.max(size.y, 0.03 / w), Math.max(size.z, 0.03 / w));
+            glow.matrix.copy(m4).multiply(new THREE.Matrix4().compose(center, new THREE.Quaternion(), size).multiply(new THREE.Matrix4().makeScale(1.06, 1.06, 1.06)));
+            glow.visible = true;
+          }
+        }
+      }
       if (chain[0] !== p.chain[0]) {
         fire(p.chain, "onPointerOut", p, first); fire(chain, "onPointerOver", p, first);
       }
@@ -108,6 +138,11 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
     }
   }, -55);
   return <>{[0, 1].map((i) => (
+    <group key={`glow${i}`} ref={(g) => { glows.current[i] = g; }} visible={false} matrixAutoUpdate={false} renderOrder={999}>
+      <mesh raycast={() => {}} renderOrder={999}><boxGeometry args={[1, 1, 1]} /><meshBasicMaterial color="#6dffb0" transparent opacity={0.2} depthWrite={false} depthTest={false} blending={THREE.AdditiveBlending} toneMapped={false} /></mesh>
+      <lineSegments raycast={() => {}} renderOrder={1000}><edgesGeometry args={[new THREE.BoxGeometry(1, 1, 1)]} /><lineBasicMaterial color="#9dffc8" transparent opacity={0.9} depthTest={false} toneMapped={false} /></lineSegments>
+    </group>
+  ))}{[0, 1].map((i) => (
     <mesh key={i} ref={(m) => { dots.current[i] = m; }} visible={false} renderOrder={1000} raycast={() => {}}>
       <sphereGeometry args={[0.012, 12, 8]} />
       <meshBasicMaterial color="#6dffb0" depthTest={false} toneMapped={false} />
