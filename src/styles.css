@@ -197,6 +197,13 @@
 .gv-bubble-name { display: block; color: var(--ink); font-family: var(--font-display); font-size: 20px; margin-bottom: 3px; }
 .gv-bubble--fade { opacity: 0; }
 @keyframes gv-pop { from { opacity: 0; } }
+.gv-bubble[data-mode="above"]::after { left: var(--tail-x, 50%); }
+.gv-bubble[data-mode="right"], .gv-bubble[data-mode="left"] { transform: none; }
+.gv-bubble[data-mode="right"]::after { left: -9px; top: 50%; bottom: auto; transform: translateY(-50%) rotate(135deg); }
+.gv-bubble[data-mode="left"]::after { left: auto; right: -9px; top: 50%; bottom: auto; transform: translateY(-50%) rotate(-45deg); }
+/* Close-up dialogue box: docked bottom center, Xion stays visible above it. */
+.gv-bubble[data-mode="dock"] { left: 50%; top: auto; transform: translateX(-50%); width: min(460px, calc(100vw - 24px)); z-index: 7; }
+.gv-bubble[data-mode="dock"]::after { display: none; }
 @media (prefers-reduced-motion: reduce) { .gv-bubble { animation: none; } }
 
 .gv-quest { position: absolute; left: 1rem; bottom: 4rem; width: 230px; padding: 0.75rem 0.9rem; border-radius: 10px; background: var(--glass); border: 2px solid var(--ink); box-shadow: 3px 3px 0 var(--ink), 0 0 14px var(--neon-green); backdrop-filter: blur(6px); }
