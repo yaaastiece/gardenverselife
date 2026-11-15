@@ -9,7 +9,8 @@ import * as THREE from "three";
 
 type R3FObject = THREE.Object3D & { __r3f?: { eventCount?: number; handlers?: Record<string, ((event: unknown) => void) | undefined> } };
 type Hit = THREE.Intersection;
-type Pointer = { id: number; chain: R3FObject[]; hit: Hit | null; hits: Hit[]; downChain: R3FObject[]; downFirst: R3FObject | null };
+type Pointer = { id: number; chain: R3FObject[]; hit: Hit | null; hits: Hit[]; downChain: R3FObject[]; downFirst: R3FObject | null; polled: boolean; triggerDown: boolean; triggerAt: number };
+const fresh = (id: number): Pointer => ({ id, chain: [], hit: null, hits: [], downChain: [], downFirst: null, polled: false, triggerDown: false, triggerAt: 0 });
 
 const RANGE = 12;
 
@@ -55,21 +56,30 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
     }
   };
 
+  const pulse = (source: XRInputSource) => { try { void (source.gamepad?.hapticActuators?.[0] as { pulse?: (v: number, ms: number) => void } | undefined)?.pulse?.(0.4, 35); } catch { /* optional */ } };
+  const press = (p: Pointer) => { p.downChain = p.chain; p.downFirst = p.chain[0] ?? null; fire(p.chain, "onPointerDown", p, p.hit); };
+  const release = (p: Pointer, source: XRInputSource) => {
+    fire(p.downChain, "onPointerUp", p, p.hit);
+    if (p.downFirst && p.chain[0] === p.downFirst) { fire(p.chain, "onClick", p, p.hit); pulse(source); }
+    p.downChain = []; p.downFirst = null;
+  };
+
   useEffect(() => {
     if (!session) return;
     const forSource = (event: XRInputSourceEvent) => {
       let p = pointers.current.get(event.inputSource);
-      if (!p) { p = { id: next.current++, chain: [], hit: null, hits: [], downChain: [], downFirst: null }; pointers.current.set(event.inputSource, p); }
+      if (!p) { p = fresh(next.current++); pointers.current.set(event.inputSource, p); }
       return p;
     };
-    const pulse = (source: XRInputSource) => { try { void (source.gamepad?.hapticActuators?.[0] as { pulse?: (v: number, ms: number) => void } | undefined)?.pulse?.(0.4, 35); } catch { /* optional */ } };
     const down = (event: XRInputSourceEvent) => {
       const p = forSource(event);
+      if (p.polled) return;
       p.downChain = p.chain; p.downFirst = p.chain[0] ?? null;
       fire(p.chain, "onPointerDown", p, p.hit);
     };
     const up = (event: XRInputSourceEvent) => {
       const p = forSource(event);
+      if (p.polled) return;
       fire(p.downChain, "onPointerUp", p, p.hit);
       if (p.downFirst && p.chain[0] === p.downFirst) { fire(p.chain, "onClick", p, p.hit); pulse(event.inputSource); }
       p.downChain = []; p.downFirst = null;
@@ -93,7 +103,7 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
       const pose = frame.getPose(source.targetRaySpace, refSpace);
       if (!pose) continue;
       let p = pointers.current.get(source);
-      if (!p) { p = { id: next.current++, chain: [], hit: null, hits: [], downChain: [], downFirst: null }; pointers.current.set(source, p); }
+      if (!p) { p = fresh(next.current++); pointers.current.set(source, p); }
       tools.matrix.fromArray(pose.transform.matrix);
       if (originMatrix) tools.matrix.premultiply(originMatrix);
       tools.from.setFromMatrixPosition(tools.matrix);
@@ -127,6 +137,8 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
             size.set(Math.max(size.x, 0.03 / w), Math.max(size.y, 0.03 / w), Math.max(size.z, 0.03 / w));
             glow.matrix.copy(m4).multiply(new THREE.Matrix4().compose(center, new THREE.Quaternion(), size).multiply(new THREE.Matrix4().makeScale(1.06, 1.06, 1.06)));
             glow.visible = true;
+            const fill = glow.children[0] as THREE.Mesh | undefined;
+            if (fill) (fill.material as THREE.MeshBasicMaterial).opacity = p.triggerDown || p.downFirst ? 0.6 : 0.2;
           }
         }
       }
@@ -134,6 +146,12 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
         fire(p.chain, "onPointerOut", p, first); fire(chain, "onPointerOver", p, first);
       }
       p.chain = chain;
+      // Also read the trigger button directly: some Quest browsers never send the select events.
+      const trigger = (source.gamepad?.buttons[0]?.value ?? 0) > 0.6 || Boolean(source.gamepad?.buttons[0]?.pressed);
+      const now = performance.now();
+      if (trigger && !p.triggerDown) { p.triggerDown = true; p.triggerAt = now; }
+      if (trigger && p.triggerDown && !p.polled && !p.downFirst && now - p.triggerAt > 90) { p.polled = true; press(p); }
+      if (!trigger && p.triggerDown) { p.triggerDown = false; if (p.polled) { p.polled = false; release(p, source); } }
       if (p.downChain.length && first) fire(p.downChain, "onPointerMove", p, first);
     }
   }, -55);
