@@ -1,4 +1,7 @@
 # Garden updates
+- [ ] Expand the welcome with Xion, tap-to-begin voice, selected cards and a one-second entrance
+- [ ] Share welcome rules with a chest-height VR panel and optional background video
+- [ ] Verify opening and entrance on desktop and phones
 - [x] Move both companions' art, care, stages and story into one data file
 - [x] Add Lumibud's orb placeholders, confirmed change-plant flow and separate care state
 - [x] Verify companion choice, stage lore, care drift and unchanged garden interactions
