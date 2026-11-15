@@ -327,7 +327,7 @@ export function GardenScene() {
       <PlantCard beds={beds} selection={selection} cardRef={cardRef} />
       <XionPanel chat={chat} journal={journal} plant={chatPlant} setPlant={setChatPlant} snapshot={snapshot} onReply={(t) => interaction.say(t)} onCheck={checkGarden} helper={helper} onHelp={acceptHelp} />
       {helper.state.busy && <div className="gv-helping" role="status">✨ Xion is helping · tap to stop</div>}
-      <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
+      {!picking && <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />}
       <div className="gv-hint">Drag to look around · Tap {plantName()}, the moonflower or the sound bowl</div>
       {!inVR && <CinematicOverlay session={cinematic} steering={steering} />}
     </div>

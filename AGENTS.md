@@ -70,4 +70,5 @@ use the editor.
 - Keep playlist, LED color, meditation script/timing, breath phases and Xion seat/return in plain TS (`audio/radio.ts`, `meditation/meditation.ts`); screen cards and XR WorldPanels only subscribe, and meditation visuals use a separate non-auto-ending cinematic session while growth cinematics wait in the gate.
 
 ## Plantlets
-- The center-planter plant person is chosen in plain TS `plants/plantlets.ts` (art layout, name, Young/Queen prompts, saved choice); copy is written with Pepper Peony's name and passed through `named()`, so new plantlets need no copy rewrites.
+- The center-planter companion catalog lives in plain TS `plants/plantlets.ts`: saved choice, taglines, four stage sprites/names, glow, care drift/likes, stage notes and all four narration/Orbis beats; scene and screen components only present it so a future WebXR chooser can reuse it.
+- `createCompanionCareStates()` keeps independent Pepper Peony and Lumibud care objects; `Seedling` ticks only the selected object and pauses while the choice screen is open, and Change plant resets only the current companion after confirmation.
