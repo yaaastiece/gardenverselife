@@ -69,10 +69,10 @@ export function Seedling({ onStageChange }: { onStageChange: (name: string) => v
   return (
     <group position={[0, 0, -1.4]}>
       <group onClick={(e) => { e.stopPropagation(); water(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
-        <mesh geometry={heart} position={[0, 0, 0.42]} rotation-x={-Math.PI / 2}><meshStandardMaterial color="#a8a5ae" metalness={0.85} roughness={0.32} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
-        <mesh geometry={heartTop} position={[0, 0.501, 0.36]} rotation-x={-Math.PI / 2} scale={0.88}><meshStandardMaterial color="#1f1510" roughness={1} /></mesh>
-        <mesh position={[0, 0.05, 0]}><torusGeometry args={[0.5, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
-        {[-0.3, -0.2, 0.2, 0.3].map((x, i) => <Plant key={x} kind={i % 3 === 0 ? "herb" : "rose"} position={[x, 0.5, -0.12 + (i % 2) * 0.1]} seed={40 + i} />)}
+        <group scale={[0.72, 1, 0.72]}><mesh geometry={heart} position={[0, 0, -0.1]} rotation-x={-Math.PI / 2}><meshStandardMaterial color="#a8a5ae" metalness={0.85} roughness={0.32} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
+        <mesh geometry={heartTop} position={[0, 0.5, -0.1]} rotation-x={-Math.PI / 2} scale={0.9}><meshStandardMaterial color="#1f1510" roughness={1} /></mesh></group>
+        <mesh position={[0, 0.05, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.36, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
+        {[-0.22, -0.14, 0.14, 0.22].map((x, i) => <Plant key={x} kind={i % 3 === 0 ? "herb" : "rose"} position={[x, 0.5, -0.12 + (i % 2) * 0.1]} seed={40 + i} />)}
         <group ref={plant} position={[0, 0.5, 0]}>
           <mesh position={[0, s.height / 2, 0]}><cylinderGeometry args={[0.012, 0.02, s.height, 6]} /><meshStandardMaterial color="#3a9a4c" /></mesh>
           {Array.from({ length: s.leaves }, (_, i) => {
