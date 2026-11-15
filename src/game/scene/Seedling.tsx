@@ -64,7 +64,7 @@ export function Seedling({ onStageChange, care }: { onStageChange: (name: string
     <group position={[0, 0, -1.4]}>
       <group onClick={(e) => { e.stopPropagation(); water(); }} onPointerOver={() => setHover(true)} onPointerOut={() => setHover(false)}>
         <group><mesh geometry={tableBody} position={[0, 0.25, 0]}><meshStandardMaterial color="#a8a5ae" metalness={0.85} roughness={0.32} /><Outlines thickness={0.015} color={PALETTE.ink} /></mesh>
-        <mesh position={[0, 0.5, 0]}><torusGeometry args={[0.4, 0.03, 10, 48]} /><meshStandardMaterial color="#b4b1ba" metalness={0.85} roughness={0.28} /></mesh>
+        <mesh position={[0, 0.5, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.4, 0.03, 10, 48]} /><meshStandardMaterial color="#b4b1ba" metalness={0.85} roughness={0.28} /></mesh>
         <mesh geometry={tableTop} position={[0, 0.49, 0]} rotation-x={-Math.PI / 2}><meshStandardMaterial color="#1f1510" roughness={1} /></mesh></group>
         <mesh position={[0, 0.05, 0]} rotation-x={Math.PI / 2}><torusGeometry args={[0.38, 0.012, 6, 48]} /><meshBasicMaterial color={hover ? PALETTE.green : PALETTE.pink} toneMapped={false} /></mesh>
         {[-0.22, -0.14, 0.14, 0.22].map((x, i) => <Plant key={x} kind={i % 3 === 0 ? "herb" : "rose"} position={[x, 0.5, -0.12 + (i % 2) * 0.24]} seed={40 + i} />)}

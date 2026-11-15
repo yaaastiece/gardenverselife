@@ -17,7 +17,7 @@ export function Lounge() {
   });
   return (
     <group>
-      <group position={[1.75, 0, -0.35]} rotation-y={-0.4} scale={0.75}>
+      <group position={[1.8, 0, -2.2]} rotation-y={-0.4} scale={0.75}>
         {/* Meditation pad: woven round mat, flat zabuton, round zafu cushion */}
         <mesh position={[0, 0.012, 0]}><cylinderGeometry args={[0.7, 0.7, 0.024, 48]} /><meshStandardMaterial color="#d9c8a8" roughness={1} /><Outlines thickness={0.012} color={PALETTE.ink} /></mesh>
         <mesh position={[0, 0.026, 0]} rotation-x={-Math.PI / 2}><ringGeometry args={[0.6, 0.63, 48]} /><meshBasicMaterial color={PALETTE.pink} toneMapped={false} /></mesh>
