@@ -45,3 +45,6 @@ use the editor.
 - Keep one seamless, aspect-preserving 360 skyline ring (painted panels joined edge to edge) under `SkyDome`, sharing `skyShader.ts` for the top fade; this avoids stretching and repeats.
 - Turning is unlimited because the city wraps fully; skip OrbitControls and camera glides while XR is presenting so head tracking remains unrestricted.
 - Generate dome stars in two-dimensional cube-face coordinates with derivative antialiasing, not a three-dimensional voxel grid, so stars remain visible at zenith and different screen sizes.
+
+## Plant companion
+- The heart-planter plant is a 4-frame billboard sprite (`scene/PlantCompanion.tsx`); per-stage heights and frame bounds live in `plants/companion.ts` so feet anchoring and sizes stay data-driven.
