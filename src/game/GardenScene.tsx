@@ -35,6 +35,12 @@ import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
 import { createGardenCinematic } from "./cinematic/session";
 import { captureGardenFrame } from "./cinematic/capture";
 import { CinematicOverlay } from "./ui/CinematicOverlay";
+import { XR } from "@react-three/xr";
+import type { RootState } from "@react-three/fiber";
+import { createGardenXRStore } from "./xr/store";
+import { VRRig } from "./xr/VRRig";
+import { GardenPanels } from "./xr/GardenPanels";
+import { createCinematicGate } from "./xr/rules";
 
 // Which bed a plant type is tracked in (matches the bed names Xion uses).
 const BED_OF: Record<Exclude<PlantKey, "companion">, number> = { tomato: 0, herb: 0, lettuce: 0, strawberry: 1, pepper: 2, rose: 3 };
@@ -57,25 +63,53 @@ export function GardenScene() {
   const [ready, setReady] = useState(false);
   const [stageName, setStageName] = useState("Seedling");
   const [playing, setPlaying] = useState(false);
+  const [xrStore] = useState(createGardenXRStore);
+  const [inVR, setInVR] = useState(false);
+  const [vrSupported, setVRSupported] = useState(false);
+  const [vrError, setVRError] = useState("");
+  const [snap, setSnap] = useState(false);
+  const [pendingStage, setPendingStage] = useState<number | null>(null);
   const audio = useRef<ReturnType<typeof createAmbience> | null>(null);
   const [interaction] = useState(() => createXionInteraction({ x: XION.position[0], y: XION.position[1], z: XION.position[2] }));
   const [quest] = useState(createMoonQuest);
   const [care] = useState(createPlantCare);
   const gardenCanvas = useRef<HTMLCanvasElement | null>(null);
+  const renderer = useRef<RootState | null>(null);
   const [cinematic] = useState(() => createGardenCinematic(() => {
     const canvas = gardenCanvas.current;
     if (!canvas) return Promise.reject(new Error("Garden frame unavailable"));
+    const root = renderer.current;
+    if (!root || root.gl.xr.isPresenting) return Promise.reject(new Error("Exit VR to capture the garden"));
+    // Draw and copy synchronously; preserveDrawingBuffer stays disabled.
+    root.gl.render(root.scene, root.camera);
     return captureGardenFrame(canvas);
   }));
+  const [cinematicGate] = useState(() => createCinematicGate((stage) => { void cinematic.advance(stage); }));
+  useEffect(() => {
+    let alive = true;
+    const xr = navigator.xr;
+    const check = () => { void xr?.isSessionSupported("immersive-vr").then((supported) => { if (alive) setVRSupported(supported); }).catch(() => { if (alive) setVRSupported(false); }); };
+    check(); xr?.addEventListener("devicechange", check);
+    return () => { alive = false; xr?.removeEventListener("devicechange", check); };
+  }, []);
+  useEffect(() => xrStore.subscribe((state, previous) => {
+    if (state.session === previous.session) return;
+    setInVR(Boolean(state.session));
+    if (!state.session && previous.session) {
+      interaction.state.dragging = false;
+      requestAnimationFrame(() => requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); }));
+    }
+  }), [xrStore, cinematicGate, interaction]);
   useEffect(() => {
     let lastStage = care.state.stage;
     const unsubscribe = care.subscribe((state) => {
       if (state.stage <= lastStage) return;
       lastStage = state.stage;
-      void cinematic.advance(state.stage);
+      cinematicGate.advance(state.stage, Boolean(xrStore.getState().session));
+      setPendingStage(cinematicGate.pending);
     });
     return () => { unsubscribe(); void cinematic.close(); };
-  }, [care, cinematic]);
+  }, [care, cinematic, cinematicGate, xrStore]);
   useEffect(() => care.onAlert((k) => interaction.say(ALERTS[k])), [care, interaction]);
   const careAction = useCallback((a: CareAction) => { care.act(a); }, [care]);
   const [beds] = useState(() => createBedCare());
@@ -88,7 +122,8 @@ export function GardenScene() {
   useEffect(() => selection.subscribe(() => { const k = selection.state.selected?.kind; if (k) setChatPlant(k); }), [selection]);
   const snapshot = useCallback((p: PlantKey): Snapshot => {
     if (p === "companion") return { stage: SEEDLING_STAGES[care.state.stage]?.name ?? "Seedling", water: care.state.water, sun: care.state.sun, soil: care.state.soil };
-    const b = beds.beds[BED_OF[p]]!;
+    const b = beds.beds[BED_OF[p]];
+    if (!b) return { stage: "Mature", water: 0, sun: 0, soil: 0 };
     return { stage: "Mature", water: b.water, sun: b.sun, soil: b.soil };
   }, [care, beds]);
   const [, setHelpTick] = useState(0);
@@ -106,8 +141,8 @@ export function GardenScene() {
     const patients: Patient[] = [
       { id: "companion", label: "plant companion", stats: care.state, tooWet: care.state.water > CARE.overwater, perch: { x: -0.35, y: 1.25, z: -1.15 }, fx: { x: 0, y: 1.2, z: -1.4 } },
       ...beds.beds.map((b, i): Patient => {
-        const c = BED_SPOTS[i]!;
-        return { id: String(i), label: BED_LABELS[i]!, stats: b, tooWet: b.water > BEDS.overwater, perch: { x: c.x, y: c.y + 0.6, z: c.z }, fx: { x: c.x, y: c.y + 0.7, z: c.z } };
+        const c = BED_SPOTS[i] ?? { x: 0, y: 0.6, z: 0 };
+        return { id: String(i), label: BED_LABELS[i] ?? "garden", stats: b, tooWet: b.water > BEDS.overwater, perch: { x: c.x, y: c.y + 0.6, z: c.z }, fx: { x: c.x, y: c.y + 0.7, z: c.z } };
       }),
     ];
     const r = report(patients, tipIndex.current++);
@@ -137,8 +172,18 @@ export function GardenScene() {
   };
   const onStage = useCallback((n: string) => setStageName(n), []);
 
+  const exitVR = () => { void xrStore.getState().session?.end().catch(() => setVRError("Use the Quest menu to leave VR.")); };
+  const enterVR = async () => {
+    setVRError("");
+    try {
+      const entering = xrStore.enterVR();
+      if (!audio.current) audio.current = createAmbience();
+      void audio.current.setPlaying(true).then(() => setPlaying(true)).catch(() => setVRError("Ambient sound could not start."));
+      await entering;
+    } catch { setVRError("VR could not start. Open the published garden in the Quest browser and try again."); }
+  };
   return (
-    <div className="gv-stage" data-scene-ready={ready ? "" : undefined}
+    <div className="gv-stage" data-vr={inVR ? "" : undefined} data-scene-ready={ready ? "" : undefined}
       onPointerDownCapture={(e) => {
         if (helper.state.busy) helper.stop();
         if (!(e.target instanceof HTMLCanvasElement)) return;
@@ -150,7 +195,10 @@ export function GardenScene() {
         canvasPress.current = null;
         if (start && !interaction.state.pointerHandled && !isDrag(start, { x: e.clientX, y: e.clientY })) interaction.dismiss();
       }}>
-      <Canvas gl={{ preserveDrawingBuffer: true }} onCreated={({ gl }) => { gardenCanvas.current = gl.domElement; }} camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={[1, LOOK.maxDpr]} onPointerMissed={() => { interaction.dismiss(); selection.clear(); }}>
+      <Canvas gl={{ preserveDrawingBuffer: false }} onCreated={(root) => { gardenCanvas.current = root.gl.domElement; renderer.current = root; root.gl.xr.setReferenceSpaceType("local-floor"); }} camera={{ position: [0, EYE_HEIGHT, 3], fov: LOOK.fov, near: 0.05, far: 500 }} dpr={inVR ? 1 : [1, LOOK.maxDpr]} onPointerMissed={() => { interaction.dismiss(); selection.clear(); }}>
+        <XR store={xrStore}>
+        <VRRig snap={snap} />
+        <group onPointerDown={() => { if (helper.state.busy) helper.stop(); }}>
         <color attach="background" args={[BACKDROP.fill]} />
         <hemisphereLight args={["#ffd9ea", "#3a2a3a", night ? 0.35 : 0.9]} />
         <directionalLight position={[-20, 15, -30]} intensity={night ? 0.2 : 0.6} color={night ? "#b9c4ff" : "#ffe6f2"} />
@@ -169,11 +217,14 @@ export function GardenScene() {
         <Suspense fallback={null}><Xion interaction={interaction} /></Suspense>
         <Seedling onStageChange={onStage} care={care} />
         <Moonflower quest={quest} onTask={doMoonTask} />
-        <XionCamera interaction={interaction} bubbleRef={bubbleRef} />
-        <PlantCardAnchor selection={selection} cardRef={cardRef} />
-        <PlantFxLayer selection={selection} />
+        {!inVR && <XionCamera interaction={interaction} bubbleRef={bubbleRef} />}
+        {!inVR && <PlantCardAnchor selection={selection} cardRef={cardRef} />}
+        {!inVR && <PlantFxLayer selection={selection} />}
+        {inVR && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={exitVR} exit={exitVR} />}
         <HelperTicker helper={helper} />
         <ReadySignal onReady={() => setReady(true)} />
+        </group>
+        </XR>
       </Canvas>
 
       <header className="gv-header grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
@@ -184,13 +235,14 @@ export function GardenScene() {
           {playing ? <Volume2 /> : <VolumeX />}{playing ? "Sound on" : "Play sound"}
         </Button>
       </header>
+      {vrSupported && !inVR && <div className="gv-vr-entry"><Button variant="outline" onClick={enterVR}>Enter VR</Button>{vrError && <p role="status">{vrError}</p>}</div>}
       <div className="gv-dock"><CarePanel care={care} onAction={careAction} /><MoonQuestCard quest={quest} onTask={doMoonTask} /></div>
       <PlantCard beds={beds} selection={selection} cardRef={cardRef} />
       <XionPanel chat={chat} journal={journal} plant={chatPlant} setPlant={setChatPlant} snapshot={snapshot} onReply={(t) => interaction.say(t)} onCheck={checkGarden} helper={helper} onHelp={acceptHelp} />
       {helper.state.busy && <div className="gv-helping" role="status">✨ Xion is helping · tap to stop</div>}
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
       <div className="gv-hint">Drag to look around · Tap the seedling or moonflower</div>
-      <CinematicOverlay session={cinematic} />
+      {!inVR && <CinematicOverlay session={cinematic} />}
     </div>
   );
 }
