@@ -3,6 +3,7 @@ import { useFrame, useLoader } from "@react-three/fiber";
 import { Billboard, Sparkles } from "@react-three/drei";
 import * as THREE from "three";
 import { currentPlantlet } from "../plants/plantlets";
+import { playPlantSound, soundForHold } from "../audio/plantVoice";
 import { COMPANION, GLOW, SWAY_SPEED, companionLayout } from "../plants/companion";
 import { status, type PlantCare } from "../plants/care";
 import { useXR } from "@react-three/xr";
@@ -26,6 +27,7 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
   const glowMat = useRef<THREE.SpriteMaterial>(null);
   const sway = useRef(0);
   const drop = useRef(1);
+  const pressAt = useRef<number | null>(null);
   useEffect(() => {
     if (stage === shown.current) return;
     setPrev(shown.current); shown.current = stage; fade.current = 0; setBurst((b) => b + 1);
@@ -68,6 +70,8 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
         </mesh>
         <mesh position={[0, H[stage]! * 0.5, 0.01]}
           onClick={(e) => { e.stopPropagation(); onWater(); }}
+          onPointerDown={() => { pressAt.current = performance.now(); }}
+          onPointerUp={() => { if (pressAt.current === null) return; playPlantSound(plantlet.id, soundForHold(performance.now() - pressAt.current)); pressAt.current = null; }}
           onPointerOver={(e) => { e.stopPropagation(); setHovered(true); onHover(true); }} onPointerOut={() => { setHovered(false); onHover(false); }}>
           <planeGeometry args={[H[stage]! * 0.62, H[stage]!]} />
           <meshBasicMaterial transparent opacity={inVR && hovered ? 0.12 : 0} color={PALETTE.green} depthWrite={false} />

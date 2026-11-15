@@ -2,9 +2,11 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Square } from "lucide-react";
 import type { Meditation } from "../meditation/meditation";
 import type { CinematicSession } from "../cinematic/session";
+import type { Radio } from "../audio/radio";
+import { VolumeSliders } from "./VolumeSliders";
 
 // Captions, breathing guide and optional Orbis visuals for the guided meditation.
-export function MeditationOverlay({ meditation, visuals }: { meditation: Meditation; visuals: CinematicSession }) {
+export function MeditationOverlay({ meditation, visuals, radio }: { meditation: Meditation; visuals: CinematicSession; radio: Radio }) {
   const m = useSyncExternalStore(meditation.subscribe, meditation.getSnapshot, meditation.getSnapshot);
   const v = useSyncExternalStore(visuals.subscribe, visuals.getSnapshot, visuals.getSnapshot);
   const [breath, setBreath] = useState(meditation.breath);
@@ -22,6 +24,7 @@ export function MeditationOverlay({ meditation, visuals }: { meditation: Meditat
       <div className="gv-breath" style={{ transform: `scale(${0.7 + 0.3 * breath.level})` }} aria-hidden="true" />
       <p className="gv-breath-label">{breath.label}</p>
       <div className="gv-meditate-caption"><b>Xion</b><span>{meditation.caption}</span></div>
+      <div className="gv-meditate-vol"><VolumeSliders radio={radio} /></div>
       <button type="button" className="gv-meditate-stop" onClick={() => meditation.stop()}><Square size={12} /> End meditation</button>
     </div>
   );
