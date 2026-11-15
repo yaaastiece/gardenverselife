@@ -28,4 +28,4 @@
 - [x] Reusable interaction rules, tests, and browser verification
 - [x] Restore a single 150-degree skyline with original proportions and blended sky edges
 - [x] Limit desktop/phone turning, preserve unrestricted XR head tracking, and check texture filtering
-- [x] Verify desktop/phone views and existing garden interactions (real headset and phone performance remain hardware-only checks)
+- [x] Verify desktop/phone views and existing garden interactions (real headset and phone performance remain hardware-only checks)- [ ] Weather in the garden (+ matching Orbis scenes) — waiting on user's go-ahead

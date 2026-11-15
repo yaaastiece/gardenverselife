@@ -6,6 +6,10 @@ import s1 from "@/assets/companion_1_seedling.png.asset.json";
 import s2 from "@/assets/companion_2_sprout.png.asset.json";
 import s3 from "@/assets/companion_3_young.png.asset.json";
 import s4 from "@/assets/companion_4_queen.png.asset.json";
+import l1 from "@/assets/lumibud_1.png.asset.json";
+import l2 from "@/assets/lumibud_2.png.asset.json";
+import l3 from "@/assets/lumibud_3.png.asset.json";
+import { currentPlantlet } from "../plants/plantlets";
 import { COMPANION, GLOW, SWAY_SPEED, companionLayout } from "../plants/companion";
 import { status, type PlantCare } from "../plants/care";
 import { useXR } from "@react-three/xr";
@@ -15,8 +19,11 @@ import { PALETTE, WIND } from "../config";
 export function PlantCompanion({ stage, care, onWater, onHover }: { stage: number; care: PlantCare; onWater: () => void; onHover: (h: boolean) => void }) {
   const inVR = useXR((s) => Boolean(s.session));
   const [hovered, setHovered] = useState(false);
-  const texes = useLoader(THREE.TextureLoader, [s1.url, s2.url, s3.url, s4.url]);
-  texes.forEach((t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; });
+  const plantlet = currentPlantlet();
+  const art = useLoader(THREE.TextureLoader, plantlet.id === "lumibud" ? [l1.url, l2.url, l3.url] : [s1.url, s2.url, s3.url, s4.url]);
+  const texes = plantlet.art.map((i) => art[i]!);
+  const H = plantlet.heights;
+  art.forEach((t) => { t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; });
   const [prev, setPrev] = useState(stage);
   const [burst, setBurst] = useState(0);
   const fade = useRef(1);
@@ -53,13 +60,13 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
       drop.current = THREE.MathUtils.lerp(drop.current, cond === "Struggling" ? COMPANION.struggleDrop : 1, 0.08);
       root.current.scale.set(pop, pop * drop.current, pop);
     }
-    if (glowMat.current) glowMat.current.opacity = THREE.MathUtils.lerp(glowMat.current.opacity, GLOW[cond], 0.05);
+    if (glowMat.current) glowMat.current.opacity = THREE.MathUtils.lerp(glowMat.current.opacity, GLOW[cond] * (stage === 3 ? plantlet.queenGlow : 1), 0.05);
   });
 
   return (
     <group ref={root} position={[0, -COMPANION.sink, 0]}>
       <Billboard lockX lockZ>
-        <sprite raycast={() => {}} position={[0, COMPANION.heights[stage]! * 0.5, -0.02]} scale={[COMPANION.heights[stage]! * 1.6, COMPANION.heights[stage]! * 1.6, 1]} renderOrder={-1}>
+        <sprite raycast={() => {}} position={[0, H[stage]! * 0.5, -0.02]} scale={[H[stage]! * 1.6, H[stage]! * 1.6, 1]} renderOrder={-1}>
           <spriteMaterial ref={glowMat} map={glowTex} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
         </sprite>
         {prev !== stage && <mesh position={[old.x, old.y, 0]}><planeGeometry args={[old.w, old.h]} /><meshBasicMaterial ref={prevMat} map={texes[prev] ?? null} transparent alphaTest={0.02} depthWrite={false} toneMapped={false} /></mesh>}
@@ -67,14 +74,14 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
           <planeGeometry args={[cur.w, cur.h]} />
           <meshBasicMaterial ref={curMat} map={texes[stage] ?? null} transparent alphaTest={0.02} toneMapped={false} />
         </mesh>
-        <mesh position={[0, COMPANION.heights[stage]! * 0.5, 0.01]}
+        <mesh position={[0, H[stage]! * 0.5, 0.01]}
           onClick={(e) => { e.stopPropagation(); onWater(); }}
           onPointerOver={(e) => { e.stopPropagation(); setHovered(true); onHover(true); }} onPointerOut={() => { setHovered(false); onHover(false); }}>
-          <planeGeometry args={[COMPANION.heights[stage]! * 0.62, COMPANION.heights[stage]!]} />
+          <planeGeometry args={[H[stage]! * 0.62, H[stage]!]} />
           <meshBasicMaterial transparent opacity={inVR && hovered ? 0.12 : 0} color={PALETTE.green} depthWrite={false} />
         </mesh>
       </Billboard>
-      {burst > 0 && <PinkBurst key={burst} y={COMPANION.heights[stage]! * 0.5} />}
+      {burst > 0 && <PinkBurst key={burst} y={H[stage]! * 0.5} />}
     </group>
   );
 }

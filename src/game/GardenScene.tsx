@@ -1,3 +1,5 @@
+import { PLANTLETS, chosenPlantlet, choosePlantlet, named, plantName, type PlantletId } from "./plants/plantlets";
+import { PlantletPicker } from "./ui/PlantletPicker";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Environment, Lightformer } from "@react-three/drei";
@@ -170,7 +172,7 @@ export function GardenScene() {
     });
     return () => { unsubscribe(); void cinematic.close(); };
   }, [care, cinematic, cinematicGate, xrStore, meditation]);
-  useEffect(() => care.onAlert((k) => interaction.say(ALERTS[k])), [care, interaction]);
+  useEffect(() => care.onAlert((k) => interaction.say(named(ALERTS[k]))), [care, interaction]);
   const careAction = useCallback((a: CareAction) => { care.act(a); }, [care]);
   const [beds] = useState(() => createBedCare());
   const [selection] = useState(createPlantSelection);
@@ -199,7 +201,7 @@ export function GardenScene() {
   const tipIndex = useRef(0);
   const checkGarden = useCallback(() => {
     const patients: Patient[] = [
-      { id: "companion", label: "Pepper Peony", stats: care.state, tooWet: care.state.water > CARE.overwater, perch: { x: -0.35, y: 1.25, z: -1.15 }, fx: { x: 0, y: 1.2, z: -1.4 } },
+      { id: "companion", label: plantName(), stats: care.state, tooWet: care.state.water > CARE.overwater, perch: { x: -0.35, y: 1.25, z: -1.15 }, fx: { x: 0, y: 1.2, z: -1.4 } },
       ...beds.beds.map((b, i): Patient => {
         const c = BED_SPOTS[i] ?? { x: 0, y: 0.6, z: 0 };
         return { id: String(i), label: BED_LABELS[i] ?? "garden", stats: b, tooWet: b.water > BEDS.overwater, perch: { x: c.x, y: c.y + 0.6, z: c.z }, fx: { x: c.x, y: c.y + 0.7, z: c.z } };
@@ -315,7 +317,7 @@ export function GardenScene() {
       <XionPanel chat={chat} journal={journal} plant={chatPlant} setPlant={setChatPlant} snapshot={snapshot} onReply={(t) => interaction.say(t)} onCheck={checkGarden} helper={helper} onHelp={acceptHelp} />
       {helper.state.busy && <div className="gv-helping" role="status">✨ Xion is helping · tap to stop</div>}
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
-      <div className="gv-hint">Drag to look around · Tap Pepper Peony, the moonflower or the sound bowl</div>
+      <div className="gv-hint">Drag to look around · Tap {plantName()}, the moonflower or the sound bowl</div>
       {!inVR && <CinematicOverlay session={cinematic} steering={steering} />}
     </div>
   );
