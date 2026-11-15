@@ -8,6 +8,7 @@ import { SEEDLING_STAGES } from "../plants/growth";
 import { Sparkles } from "@react-three/drei";
 import { Suspense } from "react";
 import { PlantCompanion } from "./PlantCompanion";
+import { useXR } from "@react-three/xr";
 import type { PlantCare } from "../plants/care";
 
 const DROPS = 40;
@@ -81,7 +82,8 @@ export function Seedling({ onStageChange, care }: { onStageChange: (name: string
 }
 
 function CompostSparkle() {
+  const inVR = useXR((s) => Boolean(s.session));
   const [on, setOn] = useState(true);
   useEffect(() => { const t = setTimeout(() => setOn(false), 1800); return () => clearTimeout(t); }, []);
-  return on ? <Sparkles position={[0, 0.6, 0]} count={30} scale={[0.6, 0.3, 0.6]} size={4} speed={1.5} color="#c9a26b" /> : null;
+  return on ? <Sparkles position={[0, 0.6, 0]} count={inVR ? 6 : 30} scale={[0.6, 0.3, 0.6]} size={4} speed={1.5} color="#c9a26b" /> : null;
 }

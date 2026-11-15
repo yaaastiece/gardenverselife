@@ -1,11 +1,12 @@
 # Garden updates
-- [ ] Add Quest sessions, shared controls and world-anchored panels
-- [ ] Add VR performance settings and deferred cinematic handoff
-- [ ] Test VR rules and normal views; document headset/emulator checks
+- [x] Add Quest sessions, shared controls and world-anchored panels
+- [x] Add VR performance settings and deferred cinematic handoff
+- [x] Test VR rules and normal views; document headset/emulator checks
+- [ ] Verify controller/pinch actions and 72 fps on Quest — emulator trigger check did not pass; real headset validation required
 - [x] Add private Reactor world-session endpoint and install requested packages
 - [x] Add reusable cinematic session controller and stage-triggered overlay
 - [x] Test lifecycle, command order, capture, and desktop/phone display
-- [ ] Verify live Reactor stream — blocked until REACTOR_API_KEY is supplied
+- [ ] Verify live Reactor stream — credentials supplied; live streaming remains unverified
 - [x] Phone header and center-planter framing
 - [x] Larger glowing Xion with tap camera glides
 - [x] Mouse/touch dragging and timed plant-care speech

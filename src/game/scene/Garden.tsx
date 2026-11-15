@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { wilt, type BedCare, type PlantPick, type PlantSelection } from "../plants/beds";
 import { Outlines, RoundedBox } from "@react-three/drei";
 import * as THREE from "three";
 import { PALETTE, WIND } from "../config";
+import { useXR } from "@react-three/xr";
 import { LEAF, leafTexture } from "../plants/leaves";
 
 export type PlantKind = "herb" | "tomato" | "strawberry" | "lettuce" | "pepper" | "rose";
@@ -173,6 +174,8 @@ const ROWS: Row[] = [
 ];
 
 function PlantHit({ bed, kind, beds, selection }: { bed: number; kind: PlantKind; beds: BedCare; selection: PlantSelection }) {
+  const inVR = useXR((s) => Boolean(s.session));
+  const [hovered, setHovered] = useState(false);
   const pick = (e: ThreeEvent<PointerEvent | MouseEvent>): PlantPick => {
     const v = new THREE.Vector3(); e.eventObject.getWorldPosition(v);
     return { bed, kind, pos: { x: v.x, y: v.y + 0.75, z: v.z } };
@@ -180,9 +183,9 @@ function PlantHit({ bed, kind, beds, selection }: { bed: number; kind: PlantKind
   void beds;
   return <mesh position={[0, 0.3, 0]}
     onClick={(e) => { e.stopPropagation(); selection.select(pick(e)); }}
-    onPointerOver={(e) => { if (e.pointerType !== "mouse") return; e.stopPropagation(); selection.hover(pick(e)); document.body.style.cursor = "pointer"; }}
-    onPointerOut={(e) => { if (e.pointerType !== "mouse") return; if (selection.state.hover?.bed === bed) selection.hover(null); document.body.style.cursor = "auto"; }}>
-    <cylinderGeometry args={[0.14, 0.14, 0.6, 8]} /><meshBasicMaterial transparent opacity={0} depthWrite={false} />
+    onPointerOver={(e) => { if (e.pointerType !== "mouse" && !inVR) return; e.stopPropagation(); setHovered(true); selection.hover(pick(e)); if (!inVR) document.body.style.cursor = "pointer"; }}
+    onPointerOut={(e) => { if (e.pointerType !== "mouse" && !inVR) return; setHovered(false); if (selection.state.hover?.bed === bed) selection.hover(null); if (!inVR) document.body.style.cursor = "auto"; }}>
+    <cylinderGeometry args={[0.14, 0.14, 0.6, 8]} /><meshBasicMaterial color={PALETTE.green} transparent opacity={inVR && hovered ? 0.13 : 0} depthWrite={false} />
   </mesh>;
 }
 
