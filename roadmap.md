@@ -1,4 +1,7 @@
 # Garden updates
+- [ ] Add editable Orbis stage lore, captions and Xion narration
+- [ ] Add safe player steering with dictation, suggestions and six-second cooldown
+- [ ] Test story advancement, prompt commands and phone cinematic controls
 - [x] Add Quest sessions, shared controls and world-anchored panels
 - [x] Add VR performance settings and deferred cinematic handoff
 - [x] Test VR rules and normal views; document headset/emulator checks
