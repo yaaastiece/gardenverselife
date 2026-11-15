@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createCinematicSession, type WorldSession } from "./session";
 import { CINEMATIC_PROMPTS } from "./prompts";
+import type { Reactor } from "@reactor-team/js-sdk";
 
 function setup() {
   const events = new Map<string, (...args: any[]) => void>();
@@ -14,7 +15,7 @@ function setup() {
   const world: WorldSession = { token: "noncredential-test-fixture", model: "reactor/visko-orbis-stable", prompt: CINEMATIC_PROMPTS[0] };
   const mint = vi.fn(async () => world);
   const capture = vi.fn(async () => new File(["frame"], "garden-frame.jpg", { type: "image/jpeg" }));
-  const create = vi.fn(async () => client as unknown as Parameters<typeof createCinematicSession>[0]["create"] extends (...args: any[]) => Promise<infer T> ? T : never);
+  const create = vi.fn(async () => client as unknown as Pick<Reactor, "connect" | "disconnect" | "sendCommand" | "uploadFile" | "on" | "off">);
   return { session: createCinematicSession({ mint, capture, create }), client, mint, capture, events };
 }
 
