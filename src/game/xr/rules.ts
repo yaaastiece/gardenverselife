@@ -13,7 +13,8 @@ export const VR = {
   snapRelease: 0.25,
   dragMeters: 0.02,
   minTarget: 0.03,
-  buttonHeight: 0.075,
+  buttonHeight: 0.088,
+  textScale: 1.25,
   origin: [0, 0, 0.2] as [number, number, number],
 };
 export function snapStep(axis: number, latched: boolean, enabled: boolean) {
