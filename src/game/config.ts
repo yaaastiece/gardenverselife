@@ -20,7 +20,7 @@ export const BACKDROP = { radius: 20, arc: 2 * Math.PI, frontArc: 150 * Math.PI 
 // Sky dome colors: horizon matches the painted dusk, zenith matches the image top.
 export const SKY = { horizon: "#d8879f", zenith: "#0d0a10", haze: "#8a6a7c" };
 // The city wraps fully, so turning is unlimited everywhere.
-export const LOOK = { margin: 5 * Math.PI / 180, polarMin: 0.9, polarMax: 2.25, fov: 55, maxDpr: 2 };
+export const LOOK = { margin: 5 * Math.PI / 180, polarMin: 0.08, polarMax: 2.25, fov: 55, maxDpr: 2 };
 export function lookYawLimit(_width: number, _height: number, _inXR = false) {
   return Infinity;
 }
