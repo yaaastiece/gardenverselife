@@ -59,7 +59,7 @@ export function PlantCompanion({ stage, care, onWater, onHover }: { stage: numbe
   return (
     <group ref={root} position={[0, -COMPANION.sink, 0]}>
       <Billboard lockX lockZ>
-        <sprite position={[0, COMPANION.heights[stage]! * 0.5, -0.02]} scale={[COMPANION.heights[stage]! * 1.6, COMPANION.heights[stage]! * 1.6, 1]} renderOrder={-1}>
+        <sprite raycast={() => {}} position={[0, COMPANION.heights[stage]! * 0.5, -0.02]} scale={[COMPANION.heights[stage]! * 1.6, COMPANION.heights[stage]! * 1.6, 1]} renderOrder={-1}>
           <spriteMaterial ref={glowMat} map={glowTex} transparent opacity={0} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} />
         </sprite>
         {prev !== stage && <mesh position={[old.x, old.y, 0]}><planeGeometry args={[old.w, old.h]} /><meshBasicMaterial ref={prevMat} map={texes[prev] ?? null} transparent alphaTest={0.02} depthWrite={false} toneMapped={false} /></mesh>}
