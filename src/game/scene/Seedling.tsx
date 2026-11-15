@@ -15,7 +15,7 @@ const DROPS = 40;
 // Round pedestal table planter.
 const tableBody = new THREE.CylinderGeometry(0.42, 0.34, 0.5, 48);
 const tableTop = new THREE.CircleGeometry(0.38, 48);
-export function Seedling({ onStageChange, care }: { onStageChange: (name: string) => void; care: PlantCare }) {
+export function Seedling({ onStageChange, care, paused = false }: { onStageChange: (name: string) => void; care: PlantCare; paused?: boolean }) {
   const [stage, setStage] = useState(care.state.stage);
   const [compost, setCompost] = useState(-1);
   const stages = companionStages();
@@ -43,7 +43,7 @@ export function Seedling({ onStageChange, care }: { onStageChange: (name: string
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
-    care.tick(dt);
+    if (!paused) care.tick(dt);
     const lit = care.state.time < care.state.lightUntil;
     if (glow.current) glow.current.intensity = THREE.MathUtils.lerp(glow.current.intensity, lit ? 6 : 0, 0.1);
     if (cone.current) { const m = cone.current.material as THREE.MeshBasicMaterial; m.opacity = THREE.MathUtils.lerp(m.opacity, lit ? 0.18 : 0, 0.1); }

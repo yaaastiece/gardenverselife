@@ -296,7 +296,7 @@ export function GardenScene() {
         </group>
         <SoundBowl radio={radio} meditation={meditation} onOpen={() => setBowlOpen(true)} />
         <Suspense fallback={null}><Xion interaction={interaction} meditation={meditation} /></Suspense>
-        <Seedling key={plantletId} onStageChange={onStage} care={care} />
+        <Seedling key={plantletId} onStageChange={onStage} care={care} paused={picking} />
         <Moonflower quest={quest} onTask={doMoonTask} />
         {!inVR && <XionCamera interaction={interaction} bubbleRef={bubbleRef} />}
         {!inVR && <PlantCardAnchor selection={selection} cardRef={cardRef} />}
