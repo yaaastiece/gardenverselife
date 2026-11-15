@@ -257,6 +257,7 @@ export function GardenScene() {
     });
     const offStage = cinematic.subscribe(() => {
       const c = cinematic.getSnapshot();
+      if (!c.open && cinematicGate.pending !== null && !xrStore.getState().session && !meditation.getSnapshot().active) { requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); }); return; }
       if (c.open && c.phase === "playing" && c.stage >= MOON_STAGE && c.stage < MOON_STAGE + 2 && timers.length === 0) {
         timers.push(window.setTimeout(() => { timers.length = 0; const n = cinematic.getSnapshot(); if (n.open && n.stage === c.stage) void cinematic.advance(c.stage + 1); }, 6000));
       }
