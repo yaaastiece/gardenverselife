@@ -3,6 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { XROrigin, XRSpace, useXR, useXRInputSourceStates } from "@react-three/xr";
 import * as THREE from "three";
 import { VR, snapStep } from "./rules";
+import { TapPointer } from "./TapPointer";
 
 // Always-visible aiming beam, drawn on top of the world. The library's own ray only shows when it hits something.
 function ControllerLasers() {
@@ -65,5 +66,5 @@ export function VRRig({ snap, onRestart }: { snap: boolean; onRestart?: () => vo
     rig.position.copy(pose.pivot).add(pose.offset);
     rig.rotation.y += turn.radians;
   }, -60);
-  return session ? <><XROrigin ref={origin} position={VR.origin} /><ControllerLasers /></> : null;
+  return session ? <><XROrigin ref={origin} position={VR.origin} /><ControllerLasers /><TapPointer origin={origin} /></> : null;
 }
