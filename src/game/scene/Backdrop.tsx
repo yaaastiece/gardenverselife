@@ -14,7 +14,7 @@ void main(){
   float lum = dot(c, vec3(0.299,0.587,0.114));
   float sky = smoothstep(0.62, 0.75, v);
   vec2 cell = floor(vec2(s, v) * vec2(960.0, 480.0));
-  float tw = 0.5 + 0.5*sin(time*(0.8 + hash(cell)*1.6) + hash(cell+3.1)*6.283);
+  float tw = 0.5 + 0.5*sin(time*(0.8 + hash(vec3(cell,0.0))*1.6) + hash(vec3(cell+3.1,0.0))*6.283);
   c *= 1.0 + sky * smoothstep(0.55, 0.85, lum) * (tw - 0.45) * 0.9;
   float edge = smoothstep(0.0, edgeFade, min(s, 1.0-s));
   float top = 1.0-smoothstep(0.96, 1.0, vUv.y);
