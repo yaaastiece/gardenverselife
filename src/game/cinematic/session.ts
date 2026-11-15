@@ -1,7 +1,7 @@
 import type { Reactor, ReactorMessage } from "@reactor-team/js-sdk";
 import { stagePrompt } from "./prompts";
 
-export type CinematicState = { open: boolean; phase: "idle" | "loading" | "playing" | "error"; error: string | null; stream: MediaStream | null };
+export type CinematicState = { open: boolean; stage: number; phase: "idle" | "loading" | "playing" | "error"; error: string | null; stream: MediaStream | null };
 type Client = Pick<Reactor, "connect" | "disconnect" | "sendCommand" | "uploadFile" | "on" | "off">;
 export type WorldSession = { token: string; model: string; prompt: string };
 type Dependencies = {
@@ -12,7 +12,7 @@ type Dependencies = {
 
 /** One controller owns one stream; screen and future XR displays only subscribe. */
 export function createCinematicSession(deps: Dependencies) {
-  let state: CinematicState = { open: false, phase: "idle", error: null, stream: null };
+  let state: CinematicState = { open: false, stage: 0, phase: "idle", error: null, stream: null };
   const listeners = new Set<() => void>();
   let client: Client | null = null;
   let lifecycle: Promise<void> = Promise.resolve();
@@ -62,7 +62,8 @@ export function createCinematicSession(deps: Dependencies) {
       if (active && !state.open) return lifecycle; // Closing: never race a second session into existence.
       const id = generation;
       const first = !active;
-      if (first) { active = true; abort = new AbortController(); update({ open: true, phase: "loading", error: null, stream: null }); }
+      if (first) { active = true; abort = new AbortController(); update({ open: true, stage, phase: "loading", error: null, stream: null }); }
+      else update({ stage });
       lifecycle = lifecycle.then(async () => {
         if (id !== generation || !state.open || state.phase === "error") return;
         const check = () => { if (id !== generation || !state.open) throw new Error("Cinematic cancelled"); };
@@ -98,9 +99,19 @@ export function createCinematicSession(deps: Dependencies) {
       });
       return lifecycle;
     },
+    steer(prompt: string) {
+      const id = generation;
+      const request = lifecycle.then(async () => {
+        if (id !== generation || !state.open || state.phase === "error" || !client) throw new Error("Cinematic stream is not ready");
+        await command(client, "set_prompt", { prompt });
+      });
+      // A rejected steering command must not poison later stage or close commands.
+      lifecycle = request.catch(() => undefined);
+      return request;
+    },
     close() {
       generation++; abort?.abort(); abort = null;
-      update({ open: false, phase: "idle", error: null, stream: null });
+      update({ open: false, stage: 0, phase: "idle", error: null, stream: null });
       lifecycle = lifecycle.then(cleanup).catch(() => undefined);
       return lifecycle;
     },
