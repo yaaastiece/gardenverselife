@@ -110,7 +110,7 @@ export function GardenScene() {
     const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, beds };
     Object.assign(window, { __game: debug });
     return () => { Reflect.deleteProperty(window, "__game"); };
-  }, [interaction]);
+  }, [interaction, care, beds]);
   useEffect(() => () => audio.current?.dispose(), []);
   const toggleSound = async () => {
     if (!audio.current) audio.current = createAmbience();
