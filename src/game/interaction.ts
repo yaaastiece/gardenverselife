@@ -65,6 +65,7 @@ export function createXionInteraction(initial: Point3) {
         if (kind) say(CARE_TIPS[kind]); else say(null);
       }
     },
+    say,
     dismiss() { if (!state.dragging) { state.focused = false; say(null); } },
   };
 }
