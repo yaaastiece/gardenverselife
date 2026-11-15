@@ -6,7 +6,7 @@ export const Route = createFileRoute("/api/world")({
       const headers = { "Cache-Control": "no-store" };
       const origin = request.headers.get("origin");
       if (!origin || origin !== new URL(request.url).origin) return Response.json({ error: "Request not allowed" }, { status: 403, headers });
-      const apiKey = process.env["REACTOR_API_KEY"];
+      const apiKey = process.env["REACTOR_API_KEY"] || process.env["react_orbis"];
       if (!apiKey) return Response.json({ error: "Cinematics are not available yet" }, { status: 503, headers });
       try {
         const { generateWorld } = await import("@tanstack/ai");
