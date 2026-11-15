@@ -23,8 +23,16 @@ import { ALERTS, createPlantCare, type CareAction } from "./plants/care";
 import { createBedCare, createPlantSelection } from "./plants/beds";
 import { PlantCard } from "./ui/PlantCard";
 import { PlantCardAnchor, PlantFxLayer } from "./scene/PlantCardAnchor";
+import { XionPanel } from "./ui/XionPanel";
+import { createXionChat } from "./xion/chat";
+import { createJournal, type PlantKey, type Snapshot } from "./xion/journal";
+import { askXion } from "@/lib/xion.functions";
+import { SEEDLING_STAGES } from "./plants/growth";
 import { createAmbience } from "./audio/ambience";
 import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
+
+// Which bed a plant type is tracked in (matches the bed names Xion uses).
+const BED_OF: Record<Exclude<PlantKey, "companion">, number> = { tomato: 0, herb: 0, lettuce: 0, strawberry: 1, pepper: 2, rose: 3 };
 
 function ReadySignal({ onReady }: { onReady: () => void }) {
   const n = useRef(0);
@@ -46,6 +54,15 @@ export function GardenScene() {
   const [selection] = useState(createPlantSelection);
   const cardRef = useRef<HTMLDivElement>(null);
   useEffect(() => beds.onAlert((a) => interaction.say(a.text)), [beds, interaction]);
+  const [chat] = useState(() => createXionChat((messages, context) => askXion({ data: { messages, context } })));
+  const [journal] = useState(() => createJournal());
+  const [chatPlant, setChatPlant] = useState<PlantKey>("companion");
+  useEffect(() => selection.subscribe(() => { const k = selection.state.selected?.kind; if (k) setChatPlant(k); }), [selection]);
+  const snapshot = useCallback((p: PlantKey): Snapshot => {
+    if (p === "companion") return { stage: SEEDLING_STAGES[care.state.stage]?.name ?? "Seedling", water: care.state.water, sun: care.state.sun, soil: care.state.soil };
+    const b = beds.beds[BED_OF[p]]!;
+    return { stage: "Mature", water: b.water, sun: b.sun, soil: b.soil };
+  }, [care, beds]);
   const [night, setNight] = useState(false);
   useEffect(() => quest.subscribe((st) => setNight(st === "bloom")), [quest]);
   const doMoonTask = useCallback(() => {
@@ -116,6 +133,7 @@ export function GardenScene() {
       </header>
       <div className="gv-dock"><CarePanel care={care} onAction={careAction} /><MoonQuestCard quest={quest} onTask={doMoonTask} /></div>
       <PlantCard beds={beds} selection={selection} cardRef={cardRef} />
+      <XionPanel chat={chat} journal={journal} plant={chatPlant} setPlant={setChatPlant} snapshot={snapshot} onReply={(t) => interaction.say(t)} />
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
       <div className="gv-hint">Drag to look around · Tap the seedling or moonflower</div>
     </div>
