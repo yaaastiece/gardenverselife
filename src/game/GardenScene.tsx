@@ -17,6 +17,8 @@ import { Xion } from "./scene/Xion";
 import { Moonflower, MOONFLOWER_POS } from "./scene/Moonflower";
 import { MoonQuestCard } from "./ui/MoonQuestCard";
 import { createMoonQuest } from "./plants/moonflower";
+import { CarePanel } from "./ui/CarePanel";
+import { ALERTS, createPlantCare, type CareAction } from "./plants/care";
 import { createAmbience } from "./audio/ambience";
 import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
 
@@ -33,6 +35,9 @@ export function GardenScene() {
   const audio = useRef<ReturnType<typeof createAmbience> | null>(null);
   const [interaction] = useState(() => createXionInteraction({ x: XION.position[0], y: XION.position[1], z: XION.position[2] }));
   const [quest] = useState(createMoonQuest);
+  const [care] = useState(createPlantCare);
+  useEffect(() => care.onAlert((k) => interaction.say(ALERTS[k])), [care, interaction]);
+  const careAction = useCallback((a: CareAction) => { care.act(a); }, [care]);
   const [night, setNight] = useState(false);
   useEffect(() => quest.subscribe((st) => setNight(st === "bloom")), [quest]);
   const doMoonTask = useCallback(() => {
@@ -84,7 +89,7 @@ export function GardenScene() {
           <Lounge />
         </group>
         <Suspense fallback={null}><Xion interaction={interaction} /></Suspense>
-        <Seedling onStageChange={onStage} />
+        <Seedling onStageChange={onStage} care={care} />
         <Moonflower quest={quest} onTask={doMoonTask} />
         <XionCamera interaction={interaction} bubbleRef={bubbleRef} />
         <ReadySignal onReady={() => setReady(true)} />
@@ -98,7 +103,7 @@ export function GardenScene() {
           {playing ? <Volume2 /> : <VolumeX />}{playing ? "Sound on" : "Play sound"}
         </Button>
       </header>
-      <MoonQuestCard quest={quest} onTask={doMoonTask} />
+      <div className="gv-dock"><CarePanel care={care} onAction={careAction} /><MoonQuestCard quest={quest} onTask={doMoonTask} /></div>
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
       <div className="gv-hint">Drag to look around · Tap the seedling or moonflower</div>
     </div>
