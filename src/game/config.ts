@@ -16,11 +16,11 @@ export const PALETTE = {
 export const WIND = { strength: 0.06, speed: 1.3 };
 export const CARS = { count: 4, minCross: 15, maxCross: 25, gap: 4, minY: 6.5, maxY: 11 };
 // Painted panorama: radius, arc (radians), cropped image aspect, bottom height, vMin = image row of painted railing.
-export const BACKDROP = { radius: 20, aspect: 1920 / 960, bottom: -1.2, vMin: 0.44, seam: 0.06, fill: "#121420" };
+export const BACKDROP = { radius: 20, aspect: 1920 / 960, bottom: -1.2, vMin: 0.44, seam: 0.06, repeat: 2, fill: "#121420" };
 // Sky dome colors: horizon matches the painted dusk, zenith matches the image top.
 export const SKY = { horizon: "#5a3c4a", zenith: "#121420", haze: "#8a6a7c" };
 // How far the player may turn: keep the image edges out of view.
-export const LOOK = { yaw: Infinity, polarMin: 1.2, polarMax: 1.82, fov: 55 };
+export const LOOK = { yaw: Infinity, polarMin: 0.9, polarMax: 2.25, fov: 55 };
 export const EYE_HEIGHT = 1.6;
 // Xion, the welcoming fairy: fairy-sized (~30 cm), hovering beside the seedling planter.
 export const XION = {

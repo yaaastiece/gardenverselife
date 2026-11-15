@@ -7,10 +7,10 @@ import { BACKDROP, SKY } from "../config";
 // Painted skyline wrapped as a full 360 ring. Edges are cross-faded so the seam never shows;
 // the top fades into the sky dome color.
 const vert = `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix*modelViewMatrix*vec4(position,1.); }`;
-const frag = `uniform sampler2D map; uniform float time; uniform float vMin; uniform float seam; uniform vec3 fill; varying vec2 vUv;
+const frag = `uniform sampler2D map; uniform float time; uniform float vMin; uniform float seam; uniform float repeat; uniform vec3 fill; varying vec2 vUv;
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
 void main(){
-  float s = 1.0 - vUv.x; float v = mix(vMin, 1.0, vUv.y);
+  float s = fract((1.0 - vUv.x) * repeat); float v = mix(vMin, 1.0, vUv.y);
   vec3 a = texture2D(map, vec2(seam + s*(1.0-seam), v)).rgb;
   vec3 b = texture2D(map, vec2(seam + (s-1.0)*(1.0-seam), v)).rgb;
   vec3 c = mix(a, b, smoothstep(1.0 - seam, 1.0, s));
@@ -27,10 +27,10 @@ void main(){
 export function Backdrop() {
   const tex = useLoader(THREE.TextureLoader, skyline.url);
   tex.colorSpace = THREE.SRGBColorSpace;
-  const uniforms = useMemo(() => ({ map: { value: tex }, time: { value: 0 }, vMin: { value: BACKDROP.vMin }, seam: { value: BACKDROP.seam }, fill: { value: new THREE.Color(SKY.zenith).convertSRGBToLinear() } }), [tex]);
+  const uniforms = useMemo(() => ({ map: { value: tex }, time: { value: 0 }, vMin: { value: BACKDROP.vMin }, seam: { value: BACKDROP.seam }, repeat: { value: BACKDROP.repeat }, fill: { value: new THREE.Color(SKY.zenith).convertSRGBToLinear() } }), [tex]);
   useFrame(({ clock }) => { uniforms.time.value = clock.elapsedTime; });
   const { radius: R, aspect, bottom, vMin } = BACKDROP;
-  const h = (R * Math.PI * 2) / aspect * (1 - vMin);
+  const h = (R * Math.PI * 2) / BACKDROP.repeat / aspect * (1 - vMin);
   return (
     <mesh position={[0, bottom + h / 2, 0]} renderOrder={-1}>
       <cylinderGeometry args={[R, R, h, 128, 1, true, 0, Math.PI * 2]} />
