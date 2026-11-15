@@ -43,7 +43,8 @@ import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
 import { createGardenCinematic } from "./cinematic/session";
 import { createCinematicSteering } from "./cinematic/steering";
 import { createDictation, speak, stopSpeaking, xionSpeechEnabled } from "./xion/voice";
-import { captureGardenFrame } from "./cinematic/capture";
+import { captureGardenFrame, captureGardenOffscreen } from "./cinematic/capture";
+import { CinematicWorldPanel } from "./xr/CinematicWorldPanel";
 import { CinematicOverlay } from "./ui/CinematicOverlay";
 import { XR } from "@react-three/xr";
 import type { RootState } from "@react-three/fiber";
@@ -107,7 +108,9 @@ export function GardenScene() {
     const canvas = gardenCanvas.current;
     if (!canvas) return Promise.reject(new Error("Garden frame unavailable"));
     const root = renderer.current;
-    if (!root || root.gl.xr.isPresenting) return Promise.reject(new Error("Exit VR to capture the garden"));
+    if (!root) return Promise.reject(new Error("Garden frame unavailable"));
+    // In VR the headset owns the screen, so draw the garden from a fixed viewpoint into an offscreen target.
+    if (root.gl.xr.isPresenting) return captureGardenOffscreen(root.gl, root.scene, [0, EYE_HEIGHT, 3], [0, 1, -1.5], LOOK.fov);
     // Draw and copy synchronously; preserveDrawingBuffer stays disabled.
     root.gl.render(root.scene, root.camera);
     return captureGardenFrame(canvas);
@@ -147,7 +150,7 @@ export function GardenScene() {
     onEnd: () => {
       void meditationVisuals.close();
       // Growth cinematics wait for the meditation to finish.
-      if (!xrStore.getState().session) requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); });
+      requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); });
     },
   }));
   const [cinematicMusic] = useState(() => createCinematicMusic(radio));
@@ -169,7 +172,6 @@ export function GardenScene() {
   const queuedSteering = useRef<{ prompt: string; stage: number } | null>(null);
   const [steering] = useState(() => createCinematicSteering(async (prompt, stage) => {
     // VR keeps the established exit-to-play handoff; the validated request follows it into the same stream.
-    if (xrStore.getState().session) { queuedSteering.current = { prompt, stage }; return; }
     await cinematic.steer(prompt);
   }, {
     dictation: (callbacks) => createDictation(callbacks.heard, callbacks.listening, callbacks.unavailable, callbacks.heard),
@@ -211,7 +213,7 @@ export function GardenScene() {
     const unsubscribe = care.subscribe((state) => {
       if (state.stage <= lastStage) return;
       lastStage = state.stage;
-      cinematicGate.advance(state.stage, Boolean(xrStore.getState().session) || meditation.getSnapshot().active);
+      cinematicGate.advance(state.stage, meditation.getSnapshot().active);
       setPendingStage(cinematicGate.pending);
     });
     return () => { unsubscribe(); void cinematic.close(); };
@@ -262,13 +264,13 @@ export function GardenScene() {
     const timers: number[] = [];
     const off = quest.subscribe((st) => {
       if (st !== "bloom") return;
-      const wait = Boolean(xrStore.getState().session) || meditation.getSnapshot().active || cinematic.getSnapshot().open;
+      const wait = meditation.getSnapshot().active || cinematic.getSnapshot().open;
       if (wait) { cinematicGate.advance(MOON_STAGE, true); setPendingStage(cinematicGate.pending); return; }
       void cinematic.advance(MOON_STAGE);
     });
     const offStage = cinematic.subscribe(() => {
       const c = cinematic.getSnapshot();
-      if (!c.open && cinematicGate.pending !== null && !xrStore.getState().session && !meditation.getSnapshot().active) { requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); }); return; }
+      if (!c.open && cinematicGate.pending !== null && !meditation.getSnapshot().active) { requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); }); return; }
       if (c.open && c.phase === "playing" && c.stage >= MOON_STAGE && c.stage < MOON_STAGE + 2 && timers.length === 0) {
         timers.push(window.setTimeout(() => { timers.length = 0; const n = cinematic.getSnapshot(); if (n.open && n.stage === c.stage) void cinematic.advance(c.stage + 1); }, 6000));
       }
@@ -368,9 +370,10 @@ export function GardenScene() {
         {!inVR && <PlantCardAnchor selection={selection} cardRef={cardRef} />}
         {!inVR && <PlantFxLayer selection={selection} />}
         {inVR && picking && <Suspense fallback={null}><StartWorldPanel start={start} /></Suspense>}
-        {inVR && !picking && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={exitVR} exit={exitVR} onStartOver={startOver} cinematic={cinematic} steering={steering} />}
+        {inVR && !picking && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={() => { void cinematic.close(); }} exit={exitVR} onStartOver={startOver} cinematic={cinematic} steering={steering} />}
         {inVR && bowlOpen && <BowlWorldPanel radio={radio} onMeditate={startMeditation} onClose={() => setBowlOpen(false)} />}
         {inVR && <MeditationWorldPanel meditation={meditation} />}
+        {inVR && <CinematicWorldPanel session={cinematic} />}
         <HelperTicker helper={helper} />
         <MeditationTicker meditation={meditation} />
         <ReadySignal onReady={() => setReady(true)} />
