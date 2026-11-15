@@ -1,8 +1,8 @@
 # Garden updates
-- [ ] Add private Reactor world-session endpoint and install requested packages
-- [ ] Add reusable cinematic session controller and stage-triggered overlay
-- [ ] Test lifecycle, command order, capture, and desktop/phone display
-- [ ] Verify live Reactor stream after REACTOR_API_KEY is supplied
+- [x] Add private Reactor world-session endpoint and install requested packages
+- [x] Add reusable cinematic session controller and stage-triggered overlay
+- [x] Test lifecycle, command order, capture, and desktop/phone display
+- [ ] Verify live Reactor stream — blocked until REACTOR_API_KEY is supplied
 - [x] Phone header and center-planter framing
 - [x] Larger glowing Xion with tap camera glides
 - [x] Mouse/touch dragging and timed plant-care speech
