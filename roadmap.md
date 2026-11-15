@@ -1,4 +1,6 @@
 # Garden updates
+- [x] Xion said like "Zion" in her voice; lore in her chat
+- [x] Orbis meditation video on by default, following each part of the meditation
 - [x] Expand the welcome with Xion, tap-to-begin voice, selected cards and a one-second entrance
 - [x] Share welcome rules with a chest-height VR panel and optional background video
 - [x] Verify opening and entrance on desktop and phones

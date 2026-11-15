@@ -2,6 +2,11 @@ import { xionSpeech } from "@/lib/xion-voice.functions";
 // All of Xion's speaking goes through speak(); swap this file's body for ElevenLabs later.
 type Rec = { lang: string; interimResults: boolean; continuous: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: ((e: { error?: string }) => void) | null };
 
+/** Spoken form only: "Xion" is pronounced like "Zion"; captions keep the X spelling. */
+export function spokenText(text: string) {
+  return text.replace(/\bXION\b/g, "ZION").replace(/\bxion\b/gi, (m) => (m[0] === "X" ? "Zion" : "zion"));
+}
+
 let xionSpeaks = true;
 const preferenceSubs = new Set<() => void>();
 export function xionSpeechEnabled() { return xionSpeaks; }
@@ -30,8 +35,9 @@ function browserSpeak(text: string) {
 }
 let player: HTMLAudioElement | null = null; let turn = 0;
 /** Xion's ElevenLabs voice, falling back to the browser voice. */
-export function speak(text: string) {
+export function speak(caption: string) {
   if (typeof window === "undefined") return;
+  const text = spokenText(caption);
   stopSpeaking(); const my = ++turn;
   player ??= new Audio(); const a = player; // created inside the click gesture so playback is allowed
   notify(true);

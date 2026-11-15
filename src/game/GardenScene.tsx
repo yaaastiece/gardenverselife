@@ -48,13 +48,14 @@ import { VRRig } from "./xr/VRRig";
 import { GardenPanels } from "./xr/GardenPanels";
 import { createCinematicGate } from "./xr/rules";
 import { createRadio } from "./audio/radio";
+import { currentPlantlet } from "./plants/plantlets";
 import { createMeditation } from "./meditation/meditation";
 import { SoundBowl } from "./scene/SoundBowl";
 import { SoundBowlCard } from "./ui/SoundBowlCard";
 import { MeditationOverlay } from "./ui/MeditationOverlay";
 import { BowlWorldPanel, MeditationWorldPanel } from "./xr/MeditationPanels";
 import { useDockOpen } from "./ui/useDockOpen";
-import { MEDITATION_PROMPT } from "./cinematic/prompts";
+import { meditationPrompt } from "./cinematic/prompts";
 import type { Meditation } from "./meditation/meditation";
 
 // Which bed a plant type is tracked in (matches the bed names Xion uses).
@@ -107,10 +108,10 @@ export function GardenScene() {
     return captureGardenFrame(canvas);
   }, []);
   const [cinematic] = useState(() => createGardenCinematic(captureFrame));
-  const [meditationVisuals] = useState(() => createGardenCinematic(captureFrame, { promptFor: () => MEDITATION_PROMPT, autoEnd: false }));
+  const [meditationVisuals] = useState(() => createGardenCinematic(captureFrame, { promptFor: (step) => meditationPrompt(step, { name: currentPlantlet().name, glowName: currentPlantlet().id === "lumibud" ? "soft teal-green glow" : "soft pink glow" }), autoEnd: false }));
   const [radio] = useState(() => createRadio());
   const [bowlOpen, setBowlOpen] = useState(false);
-  const [visualsOn, setVisualsOn] = useState(false);
+  const [visualsOn, setVisualsOn] = useState(true);
   const [dockOpen, setDockOpen] = useDockOpen();
   const [picking, setPicking] = useState(true);
   const pickPlantlet = useCallback((id: PlantletId) => {
@@ -146,6 +147,14 @@ export function GardenScene() {
   }));
   useEffect(() => radio.subscribe(() => audio.current?.duck(radio.getSnapshot().playing)), [radio]);
   useEffect(() => () => { meditation.stop(); radio.dispose(); void meditationVisuals.close(); }, [meditation, radio, meditationVisuals]);
+  useEffect(() => {
+    let last = -1;
+    return meditation.subscribe(() => {
+      const s = meditation.getSnapshot();
+      if (!s.active || !s.visuals) { last = -1; return; }
+      if (s.step !== last) { const first = last === -1; last = s.step; if (!first) void meditationVisuals.advance(s.step); }
+    });
+  }, [meditation, meditationVisuals]);
   const queuedSteering = useRef<{ prompt: string; stage: number } | null>(null);
   const [steering] = useState(() => createCinematicSteering(async (prompt, stage) => {
     // VR keeps the established exit-to-play handoff; the validated request follows it into the same stream.
