@@ -9,10 +9,16 @@ type Dependencies = {
   mint: (signal: AbortSignal) => Promise<WorldSession>;
   create: (model: string) => Promise<Client>;
   capture: () => Promise<File>;
+  /** Override the stage prompt (meditation visuals); always sent after the seed prompt. */
+  promptFor?: (stage: number) => string;
+  /** Growth cinematics auto-end after the countdown; meditation visuals run until closed. */
+  autoEnd?: boolean;
 };
 
 /** One controller owns one stream; screen and future XR displays only subscribe. */
 export function createCinematicSession(deps: Dependencies) {
+  const promptFor = deps.promptFor ?? stagePrompt;
+  const autoEnd = deps.autoEnd ?? true;
   let state: CinematicState = { open: false, stage: 0, phase: "idle", error: null, stream: null };
   const listeners = new Set<() => void>();
   let client: Client | null = null;
@@ -59,10 +65,10 @@ export function createCinematicSession(deps: Dependencies) {
     resetCountdown() { if (state.open && state.phase === "playing") timer.reset(); },
     getSnapshot: () => state,
     subscribe(f: () => void) { listeners.add(f); return () => { listeners.delete(f); }; },
-    framesArrived() { if (state.open && state.phase === "loading") { timer.start(); update({ phase: "playing" }); } },
+    framesArrived() { if (state.open && state.phase === "loading") { if (autoEnd) timer.start(); update({ phase: "playing" }); } },
     playbackFailed: fail,
     advance(stage: number) {
-      stagePrompt(stage);
+      promptFor(stage);
       if (active && !state.open) return lifecycle; // Closing: never race a second session into existence.
       const id = generation;
       const first = !active;
@@ -71,7 +77,7 @@ export function createCinematicSession(deps: Dependencies) {
       lifecycle = lifecycle.then(async () => {
         if (id !== generation || !state.open || state.phase === "error") return;
         const check = () => { if (id !== generation || !state.open) throw new Error("Cinematic cancelled"); };
-        if (!first) { if (client) await command(client, "set_prompt", { prompt: stagePrompt(stage) }); return; }
+        if (!first) { if (client) await command(client, "set_prompt", { prompt: promptFor(stage) }); return; }
         await acquireLock(); check();
         const signal = abort?.signal;
         if (!signal) return;
@@ -96,7 +102,7 @@ export function createCinematicSession(deps: Dependencies) {
         await command(c, "set_image", { image }); check();
         await command(c, "set_prompt", { prompt: world.prompt }); check();
         await command(c, "start", {}); check();
-        if (stage > 0) await command(c, "set_prompt", { prompt: stagePrompt(stage) });
+        if (stage > 0 || deps.promptFor) await command(c, "set_prompt", { prompt: promptFor(stage) });
       }).catch(async () => {
         if (id === generation && state.open) fail();
         await cleanup().catch(() => undefined);
@@ -126,9 +132,9 @@ export function createCinematicSession(deps: Dependencies) {
 }
 export type CinematicSession = ReturnType<typeof createCinematicSession>;
 
-export function createGardenCinematic(capture: () => Promise<File>) {
+export function createGardenCinematic(capture: () => Promise<File>, options: Pick<Dependencies, "promptFor" | "autoEnd"> = {}) {
   return createCinematicSession({
-    capture,
+    capture, ...options,
     create: async (modelName) => { const { Reactor } = await import("@reactor-team/js-sdk"); return new Reactor({ modelName }); },
     mint: async (signal) => {
       const response = await fetch("/api/world", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}", signal });

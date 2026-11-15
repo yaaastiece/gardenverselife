@@ -61,3 +61,6 @@ export function stageXionSuggestions(stage: number) {
   if (!story) throw new Error("Unknown companion stage");
   return story.xionSuggestions;
 }
+
+/** Calm Orbis visuals that accompany Xion's guided meditation (separate from growth lore). */
+export const MEDITATION_PROMPT = "A slow, dreamy meditation scene on a moonlit neon rooftop garden: soft pink and green light breathes gently through glowing leaves, fireflies drift, mist curls over the meditation cushion, the city glows softly far below, calm and peaceful, slow camera drift.";

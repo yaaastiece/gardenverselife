@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
-import { Droplet, Sun, Sprout, Leaf } from "lucide-react";
+import { Droplet, Sun, Sprout, Leaf, ChevronDown, ChevronUp } from "lucide-react";
 import { CARE, health, status, type CareAction, type PlantCare } from "../plants/care";
 import { SEEDLING_STAGES } from "../plants/growth";
 
 // Screen view of plant care; WebXR panels can subscribe to the same PlantCare later.
-export function CarePanel({ care, onAction }: { care: PlantCare; onAction: (a: CareAction) => void }) {
+export function CarePanel({ care, onAction, open, setOpen }: { care: PlantCare; onAction: (a: CareAction) => void; open: boolean; setOpen: (open: boolean) => void }) {
   const [, force] = useState(0);
-  const [open, setOpen] = useState(true);
-  useEffect(() => { if (window.matchMedia("(max-width: 767px)").matches) setOpen(false); }, []);
   useEffect(() => { let last = 0; return care.subscribe(() => { const n = performance.now(); if (n - last > 250) { last = n; force((x) => x + 1); } }); }, [care]);
   const s = care.state;
   const word = status(s);
@@ -22,7 +20,7 @@ export function CarePanel({ care, onAction }: { care: PlantCare; onAction: (a: C
   ];
   return (
     <div className="gv-care-wrap">
-      <button type="button" className="gv-care-toggle" aria-expanded={open} onClick={() => setOpen(!open)}><Sprout size={14} /> Care</button>
+      <button type="button" className="gv-care-toggle" aria-expanded={open} aria-label={open ? "Hide care panels" : "Show care panels"} onClick={() => setOpen(!open)}><Sprout size={14} /> Care {open ? <ChevronDown size={14} /> : <ChevronUp size={14} />}</button>
       {open && <aside className="gv-care" aria-label="Plant care">
         <div className="gv-care-head"><span>Condition</span><b data-status={word}>{word}</b></div>
         {s.water > CARE.overwater && <p className="gv-care-warn">Too much water</p>}

@@ -34,7 +34,7 @@ import { createAmbience } from "./audio/ambience";
 import { BACKDROP, EYE_HEIGHT, LOOK, XION } from "./config";
 import { createGardenCinematic } from "./cinematic/session";
 import { createCinematicSteering } from "./cinematic/steering";
-import { createDictation } from "./xion/voice";
+import { createDictation, speak, stopSpeaking, xionSpeechEnabled } from "./xion/voice";
 import { captureGardenFrame } from "./cinematic/capture";
 import { CinematicOverlay } from "./ui/CinematicOverlay";
 import { XR } from "@react-three/xr";
@@ -43,6 +43,15 @@ import { createGardenXRStore } from "./xr/store";
 import { VRRig } from "./xr/VRRig";
 import { GardenPanels } from "./xr/GardenPanels";
 import { createCinematicGate } from "./xr/rules";
+import { createRadio } from "./audio/radio";
+import { createMeditation } from "./meditation/meditation";
+import { SoundBowl } from "./scene/SoundBowl";
+import { SoundBowlCard } from "./ui/SoundBowlCard";
+import { MeditationOverlay } from "./ui/MeditationOverlay";
+import { BowlWorldPanel, MeditationWorldPanel } from "./xr/MeditationPanels";
+import { useDockOpen } from "./ui/useDockOpen";
+import { MEDITATION_PROMPT } from "./cinematic/prompts";
+import type { Meditation } from "./meditation/meditation";
 
 // Which bed a plant type is tracked in (matches the bed names Xion uses).
 const BED_OF: Record<Exclude<PlantKey, "companion">, number> = { tomato: 0, herb: 0, lettuce: 0, strawberry: 1, pepper: 2, rose: 3 };
@@ -52,6 +61,11 @@ const BED_SPOTS = [{ x: -2.6, y: 0.65, z: -1.2 }, { x: -1.3, y: 0.58, z: -3.4 },
 const BED_LABELS = ["tomatoes", "strawberries", "peppers", "roses"];
 function HelperTicker({ helper }: { helper: GardenHelper }) {
   useFrame((_, d) => helper.tick(Math.min(d, 0.05)));
+  return null;
+}
+
+function MeditationTicker({ meditation }: { meditation: Meditation }) {
+  useFrame((_, d) => meditation.tick(Math.min(d, 0.1)));
   return null;
 }
 
@@ -77,7 +91,7 @@ export function GardenScene() {
   const [care] = useState(createPlantCare);
   const gardenCanvas = useRef<HTMLCanvasElement | null>(null);
   const renderer = useRef<RootState | null>(null);
-  const [cinematic] = useState(() => createGardenCinematic(() => {
+  const captureFrame = useCallback(() => {
     const canvas = gardenCanvas.current;
     if (!canvas) return Promise.reject(new Error("Garden frame unavailable"));
     const root = renderer.current;
@@ -85,8 +99,27 @@ export function GardenScene() {
     // Draw and copy synchronously; preserveDrawingBuffer stays disabled.
     root.gl.render(root.scene, root.camera);
     return captureGardenFrame(canvas);
-  }));
+  }, []);
+  const [cinematic] = useState(() => createGardenCinematic(captureFrame));
+  const [meditationVisuals] = useState(() => createGardenCinematic(captureFrame, { promptFor: () => MEDITATION_PROMPT, autoEnd: false }));
+  const [radio] = useState(() => createRadio());
+  const [bowlOpen, setBowlOpen] = useState(false);
+  const [visualsOn, setVisualsOn] = useState(false);
+  const [dockOpen, setDockOpen] = useDockOpen();
   const [cinematicGate] = useState(() => createCinematicGate((stage) => { void cinematic.advance(stage); }));
+  const [meditation] = useState(() => createMeditation({
+    move: (p) => interaction.move(p),
+    speak: (t) => { if (xionSpeechEnabled()) speak(t); },
+    stopSpeaking,
+    music: { playing: () => radio.getSnapshot().playing, play: () => { void radio.play(); }, pause: () => radio.pause() },
+    onEnd: () => {
+      void meditationVisuals.close();
+      // Growth cinematics wait for the meditation to finish.
+      if (!xrStore.getState().session) requestAnimationFrame(() => { cinematicGate.flush(); setPendingStage(null); });
+    },
+  }));
+  useEffect(() => radio.subscribe(() => audio.current?.duck(radio.getSnapshot().playing)), [radio]);
+  useEffect(() => () => { meditation.stop(); radio.dispose(); void meditationVisuals.close(); }, [meditation, radio, meditationVisuals]);
   const queuedSteering = useRef<{ prompt: string; stage: number } | null>(null);
   const [steering] = useState(() => createCinematicSteering(async (prompt, stage) => {
     // VR keeps the established exit-to-play handoff; the validated request follows it into the same stream.
@@ -132,11 +165,11 @@ export function GardenScene() {
     const unsubscribe = care.subscribe((state) => {
       if (state.stage <= lastStage) return;
       lastStage = state.stage;
-      cinematicGate.advance(state.stage, Boolean(xrStore.getState().session));
+      cinematicGate.advance(state.stage, Boolean(xrStore.getState().session) || meditation.getSnapshot().active);
       setPendingStage(cinematicGate.pending);
     });
     return () => { unsubscribe(); void cinematic.close(); };
-  }, [care, cinematic, cinematicGate, xrStore]);
+  }, [care, cinematic, cinematicGate, xrStore, meditation]);
   useEffect(() => care.onAlert((k) => interaction.say(ALERTS[k])), [care, interaction]);
   const careAction = useCallback((a: CareAction) => { care.act(a); }, [care]);
   const [beds] = useState(() => createBedCare());
@@ -183,17 +216,24 @@ export function GardenScene() {
     interaction.move({ x: MOONFLOWER_POS[0] - 0.35, y: 1.3, z: MOONFLOWER_POS[2] + 0.1 });
     interaction.say(lesson);
   }, [quest, interaction]);
+  const startMeditation = useCallback(() => {
+    helper.stop(); interaction.dismiss(); setBowlOpen(false);
+    const vr = Boolean(xrStore.getState().session);
+    const withVisuals = visualsOn && !vr && !cinematic.getSnapshot().open;
+    meditation.start(interaction.state.position, withVisuals);
+    if (withVisuals) void meditationVisuals.advance(0);
+  }, [helper, interaction, xrStore, visualsOn, cinematic, meditation, meditationVisuals]);
   const bubbleRef = useRef<HTMLDivElement>(null);
   const canvasPress = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
     if (!import.meta.env.DEV) return;
-    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, beds, xr: xrStore, renderer: () => renderer.current, selection, cinematic, steering };
+    const debug = { get state() { return { ...interaction.state }; }, move: interaction.move, tap: () => interaction.release(false), release: () => interaction.release(true), dismiss: interaction.dismiss, say: interaction.say, care, beds, xr: xrStore, renderer: () => renderer.current, selection, cinematic, steering, radio, meditation, meditationVisuals };
     Object.assign(window, { __game: debug });
     return () => { Reflect.deleteProperty(window, "__game"); };
-  }, [interaction, care, beds, xrStore, selection, cinematic, steering]);
+  }, [interaction, care, beds, xrStore, selection, cinematic, steering, radio, meditation, meditationVisuals]);
   useEffect(() => () => audio.current?.dispose(), []);
   const toggleSound = async () => {
-    if (!audio.current) audio.current = createAmbience();
+    if (!audio.current) { audio.current = createAmbience(); audio.current.duck(radio.getSnapshot().playing); }
     await audio.current.setPlaying(!playing);
     setPlaying(!playing);
   };
@@ -214,6 +254,7 @@ export function GardenScene() {
       onPointerDownCapture={(e) => {
         if (helper.state.busy) helper.stop();
         if (!(e.target instanceof HTMLCanvasElement)) return;
+        if (meditation.getSnapshot().active) meditation.stop();
         canvasPress.current = { x: e.clientX, y: e.clientY };
         interaction.state.pointerHandled = false;
       }}
@@ -241,14 +282,18 @@ export function GardenScene() {
           <Garden beds={beds} selection={selection} />
           <Lounge />
         </group>
-        <Suspense fallback={null}><Xion interaction={interaction} /></Suspense>
+        <SoundBowl radio={radio} meditation={meditation} onOpen={() => setBowlOpen(true)} />
+        <Suspense fallback={null}><Xion interaction={interaction} meditation={meditation} /></Suspense>
         <Seedling onStageChange={onStage} care={care} />
         <Moonflower quest={quest} onTask={doMoonTask} />
         {!inVR && <XionCamera interaction={interaction} bubbleRef={bubbleRef} />}
         {!inVR && <PlantCardAnchor selection={selection} cardRef={cardRef} />}
         {!inVR && <PlantFxLayer selection={selection} />}
         {inVR && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={exitVR} exit={exitVR} cinematic={cinematic} steering={steering} />}
+        {inVR && bowlOpen && <BowlWorldPanel radio={radio} onMeditate={startMeditation} onClose={() => setBowlOpen(false)} />}
+        {inVR && <MeditationWorldPanel meditation={meditation} />}
         <HelperTicker helper={helper} />
+        <MeditationTicker meditation={meditation} />
         <ReadySignal onReady={() => setReady(true)} />
         </group>
         </XR>
@@ -263,12 +308,14 @@ export function GardenScene() {
         </Button>
       </header>
       {vrSupported && !inVR && <div className="gv-vr-entry"><Button variant="outline" onClick={enterVR}>Enter VR</Button>{vrError && <p role="status">{vrError}</p>}</div>}
-      <div className="gv-dock"><CarePanel care={care} onAction={careAction} /><MoonQuestCard quest={quest} onTask={doMoonTask} /></div>
+      <div className="gv-dock"><CarePanel care={care} onAction={careAction} open={dockOpen} setOpen={setDockOpen} />{dockOpen && <MoonQuestCard quest={quest} onTask={doMoonTask} />}</div>
+      {!inVR && bowlOpen && <SoundBowlCard radio={radio} onMeditate={startMeditation} visuals={visualsOn} setVisuals={setVisualsOn} onClose={() => setBowlOpen(false)} />}
+      {!inVR && <MeditationOverlay meditation={meditation} visuals={meditationVisuals} />}
       <PlantCard beds={beds} selection={selection} cardRef={cardRef} />
       <XionPanel chat={chat} journal={journal} plant={chatPlant} setPlant={setChatPlant} snapshot={snapshot} onReply={(t) => interaction.say(t)} onCheck={checkGarden} helper={helper} onHelp={acceptHelp} />
       {helper.state.busy && <div className="gv-helping" role="status">✨ Xion is helping · tap to stop</div>}
       <XionSpeech interaction={interaction} bubbleRef={bubbleRef} />
-      <div className="gv-hint">Drag to look around · Tap Pepper Peony or the moonflower</div>
+      <div className="gv-hint">Drag to look around · Tap Pepper Peony, the moonflower or the sound bowl</div>
       {!inVR && <CinematicOverlay session={cinematic} steering={steering} />}
     </div>
   );

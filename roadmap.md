@@ -1,4 +1,8 @@
 # Garden updates
+- [ ] Lumibud (second character): images received, awaiting how they should appear
+- [x] Sound bowl radio with 3 songs, LED light, play/next
+- [x] Guided meditation: seated Xion, voice + captions, breath light, optional Orbis visuals
+- [x] Collapsible desktop status panels
 - [x] Name the plant person Pepper Peony across labels, tips, chat and story
 - [x] Move the moonflower right so the meditation pad shows
 - [x] Add shared four-chip steering, rotating Xion suggestions and hold-to-talk transcript rules

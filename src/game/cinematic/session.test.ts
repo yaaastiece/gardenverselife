@@ -3,7 +3,7 @@ import { createCinematicSession, type WorldSession } from "./session";
 import { CINEMATIC_PROMPTS } from "./prompts";
 import type { Reactor } from "@reactor-team/js-sdk";
 
-function setup() {
+function setup(options: { promptFor?: (stage: number) => string; autoEnd?: boolean } = {}) {
   const events = new Map<string, (...args: any[]) => void>();
   const client = {
     connect: vi.fn(async () => undefined), disconnect: vi.fn(async () => undefined),
@@ -16,10 +16,21 @@ function setup() {
   const mint = vi.fn(async () => world);
   const capture = vi.fn(async () => new File(["frame"], "garden-frame.jpg", { type: "image/jpeg" }));
   const create = vi.fn(async () => client as unknown as Pick<Reactor, "connect" | "disconnect" | "sendCommand" | "uploadFile" | "on" | "off">);
-  return { session: createCinematicSession({ mint, capture, create }), client, mint, capture, events };
+  return { session: createCinematicSession({ mint, capture, create, ...options }), client, mint, capture, events };
 }
 
 describe("cinematic lifecycle", () => {
+  it("meditation visuals send their own prompt and never auto-end", async () => {
+    vi.useFakeTimers();
+    const { session, client } = setup({ promptFor: () => "calm meditation", autoEnd: false });
+    try {
+      await session.advance(0);
+      expect(client.sendCommand).toHaveBeenLastCalledWith("set_prompt", { prompt: "calm meditation" });
+      session.framesArrived();
+      await vi.advanceTimersByTimeAsync(60000);
+      expect(session.getSnapshot().open).toBe(true);
+    } finally { await session.close(); vi.useRealTimers(); }
+  });
   it("auto-closes only after first frames, 15 seconds and a one-second fade, stopping and disconnecting", async () => {
     vi.useFakeTimers();
     const { session, client } = setup();

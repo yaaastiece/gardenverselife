@@ -19,11 +19,15 @@ export function createAmbience() {
   const wG = ctx.createGain(); wG.gain.value = 0.25; wind.connect(bp).connect(wG).connect(master);
   const lfo = ctx.createOscillator(); lfo.frequency.value = 0.12; const lfoG = ctx.createGain(); lfoG.gain.value = 0.18;
   lfo.connect(lfoG).connect(wG.gain); lfo.start();
+  let on = false; let ducked = false;
+  const apply = () => master.gain.setTargetAtTime(on ? (ducked ? 0.15 : 0.6) : 0, ctx.currentTime, 0.4);
   return {
-    async setPlaying(on: boolean) {
+    async setPlaying(next: boolean) {
       if (ctx.state === "suspended") await ctx.resume();
-      master.gain.setTargetAtTime(on ? 0.6 : 0, ctx.currentTime, 0.4);
+      on = next; apply();
     },
+    /** Fade the city sound down while the sound bowl plays music. */
+    duck(next: boolean) { ducked = next; apply(); },
     dispose() { void ctx.close(); },
   };
 }
