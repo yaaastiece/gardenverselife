@@ -1,5 +1,5 @@
 # Garden updates
-- [ ] Phone header and center-planter framing
-- [ ] Larger glowing Xion with tap camera glides
-- [ ] Mouse/touch dragging and timed plant-care speech
-- [ ] Reusable interaction rules, tests, and browser verification
+- [x] Phone header and center-planter framing
+- [x] Larger glowing Xion with tap camera glides
+- [x] Mouse/touch dragging and timed plant-care speech
+- [x] Reusable interaction rules, tests, and browser verification
