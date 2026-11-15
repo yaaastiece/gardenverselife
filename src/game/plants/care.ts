@@ -1,11 +1,10 @@
 // Plain TS plant-condition + growth rules; screen panels or WebXR panels subscribe to the same state.
-import { SEEDLING_STAGES } from "./growth";
+import { PLANTLETS, type Plantlet, type PlantletId } from "./plantlets";
 
 export type CareAction = "water" | "sun" | "soil";
 export type AlertKey = "water" | "sun" | "soil" | "tooWet";
 export const CARE = {
   start: 70,
-  drift: { water: 0.5, sun: 0.3, soil: 0.15 }, // points per second
   boost: { water: 25, sun: 30, soil: 25 },
   overwater: 90, overwaterSoilLoss: 5,
   low: 30, growMin: 40, bonusMin: 60,
@@ -18,7 +17,6 @@ export const ALERTS: Record<AlertKey, string> = {
   soil: "The soil is tired. Mix in compost to bring nutrients back.",
   tooWet: "Too much water can rot roots. Let the soil dry a little before watering again.",
 };
-export const STAGE_NOTES = ["", "Pepper Peony is a sprout now", "Pepper Peony is thriving", "Pepper Peony is a Queen now!"];
 
 export type CareState = { water: number; sun: number; soil: number; points: number; stage: number; time: number; history: number[]; lightUntil: number; compostAt: number; note: string | null; noteAt: number };
 const clamp = (v: number) => Math.max(0, Math.min(100, v));
@@ -32,8 +30,10 @@ export function status(s: CareState): "Thriving" | "Okay" | "Struggling" {
   return min > CARE.bonusMin ? "Thriving" : "Okay";
 }
 
-export function createPlantCare() {
-  const state: CareState = { water: CARE.start, sun: CARE.start, soil: CARE.start, points: 0, stage: 0, time: 0, history: [CARE.start], lightUntil: -1, compostAt: -1, note: null, noteAt: -1 };
+const initialState = (): CareState => ({ water: CARE.start, sun: CARE.start, soil: CARE.start, points: 0, stage: 0, time: 0, history: [CARE.start], lightUntil: -1, compostAt: -1, note: null, noteAt: -1 });
+
+export function createPlantCare(plantlet: Plantlet = PLANTLETS.pepper) {
+  const state = initialState();
   const lastAlert: Partial<Record<AlertKey, number>> = {};
   const subs = new Set<(s: CareState) => void>();
   const alertSubs = new Set<(k: AlertKey) => void>();
@@ -54,9 +54,10 @@ export function createPlantCare() {
     onAlert(f: (k: AlertKey) => void) { alertSubs.add(f); return () => { alertSubs.delete(f); }; },
     tick(dt: number) {
       state.time += dt;
-      state.water = clamp(state.water - CARE.drift.water * dt);
-      state.sun = clamp(state.sun - CARE.drift.sun * dt);
-      state.soil = clamp(state.soil - CARE.drift.soil * dt);
+      const drift = plantlet.careProfile.drift;
+      state.water = clamp(state.water - drift.water * dt);
+      state.sun = clamp(state.sun - drift.sun * dt);
+      state.soil = clamp(state.soil - drift.soil * dt);
       sampleT += dt;
       if (sampleT >= CARE.sampleEvery) { sampleT = 0; state.history = [...state.history, health(state)].slice(-CARE.historyLen); }
       checkAlerts(); emit();
@@ -78,14 +79,26 @@ export function createPlantCare() {
       if (a === "sun") state.lightUntil = state.time + CARE.lightSeconds;
       if (a === "soil") state.compostAt = state.time;
       let advanced = false;
-      const last = SEEDLING_STAGES.length - 1;
+      const last = plantlet.stageNames.length - 1;
       if (healthy && state.stage < last) {
         state.points += bonus ? CARE.bonusPoints : CARE.pointsPerAction;
-        if (state.points >= CARE.pointsPerStage) { state.points = 0; state.stage++; advanced = true; state.note = STAGE_NOTES[state.stage] ?? null; state.noteAt = state.time; }
+        if (state.points >= CARE.pointsPerStage) { state.points = 0; state.stage++; advanced = true; state.note = plantlet.stageNotes[state.stage] ?? null; state.noteAt = state.time; }
       }
       checkAlerts(); emit();
       return advanced;
     },
+    /** Change plant starts the current companion over without touching the other companion. */
+    reset() {
+      Object.assign(state, initialState());
+      sampleT = 0;
+      (Object.keys(lastAlert) as AlertKey[]).forEach((k) => { delete lastAlert[k]; });
+      emit();
+    },
   };
 }
 export type PlantCare = ReturnType<typeof createPlantCare>;
+
+/** Independent progress and drift clocks; the scene ticks only the selected character's care. */
+export function createCompanionCareStates(): Record<PlantletId, PlantCare> {
+  return { pepper: createPlantCare(PLANTLETS.pepper), lumibud: createPlantCare(PLANTLETS.lumibud) };
+}

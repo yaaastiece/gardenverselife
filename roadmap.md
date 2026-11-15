@@ -1,4 +1,7 @@
 # Garden updates
+- [ ] Move both companions' art, care, stages and story into one data file
+- [ ] Add Lumibud's orb placeholders, confirmed change-plant flow and separate care state
+- [ ] Verify companion choice, stage lore, care drift and unchanged garden interactions
 - [x] Lumibud: choosable plantlet at start
 - [x] Sound bowl radio with 3 songs, LED light, play/next
 - [x] Guided meditation: seated Xion, voice + captions, breath light, optional Orbis visuals

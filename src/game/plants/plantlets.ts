@@ -1,35 +1,133 @@
-// Plain TS plantlet choice: which plant person grows in the center planter, its art layout and story wording.
+// Plain TS companion catalog: choice, art, care, stage names and Orbis lore live here,
+// independently of the screen, 3D scene or a future WebXR chooser.
+import pepperSeedling from "@/assets/companion_1_seedling.png.asset.json";
+import pepperSprout from "@/assets/companion_2_sprout.png.asset.json";
+import pepperYoung from "@/assets/companion_3_young.png.asset.json";
+import pepperQueen from "@/assets/companion_4_queen.png.asset.json";
+
 export type PlantletId = "pepper" | "lumibud";
 export type Frame = { top: number; bottom: number; cx: number };
-export type Plantlet = {
-  id: PlantletId; name: string; blurb: string;
-  aspect: number; heights: number[]; frames: Frame[];
-  /** Index of the art image used for each of the 4 stages (Lumibud reuses its flower-crown art at Queen). */
-  art: number[]; queenGlow: number;
-  /** Story prompts for the Young and Queen stages (Seedling and Sprout are shared). */
-  prompts: { young: string; queen: string };
+export type Four<T> = readonly [T, T, T, T];
+export type StoryBeat = { narration: string; prompt: string };
+export type CareProfile = {
+  drift: { water: number; sun: number; soil: number };
+  likes: string;
 };
+export type Plantlet = {
+  id: PlantletId;
+  name: string;
+  tagline: string;
+  stageNames: Four<string>;
+  sprites: Four<string>;
+  glowColor: string;
+  careProfile: CareProfile;
+  story: Four<StoryBeat>;
+  stageNotes: Four<string>;
+  /** Billboard measurements; change these with the art, without touching scene code. */
+  aspect: number;
+  heights: Four<number>;
+  frames: Four<Frame>;
+  queenGlow: number;
+  burstColor: string;
+};
+
+// Temporary Lumibud art: one transparent, glowing teal orb, reused and scaled at each stage.
+// To swap in final art, import four cut-outs above and replace these four sprite URLs, then
+// update Lumibud's aspect and measured frame bounds below. No choice or care code changes.
+const LUMIBUD_ORB = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <defs>
+      <radialGradient id="halo"><stop offset="0" stop-color="#8fffd2" stop-opacity=".8"/><stop offset=".55" stop-color="#8fffd2" stop-opacity=".25"/><stop offset="1" stop-color="#8fffd2" stop-opacity="0"/></radialGradient>
+      <radialGradient id="orb" cx="35%" cy="28%"><stop offset="0" stop-color="#e4fff5"/><stop offset=".35" stop-color="#a8ffdc"/><stop offset="1" stop-color="#42c99b"/></radialGradient>
+    </defs>
+    <circle cx="256" cy="256" r="240" fill="url(#halo)"/>
+    <circle cx="256" cy="256" r="126" fill="url(#orb)" stroke="#173f38" stroke-width="10"/>
+    <ellipse cx="216" cy="207" rx="35" ry="24" fill="#effff9" opacity=".72"/>
+  </svg>
+`)}`;
 
 export const PLANTLETS: Record<PlantletId, Plantlet> = {
   pepper: {
-    id: "pepper", name: "Pepper Peony", blurb: "A moss-haired plant person who dreams of a peony crown.",
-    aspect: 1920 / 1048, heights: [0.35, 0.53, 0.72, 0.9],
-    frames: [{ top: 0.142, bottom: 0.917, cx: 0.495 }, { top: 0.089, bottom: 0.917, cx: 0.49 }, { top: 0.081, bottom: 0.916, cx: 0.49 }, { top: 0.051, bottom: 0.915, cx: 0.473 }],
-    art: [0, 1, 2, 3], queenGlow: 1,
-    prompts: {
-      young: "A small plant person with a green moss afro and a pink bud flower in her hair stands up in the planter, her leaves lighting with thin pink neon veins.",
-      queen: "The plant person grows into a graceful plant queen with long moss locs, a large glowing pink peony crown opens, soft pink light fills the garden, the camera tilts up to the moon.",
+    id: "pepper",
+    name: "Pepper Peony",
+    tagline: "A peony who dreams of the moon.",
+    stageNames: ["Seedling", "Sprout", "Young", "Queen"],
+    sprites: [pepperSeedling.url, pepperSprout.url, pepperYoung.url, pepperQueen.url],
+    glowColor: "#ff5fb8",
+    careProfile: {
+      drift: { water: 0.5, sun: 0.3, soil: 0.15 },
+      likes: "Likes bright light, water when the top inch of soil feels dry, and compost-rich soil.",
     },
+    story: [
+      {
+        narration: "Long ago, the moon dropped a single seed on this rooftop. It's been waiting for someone kind enough to wake it.",
+        prompt: "A tiny glowing pink-winged pixie hovers over a glass planter on a rooftop garden at moonlit dusk as a small sprout breaks through the soil, soft moonlight, the gray and pink city skyline behind, slow gentle camera drift.",
+      },
+      {
+        narration: "It remembers you now. Every drop of water is a word in its language.",
+        prompt: "The sprout unfurls new leaves and a small pink bud swells, soft light rising from the soil, the pixie circles it.",
+      },
+      {
+        narration: "Something old is waking up inside Pepper Peony. She's starting to dream of the whole garden.",
+        prompt: "A small plant person with a green moss afro and a pink bud flower in her hair stands up in the planter, her leaves lighting with thin pink neon veins.",
+      },
+      {
+        narration: "The first bloom has returned to the moon, and the Gardenverse remembers its queen, Pepper Peony.",
+        prompt: "The plant person grows into a graceful plant queen with long moss locs, a large glowing pink peony crown opens, soft pink light fills the garden, the camera tilts up to the moon.",
+      },
+    ],
+    stageNotes: ["", "Pepper Peony is a sprout now", "Pepper Peony is thriving", "Pepper Peony is a Queen now!"],
+    aspect: 1920 / 1048,
+    heights: [0.35, 0.53, 0.72, 0.9],
+    frames: [
+      { top: 0.142, bottom: 0.917, cx: 0.495 },
+      { top: 0.089, bottom: 0.917, cx: 0.49 },
+      { top: 0.081, bottom: 0.916, cx: 0.49 },
+      { top: 0.051, bottom: 0.915, cx: 0.473 },
+    ],
+    queenGlow: 1,
+    burstColor: "#ffb3d9",
   },
   lumibud: {
-    id: "lumibud", name: "Lumibud", blurb: "A round little sprout creature with glowing teal leaf veins.",
-    aspect: 1280 / 720, heights: [0.3, 0.45, 0.6, 0.72],
-    frames: [{ top: 0.067, bottom: 0.922, cx: 0.498 }, { top: 0.04, bottom: 0.965, cx: 0.509 }, { top: 0.035, bottom: 0.997, cx: 0.503 }, { top: 0.035, bottom: 0.997, cx: 0.503 }],
-    art: [0, 1, 2, 2], queenGlow: 1.6,
-    prompts: {
-      young: "A chubby round peach-green plant creature with big shiny eyes stands up in the planter, a crown of leaves with glowing teal veins and pink blossoms opens on its head, teal swirls glow on its belly.",
-      queen: "The chubby plant creature glows brighter, its crown of teal-veined leaves and pink blossoms opens wide, glowing teal swirls light its body, soft teal and pink light fills the garden, the camera tilts up to the moon.",
+    id: "lumibud",
+    name: "Lumibud",
+    tagline: "A little light that learned to grow.",
+    stageNames: ["Glow Seed", "Sprout", "Leafling", "Bloom"],
+    sprites: [LUMIBUD_ORB, LUMIBUD_ORB, LUMIBUD_ORB, LUMIBUD_ORB],
+    glowColor: "#8fffd2",
+    careProfile: {
+      drift: { water: 0.65, sun: 0.15, soil: 0.15 },
+      likes: "Likes soft light and evenly moist soil, like many shade-loving plants and ferns.",
     },
+    story: [
+      {
+        narration: "This one fell from the sky wrapped in starlight. It doesn't know it's a seed yet.",
+        prompt: "A tiny glowing seed sits in a glass planter on a moonlit rooftop garden, a soft teal light pulses inside it and a first sprout peeks out, the pixie hovers close, the gray and pink city skyline behind.",
+      },
+      {
+        narration: "It opened its eyes and saw you first. It will remember.",
+        prompt: "A round mint-green plant creature with a pink belly and a single glowing leaf tip hops out of the soil and blinks its big eyes.",
+      },
+      {
+        narration: "The more you tend it, the brighter it glows. Light is how it says thank you.",
+        prompt: "Glowing teal veins spread across its broad leaves as it stretches its arms, little lights drift upward.",
+      },
+      {
+        narration: "Every petal holds a little moonlight, and the garden glows back.",
+        prompt: "A crown of pink blossoms and glowing leaves blooms on its head as teal patterns light up its body, the camera tilts up to the moon.",
+      },
+    ],
+    stageNotes: ["", "Lumibud is a Sprout now", "Lumibud is thriving", "Lumibud is a Bloom now!"],
+    aspect: 1,
+    heights: [0.28, 0.42, 0.58, 0.76],
+    frames: [
+      { top: 0, bottom: 1, cx: 0.5 },
+      { top: 0, bottom: 1, cx: 0.5 },
+      { top: 0, bottom: 1, cx: 0.5 },
+      { top: 0, bottom: 1, cx: 0.5 },
+    ],
+    queenGlow: 1.25,
+    burstColor: "#8fffd2",
   },
 };
 
@@ -53,7 +151,7 @@ export function choosePlantlet(id: PlantletId) {
   subs.forEach((f) => f());
 }
 export function onPlantletChange(f: () => void) { subs.add(f); return () => { subs.delete(f); }; }
-/** Story and tip copy is written with Pepper Peony's name; swap in the chosen plantlet's. */
+/** Shared care and meditation copy uses the selected companion's name. */
 export function named(text: string) { return text.split("Pepper Peony").join(plantName()); }
 /** Test hook: forget the cached choice so storage is re-read. */
 export function _resetPlantletCache() { loaded = false; chosen = null; }
