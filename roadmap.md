@@ -1,4 +1,5 @@
 # Garden updates
+- [ ] Add and verify cinematic countdown, steering/stage resets and auto-close fade
 - [x] Add editable Orbis stage lore, captions and Xion narration
 - [x] Add safe player steering with dictation, suggestions and six-second cooldown
 - [x] Test story advancement, prompt commands and phone cinematic controls
