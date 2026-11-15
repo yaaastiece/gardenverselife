@@ -19,7 +19,7 @@ void main(){
   vec2 cell = floor(vec2(s, v) * vec2(960.0, 480.0));
   float tw = 0.5 + 0.5*sin(time*(0.8 + hash(cell)*1.6) + hash(cell+3.1)*6.283);
   c *= 1.0 + sky * smoothstep(0.55, 0.85, lum) * (tw - 0.45) * 0.9;
-  c = mix(c, fill, smoothstep(0.88, 1.0, vUv.y));
+  c = mix(c, fill, smoothstep(0.6, 1.0, vUv.y));
   gl_FragColor = vec4(c, 1.0);
   #include <colorspace_fragment>
 }`;
