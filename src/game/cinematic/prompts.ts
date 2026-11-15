@@ -16,14 +16,14 @@ export const CINEMATIC_STAGES = [
   },
   {
     name: "Young",
-    narration: "Something old is waking up inside her. She's starting to dream of the whole garden.",
+    narration: "Something old is waking up inside Pepper Peony. She's starting to dream of the whole garden.",
     prompt: "A small plant person with a green moss afro and a pink bud flower in her hair stands up in the planter, her leaves lighting with thin pink neon veins.",
     suggestions: ["Show the whole city", "A gentle breeze", "Fireflies fill the air", "The moon glows brighter"],
     xionSuggestions: ["Her neon veins softly brighten", "Moss curls move in the breeze", "A lotus shadow crosses the roof", "Pink pollen floats upward", "The garden answers with light", "Clouds part above her", "Her reflection fills the glass", "Leaves open toward the moon"],
   },
   {
     name: "Queen",
-    narration: "The first bloom has returned to the moon, and the Gardenverse remembers its queen.",
+    narration: "The first bloom has returned to the moon, and the Gardenverse remembers its queen, Pepper Peony.",
     prompt: "The plant person grows into a graceful plant queen with long moss locs, a large glowing pink peony crown opens, soft pink light fills the garden, the camera tilts up to the moon.",
     suggestions: ["Make it rain petals", "Show the whole city", "The moon glows brighter", "The pixie flies closer"],
     xionSuggestions: ["Her crown blooms one petal more", "A gentle halo rings the moon", "Moss locs glow at their tips", "Petals settle like soft snow", "The rooftop fills with fireflies", "Pink light reaches the skyline", "She bows to the waiting garden", "The camera circles her crown"],
