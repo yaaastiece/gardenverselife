@@ -37,7 +37,7 @@ export function PlantletPicker({ start, onVR, vrError }: { start: StartScreen; o
         <div className="gv-start-cards">{(Object.keys(PLANTLETS) as PlantletId[]).map((id) => {
           const plant = PLANTLETS[id];
           return <Button variant="ghost" className="gv-start-card" key={id} aria-label={`Choose ${plant.name}`} aria-pressed={state.selected === id} disabled={waiting || leaving} onClick={() => start.select(id)}>
-            <img src={plant.sprites[0]} alt="" /><b>{plant.name}</b><span>{plant.tagline}</span>
+            <img src={plant.sprites[plant.cardStage]} alt="" /><b>{plant.name}</b><span>{plant.tagline}</span>
           </Button>;
         })}</div>
       </div>

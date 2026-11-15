@@ -32,6 +32,8 @@ export type Plantlet = {
   frames: Four<Frame>;
   queenGlow: number;
   burstColor: string;
+  /** Which stage image the start-screen card shows. */
+  cardStage: 0 | 1 | 2 | 3;
 };
 
 // Lumibud's Glow Seed has no artwork yet: a glowing teal orb with a first sprout peeking out.
@@ -91,6 +93,7 @@ export const PLANTLETS: Record<PlantletId, Plantlet> = {
     ],
     queenGlow: 1,
     burstColor: "#ffb3d9",
+    cardStage: 0,
   },
   lumibud: {
     id: "lumibud",
@@ -132,6 +135,7 @@ export const PLANTLETS: Record<PlantletId, Plantlet> = {
     ],
     queenGlow: 1.25,
     burstColor: "#8fffd2",
+    cardStage: 1,
   },
 };
 
