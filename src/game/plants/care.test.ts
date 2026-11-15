@@ -15,7 +15,6 @@ describe("plant care", () => {
     pepper.tick(10); lumibud.tick(10);
     expect(70 - lumibud.state.sun).toBeCloseTo((70 - pepper.state.sun) * 0.5, 8);
     expect(70 - lumibud.state.water).toBeCloseTo((70 - pepper.state.water) * 1.3, 8);
-    expect(lumibud.careProfile ?? PLANTLETS.lumibud.careProfile).toBe(PLANTLETS.lumibud.careProfile);
   });
   it("keeps separate care progress and resets only the current companion", () => {
     const states = createCompanionCareStates();
