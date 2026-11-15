@@ -34,3 +34,9 @@ use the editor.
 
 ## Gardenverse structure
 - 3D scene lives in `src/game/`: rules/data in plain TS (`plants/`, `config.ts`), scene pieces in `scene/`, audio in `audio/`; the `/` route uses `ssr: false` because WebGL is browser-only.
+
+## Xion interaction boundaries
+- Keep world-space Xion state, care targets, gesture thresholds, and speech timing in plain TypeScript `src/game/interaction.ts`; pointer and future Quest hand adapters share its begin/move/release/dismiss commands.
+- Pointer dragging raycasts onto a horizontal plane at Xion's current hover height; this lets screen dragging reach the garden's plants while preserving altitude, and tracked hands may supply 3D positions directly.
+- `XionCamera` owns camera glides and projects the speech anchor, while `XionSpeech` subscribes to speech events at fixed screen dimensions; future XR panels replace presentation without changing rules.
+- Dev-only `window.__game` exposes live `state`, `move({x,y,z})`, `tap()`, `release()`, and `dismiss()` for repeatable garden interaction checks; `[data-scene-ready]` marks rendered frames.
