@@ -74,3 +74,4 @@ use the editor.
 ## Audio mixing
 - Music and Xion's voice volumes live in plain TS (`audio/mixer.ts`, saved per device); real audio elements route through a Web Audio gain because phones ignore element volume, and silent Orbis videos get `audio/cinematicMusic.ts` underneath while the bowl radio pauses.
 - The moonflower story reuses the shared cinematic as stages from `MOON_STAGE` in `cinematic/prompts.ts`, so overlay, steering and the gate need no separate path.
+- Plantlet poke/squeeze noises are synthesized in plain TS `audio/plantVoice.ts` (gesture rule + cooldown) and follow the garden volume in `mixer.ts`, so screen and XR taps share one sound path without audio files.
