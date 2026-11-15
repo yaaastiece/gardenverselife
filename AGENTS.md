@@ -70,3 +70,7 @@ use the editor.
 - Keep welcome copy, tap/selection gating and one-second entrance in plain TS `src/game/start.ts`; screen and chest-height XR presentations share this controller so neither duplicates entry rules.
 - The center-planter companion catalog lives in plain TS `plants/plantlets.ts`: saved choice, taglines, four stage sprites/names, glow, care drift/likes, stage notes and all four narration/Orbis beats; scene and screen components only present it so a future WebXR chooser can reuse it.
 - `createCompanionCareStates()` keeps independent Pepper Peony and Lumibud care objects; `Seedling` ticks only the selected object and pauses while the choice screen is open, and Change plant resets only the current companion after confirmation.
+
+## Audio mixing
+- Music and Xion's voice volumes live in plain TS (`audio/mixer.ts`, saved per device); real audio elements route through a Web Audio gain because phones ignore element volume, and silent Orbis videos get `audio/cinematicMusic.ts` underneath while the bowl radio pauses.
+- The moonflower story reuses the shared cinematic as stages from `MOON_STAGE` in `cinematic/prompts.ts`, so overlay, steering and the gate need no separate path.
