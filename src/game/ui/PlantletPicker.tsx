@@ -12,7 +12,7 @@ const pointers = import.meta.glob<{ url: string }>("/src/assets/**/start-loop.mp
 const videos = import.meta.glob<string>("/src/assets/**/start-loop.mp4", { eager: true, query: "?url", import: "default" });
 const loop = Object.values(pointers)[0]?.url ?? Object.values(videos)[0];
 
-export function PlantletPicker({ start, onVR, vrError }: { start: StartScreen; onVR?: () => void; vrError: string }) {
+export function PlantletPicker({ start, onVR, vrError }: { start: StartScreen; onVR?: (() => void) | undefined; vrError: string }) {
   const state = useSyncExternalStore(start.subscribe, start.getSnapshot);
   const voiced = useSyncExternalStore(onXionSpeechPreference, xionSpeechEnabled);
   const [videoFailed, setVideoFailed] = useState(false);
