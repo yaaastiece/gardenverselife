@@ -3,6 +3,6 @@
 - [x] Larger glowing Xion with tap camera glides
 - [x] Mouse/touch dragging and timed plant-care speech
 - [x] Reusable interaction rules, tests, and browser verification
-- [ ] Restore a single 150-degree skyline with original proportions and blended sky edges
-- [ ] Limit desktop/phone turning, preserve unrestricted XR head tracking, and check texture filtering
-- [ ] Verify desktop/phone views and existing garden interactions
+- [x] Restore a single 150-degree skyline with original proportions and blended sky edges
+- [x] Limit desktop/phone turning, preserve unrestricted XR head tracking, and check texture filtering
+- [x] Verify desktop/phone views and existing garden interactions (real headset and phone performance remain hardware-only checks)
