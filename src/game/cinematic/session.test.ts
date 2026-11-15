@@ -58,6 +58,30 @@ describe("cinematic lifecycle", () => {
     expect(mint).toHaveBeenCalledTimes(2);
     await session.close();
   });
+  it("steers the running stream with set_prompt only and preserves stage advancement", async () => {
+    const { session, client, capture } = setup();
+    await session.advance(1);
+    session.framesArrived();
+    await session.steer(`${CINEMATIC_PROMPTS[1]} Then: Fireflies fill the air.`);
+    await session.advance(2);
+    expect(client.sendCommand.mock.calls.slice(-2)).toEqual([
+      ["set_prompt", { prompt: `${CINEMATIC_PROMPTS[1]} Then: Fireflies fill the air.` }],
+      ["set_prompt", { prompt: CINEMATIC_PROMPTS[2] }],
+    ]);
+    expect(capture).toHaveBeenCalledTimes(1);
+    expect(session.getSnapshot().stage).toBe(2);
+    await session.close();
+  });
+  it("a rejected steering command does not block closing the stream", async () => {
+    const { session, client } = setup();
+    await session.advance(1);
+    session.framesArrived();
+    client.sendCommand.mockRejectedValueOnce(new Error("refused"));
+    await expect(session.steer("stage prompt Then: gentle breeze.")).rejects.toThrow("refused");
+    await session.close();
+    expect(client.sendCommand).toHaveBeenLastCalledWith("stop", {});
+    expect(client.disconnect).toHaveBeenCalledTimes(1);
+  });
   it("command_error produces a recoverable error and skip can shut down the session", async () => {
     const { session, events, client } = setup();
     await session.advance(1);

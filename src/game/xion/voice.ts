@@ -2,6 +2,12 @@ import { xionSpeech } from "@/lib/xion-voice.functions";
 // All of Xion's speaking goes through speak(); swap this file's body for ElevenLabs later.
 type Rec = { lang: string; interimResults: boolean; continuous: boolean; start(): void; stop(): void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null; onend: (() => void) | null; onerror: ((e: { error?: string }) => void) | null };
 
+let xionSpeaks = true;
+const preferenceSubs = new Set<() => void>();
+export function xionSpeechEnabled() { return xionSpeaks; }
+export function setXionSpeechEnabled(enabled: boolean) { xionSpeaks = enabled; preferenceSubs.forEach((f) => f()); }
+export function onXionSpeechPreference(f: () => void) { preferenceSubs.add(f); return () => { preferenceSubs.delete(f); }; }
+
 const subs = new Set<(speaking: boolean) => void>();
 const notify = (v: boolean) => subs.forEach((f) => f(v));
 export function onSpeaking(f: (speaking: boolean) => void) { subs.add(f); return () => { subs.delete(f); }; }
