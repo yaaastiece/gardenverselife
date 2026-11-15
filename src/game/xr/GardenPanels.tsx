@@ -10,6 +10,7 @@ import { FADE_MS, SPEECH_MS, type XionInteraction } from "../interaction";
 import type { CinematicSession } from "../cinematic/session";
 import type { CinematicSteering } from "../cinematic/steering";
 import { WorldPanel, type PanelButton } from "./WorldPanel";
+import { weather, WEATHER_LABEL } from "../weather/weather";
 
 function useRefresh(subscribe: (cb: () => void) => () => void) {
   const [, force] = useState(0);
@@ -32,7 +33,7 @@ export function GardenPanels({ care, beds, selection, quest, interaction, onMoon
   return <>
     <WorldPanel position={[-0.9, 1.28, -0.85]} title={`${plantName()} · ${status(care.state)}`} bars={stats(care.state)}
       lines={[...(care.state.water > 90 ? ["Too much water"] : []), companionStages().map((stage, i) => `${i === care.state.stage ? "● " : ""}${stage.name}`).join(" · ")]}
-      buttons={[{ label: "Water", action: () => care.act("water") }, { label: "Sun", action: () => care.act("sun") }, { label: "Feed soil", action: () => care.act("soil") }, { label: `Snap turn 30°: ${snap ? "On" : "Off"}`, action: () => setSnap(!snap) }, { label: "Exit VR", action: exit }]} />
+      buttons={[{ label: "Water", action: () => care.act("water") }, { label: "Sun", action: () => care.act("sun") }, { label: "Feed soil", action: () => care.act("soil") }, { label: `Weather: ${WEATHER_LABEL[weather.getSnapshot()]}`, action: () => weather.cycle() }, { label: `Snap turn 30°: ${snap ? "On" : "Off"}`, action: () => setSnap(!snap) }, { label: "Exit VR", action: exit }]} />
     <WorldPanel position={[1.45, 1.25, -0.85]} title="Moonflower" lines={[task.task]} buttons={[{ label: task.action, action: onMoon }]} />
     {pick && bed && <WorldPanel position={[pick.pos.x, pick.pos.y + 0.35, pick.pos.z]} title={`${PLANT_INFO[pick.kind].name} · ${bedStatus(bed)}`} bars={stats(bed)}
       lines={[...(bed.water > 90 ? ["Too much water"] : []), PLANT_INFO[pick.kind].likes]}

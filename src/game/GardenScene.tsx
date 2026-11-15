@@ -8,6 +8,9 @@ import { Environment, Lightformer } from "@react-three/drei";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, Volume2, VolumeX } from "lucide-react";
 import { VolumeSliders } from "./ui/VolumeSliders";
+import { Weather } from "./scene/Weather";
+import { weather, WEATHER_ICON, WEATHER_LABEL, type WeatherMode } from "./weather/weather";
+import { setRain } from "./weather/rainSound";
 import { createXionInteraction, isDrag } from "./interaction";
 import { XionCamera } from "./scene/XionCamera";
 import { XionSpeech } from "./ui/XionSpeech";
@@ -294,6 +297,8 @@ export function GardenScene() {
   }, [interaction, care, careStates, plantletId, beds, xrStore, selection, cinematic, steering, radio, meditation, meditationVisuals]);
   useEffect(() => () => audio.current?.dispose(), []);
   const [volOpen, setVolOpen] = useState(false);
+  const [sky, setSky] = useState<WeatherMode>(weather.getSnapshot());
+  useEffect(() => weather.subscribe(() => { setSky(weather.getSnapshot()); setRain(weather.getSnapshot() === "rain"); }), []);
   const toggleSound = async () => {
     if (!audio.current) { audio.current = createAmbience(); audio.current.duck(radio.getSnapshot().playing); }
     await audio.current.setPlaying(!playing);
@@ -340,6 +345,7 @@ export function GardenScene() {
         </Environment>
         <group onClick={() => { interaction.dismiss(); selection.clear(); }}>
           <SkyDome />
+          <Weather weather={weather} />
           <Suspense fallback={null}><Backdrop /></Suspense>
           <FlyingCars />
           <Deck />
@@ -372,6 +378,7 @@ export function GardenScene() {
           <Button variant="ghost" className="gv-sound" onClick={toggleSound} aria-label={playing ? "Mute ambience" : "Play ambience"}>
             {playing ? <Volume2 /> : <VolumeX />}{playing ? "Sound on" : "Play sound"}
           </Button>
+          <Button variant="ghost" className="gv-sound" aria-label={`Weather: ${WEATHER_LABEL[sky]}. Tap to change`} onClick={() => weather.cycle()}>{WEATHER_ICON[sky]} <span className="max-sm:hidden">{WEATHER_LABEL[sky]}</span></Button>
           <Button variant="ghost" className="gv-sound" aria-label="Volume" aria-expanded={volOpen} onClick={() => setVolOpen((v) => !v)}><SlidersHorizontal /></Button>
           {volOpen && <div className="gv-volpop" role="dialog" aria-label="Volume controls"><VolumeSliders radio={radio} garden /></div>}
         </div>
