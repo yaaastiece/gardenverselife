@@ -13,4 +13,9 @@ describe("360 skyline ring", () => {
   it("allows mobile rendering up to pixel ratio two", () => {
     expect(LOOK.maxDpr).toBe(2);
   });
+  it("allows looking almost directly overhead without the orbit pole singularity", () => {
+    expect(LOOK.polarMin).toBe(0.08);
+    expect(LOOK.polarMin).toBeGreaterThan(0);
+    expect(LOOK.polarMax).toBe(2.25);
+  });
 });
