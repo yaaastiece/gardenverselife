@@ -5,8 +5,8 @@ export const START = {
   welcome: "Welcome to the Gardenverse. I'm Xion, your garden guide. Choose a plantlet person to grow, and I'll show you how to care for it.",
   fadeMs: 1000,
   characterMs: 30,
-  distance: 1.5,
-  chestOffset: 0.35,
+  distance: 1.9,
+  chestOffset: 0,
 };
 export type StartState = { phase: "waiting" | "choosing" | "leaving" | "done"; selected: PlantletId | null; text: string; visibleText: string; opacity: number };
 export function createStartScreen(actions: { speak: (text: string) => void; speechEnabled: () => boolean; enter: (id: PlantletId) => void; finish: () => void }, now = () => Date.now()) {

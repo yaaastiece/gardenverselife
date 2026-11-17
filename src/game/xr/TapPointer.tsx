@@ -10,8 +10,8 @@ import { beamObjects } from "./beams";
 
 type R3FObject = THREE.Object3D & { __r3f?: { eventCount?: number; handlers?: Record<string, ((event: unknown) => void) | undefined> } };
 type Hit = THREE.Intersection;
-type Pointer = { id: number; chain: R3FObject[]; hit: Hit | null; hits: Hit[]; downChain: R3FObject[]; downFirst: R3FObject | null; polled: boolean; triggerDown: boolean; triggerAt: number };
-const fresh = (id: number): Pointer => ({ id, chain: [], hit: null, hits: [], downChain: [], downFirst: null, polled: false, triggerDown: false, triggerAt: 0 });
+type Pointer = { id: number; chain: R3FObject[]; hit: Hit | null; hits: Hit[]; downChain: R3FObject[]; downFirst: R3FObject | null; polled: boolean; triggerDown: boolean; triggerAt: number; leftFrom: R3FObject | null; leftAt: number };
+const fresh = (id: number): Pointer => ({ id, chain: [], hit: null, hits: [], downChain: [], downFirst: null, polled: false, triggerDown: false, triggerAt: 0, leftFrom: null, leftAt: 0 });
 
 const RANGE = 12;
 
@@ -83,9 +83,11 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
     if (!p.chain.length) note("press: pointing at nothing tappable");
     fire(p.chain, "onPointerDown", p, p.hit);
   };
+  // A click still counts if your hand drifted off the button in the last quarter second before you let go.
+  const stillOn = (p: Pointer) => p.chain[0] === p.downFirst || (p.leftFrom === p.downFirst && performance.now() - p.leftAt < 250);
   const release = (p: Pointer, source: XRInputSource) => {
     fire(p.downChain, "onPointerUp", p, p.hit);
-    if (p.downFirst && p.chain[0] === p.downFirst) { fire(p.chain, "onClick", p, p.hit); pulse(source); }
+    if (p.downFirst && stillOn(p)) { fire(p.downChain, "onClick", p, p.hit); pulse(source); }
     else note(p.downFirst ? "release: aim moved off the item" : "release: nothing was pressed");
     p.downChain = []; p.downFirst = null;
   };
@@ -107,7 +109,7 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
       const p = forSource(event);
       if (p.polled) return;
       fire(p.downChain, "onPointerUp", p, p.hit);
-      if (p.downFirst && p.chain[0] === p.downFirst) { fire(p.chain, "onClick", p, p.hit); pulse(event.inputSource); }
+      if (p.downFirst && stillOn(p)) { fire(p.downChain.length ? p.downChain : p.chain, "onClick", p, p.hit); pulse(event.inputSource); }
       p.downChain = []; p.downFirst = null;
     };
     session.addEventListener("selectstart", down); session.addEventListener("selectend", up);
@@ -209,6 +211,7 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
         }
       }
       if (chain[0] !== p.chain[0]) {
+        p.leftFrom = p.chain[0] ?? null; p.leftAt = performance.now();
         fire(p.chain, "onPointerOut", p, first); fire(chain, "onPointerOver", p, first);
       }
       p.chain = chain;

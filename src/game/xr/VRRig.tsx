@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { XROrigin, XRSpace, useXR, useXRInputSourceStates } from "@react-three/xr";
+import { XROrigin, XRSpace, useXR } from "@react-three/xr";
 import * as THREE from "three";
 import { VR, snapStep } from "./rules";
 import { TapPointer } from "./TapPointer";
@@ -11,10 +11,17 @@ import { menuBus } from "./menuBus";
 // The pink beams are placed by the library exactly where the controllers are drawn. The tap pointer aims along the same objects,
 // so what you click is always what the beam points at, wherever you have walked or turned.
 function ControllerLasers() {
-  const states = useXRInputSourceStates();
-  return <>{states.filter((state) => state.type === "controller").map((state) => (
-    <XRSpace key={state.inputSource.handedness + state.id} space={state.inputSource.targetRaySpace}>
-      <group ref={(g) => { if (g) beamObjects.set(state.inputSource, g); else beamObjects.delete(state.inputSource); }}>
+  const session = useXR((s) => s.session);
+  const [sources, setSources] = useState<XRInputSource[]>([]);
+  useEffect(() => {
+    if (!session) return;
+    const update = () => setSources([...session.inputSources].filter((src) => src.targetRayMode !== "gaze" && src.targetRaySpace));
+    update(); session.addEventListener("inputsourceschange", update);
+    return () => session.removeEventListener("inputsourceschange", update);
+  }, [session]);
+  return <>{sources.map((source) => (
+    <XRSpace key={source.handedness + sources.indexOf(source)} space={source.targetRaySpace}>
+      <group ref={(g) => { if (g) beamObjects.set(source, g); else beamObjects.delete(source); }}>
         <mesh position={[0, 0, -0.6]} renderOrder={999} raycast={() => {}}>
           <boxGeometry args={[0.004, 0.004, 1.2]} />
           <meshBasicMaterial color="#ff8fcf" transparent opacity={0.85} depthTest={false} toneMapped={false} />
@@ -102,5 +109,6 @@ export function VRRig({ snap, onRestart }: { snap: boolean; onRestart?: () => vo
     rig.position.copy(pose.pivot).add(pose.offset);
     rig.rotation.y += turn.radians;
   }, -60);
-  return session ? <><XROrigin ref={origin} position={VR.origin} /><ControllerLasers /><TapPointer origin={origin} /></> : null;
+  // The beams must live inside the origin, like the controller models do, or they stay behind at the spawn spot when you walk.
+  return session ? <><XROrigin ref={origin} position={VR.origin}><ControllerLasers /></XROrigin><TapPointer origin={origin} /></> : null;
 }

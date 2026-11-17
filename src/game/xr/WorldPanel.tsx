@@ -80,7 +80,7 @@ export function WorldPanel({ title, lines = [], bars = [], buttons = [], positio
       onPointerUp={(e) => { e.stopPropagation(); if (!button.disabled) button.release?.(); }}
       onPointerCancel={(e) => { e.stopPropagation(); if (!button.disabled) button.release?.(); }}
       onClick={(e) => { e.stopPropagation(); if (!button.disabled) button.action?.(); }}>
-      <planeGeometry args={[width - 0.04, Math.max(VR.minTarget, VR.buttonHeight)]} /><meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      <planeGeometry args={[width - 0.01, VR.buttonHeight + 0.01]} /><meshBasicMaterial transparent opacity={0} depthWrite={false} />
     </mesh>)}
   </Billboard>;
 }
