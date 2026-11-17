@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { VR, snapStep } from "./rules";
 import { TapPointer } from "./TapPointer";
 import { beamObjects } from "./beams";
+import { menuBus } from "./menuBus";
 
 // Always-visible aiming beam, drawn on top of the world. The library's own ray only shows when it hits something.
 // The pink beams are placed by the library exactly where the controllers are drawn. The tap pointer aims along the same objects,
@@ -29,6 +30,9 @@ export function VRRig({ snap, onRestart }: { snap: boolean; onRestart?: () => vo
   const { gl, camera, scene } = useThree();
   const latched = useRef(false);
   const restartHeld = useRef(false);
+  const bothSince = useRef(0);
+  const suppress = useRef(false);
+  const faceDown = useRef(new Map<string, number>());
   const pose = useMemo(() => ({ position: new THREE.Vector3(), quaternion: new THREE.Quaternion(), pivot: new THREE.Vector3(), offset: new THREE.Vector3() }), []);
   const hiddenLights = useRef(new Set<THREE.PointLight>());
   useEffect(() => {
@@ -54,10 +58,23 @@ export function VRRig({ snap, onRestart }: { snap: boolean; onRestart?: () => vo
         object.raycast = () => {};
       }
     });
-    // Press the lower face buttons (X/A or Y/B) on both controllers together to start over.
-    const lowerPressed = [...session.inputSources].filter((s) => s.gamepad?.buttons[5]?.pressed).length;
-    if (lowerPressed >= 2 && !restartHeld.current) { restartHeld.current = true; onRestart?.(); }
-    if (lowerPressed < 2) restartHeld.current = false;
+    // Face buttons: a quick press of B / Y / A / X shows or hides the menu. Hold B and Y together for 1.5 s to start over.
+    const now = performance.now();
+    const bothHeld = [...session.inputSources].filter((s) => s.gamepad?.buttons[5]?.pressed).length >= 2;
+    if (bothHeld) { if (!restartHeld.current) { restartHeld.current = true; bothSince.current = now; } else if (bothSince.current && now - bothSince.current > 1500) { bothSince.current = 0; onRestart?.(); } suppress.current = true; }
+    else restartHeld.current = false;
+    for (const source of session.inputSources) {
+      for (const idx of [4, 5]) {
+        const key = `${source.handedness}${idx}`; const down = Boolean(source.gamepad?.buttons[idx]?.pressed);
+        const since = faceDown.current.get(key);
+        if (down && since === undefined) faceDown.current.set(key, now);
+        if (!down && since !== undefined) {
+          faceDown.current.delete(key);
+          if (now - since < 700 && !suppress.current) menuBus.toggle();
+        }
+      }
+    }
+    if (faceDown.current.size === 0 && !bothHeld) suppress.current = false;
     // Walk with the left thumbstick, relative to where the head is facing.
     const walker = [...session.inputSources].find((s) => s.handedness === "left" && s.gamepad);
     const walk = walker?.gamepad?.axes;

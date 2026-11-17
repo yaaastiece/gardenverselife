@@ -12,6 +12,8 @@ import type { CinematicSteering } from "../cinematic/steering";
 import { WorldPanel, type PanelButton } from "./WorldPanel";
 import { HeadAnchored } from "./HeadAnchored";
 import { weather, WEATHER_LABEL } from "../weather/weather";
+import { menuBus } from "./menuBus";
+import { MOON_STAGE } from "../cinematic/prompts";
 
 function useRefresh(subscribe: (cb: () => void) => () => void) {
   const [, force] = useState(0);
@@ -20,9 +22,9 @@ function useRefresh(subscribe: (cb: () => void) => () => void) {
 const stats = (s: { water: number; sun: number; soil: number }) => [
   { label: "Water", value: s.water }, { label: "Sun", value: s.sun }, { label: "Soil", value: s.soil },
 ];
-export function GardenPanels({ care, beds, selection, quest, interaction, onMoon, snap, setSnap, pending, playCinematic, exit, onStartOver, cinematic, steering }: {
+export function GardenPanels({ care, beds, selection, quest, interaction, onMoon, snap, setSnap, pending, playCinematic, exit, onStartOver, orbis, cinematic, steering }: {
   care: PlantCare; beds: BedCare; selection: PlantSelection; quest: MoonQuest; interaction: XionInteraction;
-  onMoon: () => void; snap: boolean; setSnap: (v: boolean) => void; pending: number | null; playCinematic: () => void; exit: () => void; onStartOver: () => void;
+  onMoon: () => void; snap: boolean; setSnap: (v: boolean) => void; pending: number | null; playCinematic: () => void; exit: () => void; onStartOver: () => void; orbis: (stage: number) => void;
   cinematic: CinematicSession; steering: CinematicSteering;
 }) {
   useRefresh(care.subscribe); useRefresh(beds.subscribe); useRefresh(selection.subscribe);
@@ -33,25 +35,29 @@ export function GardenPanels({ care, beds, selection, quest, interaction, onMoon
   const bed = pick ? beds.beds[pick.bed] : undefined;
   const task = MOON_TASKS[quest.state.step];
   // One menu that follows you and folds down to a small button, instead of panels scattered around the garden.
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(true);
   const [menuKey, setMenuKey] = useState(0);
   const openMenu = () => { setMenuKey((k) => k + 1); setMenuOpen(true); };
-  const [page, setPage] = useState<"care" | "world" | "quest" | "bed">("care");
+  // B / Y / A / X toggles the menu; it appears in front of you and then stays exactly where it is.
+  const menuOpenRef = useRef(menuOpen); menuOpenRef.current = menuOpen;
+  useEffect(() => menuBus.subscribe(() => { if (menuOpenRef.current) setMenuOpen(false); else { setPage("care"); openMenu(); } }), []);
+  const [page, setPage] = useState<"care" | "world" | "quest" | "bed" | "orbis">("care");
   const pickKey = pick ? `${pick.bed}` : "";
   useEffect(() => { if (pickKey) { openMenu(); setPage("bed"); } else setPage((p) => (p === "bed" ? "care" : p)); }, [pickKey]);
   const sky = useSyncExternalStore(weather.subscribe, weather.getSnapshot, weather.getSnapshot);
   const back: PanelButton = { label: "◂ Back", action: () => setPage("care") };
   const hide: PanelButton = { label: "Hide menu", action: () => setMenuOpen(false) };
   return <>
-    <HeadAnchored active={!(cin.open)} follow placeKey={menuKey} distance={0.55} drop={0.5} side={-0.6}>
-      {!menuOpen && <WorldPanel width={0.3} title="Menu" buttons={[{ label: "Open menu", action: openMenu }]} />}
+    <HeadAnchored active={menuOpen && !cin.open} placeKey={menuKey} distance={1.0} drop={0.2} side={-0.9}>
       {menuOpen && page === "care" && <WorldPanel title={`${plantName()} · ${status(care.state)}`} bars={stats(care.state)}
-        lines={[...(care.state.water > 90 ? ["Too much water"] : []), companionStages().map((stage, i) => `${i === care.state.stage ? "● " : ""}${stage.name}`).join(" · ")]}
+        lines={["B or Y shows / hides this menu", ...(care.state.water > 90 ? ["Too much water"] : []), companionStages().map((stage, i) => `${i === care.state.stage ? "● " : ""}${stage.name}`).join(" · ")]}
         buttons={[{ label: "Water", action: () => care.act("water") }, { label: "Sun", action: () => care.act("sun") }, { label: "Feed soil", action: () => care.act("soil") },
-          { label: `Weather & settings`, action: () => setPage("world") }, { label: "Moonflower quest", action: () => setPage("quest") }, hide]} />}
+          { label: "Orbis videos", action: () => setPage("orbis") }, { label: `Weather & settings`, action: () => setPage("world") }, { label: "Moonflower quest", action: () => setPage("quest") }, hide]} />}
       {menuOpen && page === "world" && <WorldPanel title="Weather & settings" lines={[`Now: ${WEATHER_LABEL[sky]}`]}
         buttons={[{ label: `Weather: ${weather.isOn() ? "On" : "Off"}`, active: weather.isOn(), action: () => weather.toggle() }, { label: `Change weather · ${WEATHER_LABEL[sky]}`, action: () => weather.cycle() },
           { label: `Turning: ${snap ? "Snap" : "Smooth"} (tap to switch)`, action: () => setSnap(!snap) }, { label: "Change companion / start over", action: onStartOver }, { label: "Exit VR", action: exit }, back]} />}
+      {menuOpen && page === "orbis" && <WorldPanel title="Orbis videos" lines={["Plays on the big screen past the balcony"]}
+        buttons={[{ label: "Play growth video", action: () => { setMenuOpen(false); orbis(care.state.stage); } }, { label: "Play Moonflower video", action: () => { setMenuOpen(false); orbis(MOON_STAGE); } }, back]} />}
       {menuOpen && page === "quest" && <WorldPanel title="Moonflower" lines={[task.task]} buttons={[{ label: task.action, action: onMoon }, back]} />}
       {menuOpen && page === "bed" && pick && bed && <WorldPanel title={`${PLANT_INFO[pick.kind].name} · ${bedStatus(bed)}`} bars={stats(bed)}
         lines={[...(bed.water > 90 ? ["Too much water"] : []), PLANT_INFO[pick.kind].likes]}

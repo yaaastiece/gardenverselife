@@ -368,11 +368,11 @@ export function GardenScene() {
         {!inVR && <PlantCardAnchor selection={selection} cardRef={cardRef} />}
         {!inVR && <PlantFxLayer selection={selection} />}
         {inVR && picking && <Suspense fallback={null}><StartWorldPanel start={start} /></Suspense>}
-        {inVR && !picking && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={() => { void cinematic.close(); }} exit={exitVR} onStartOver={startOver} cinematic={cinematic} steering={steering} />}
+        {inVR && !picking && <GardenPanels care={care} beds={beds} selection={selection} quest={quest} interaction={interaction} onMoon={doMoonTask} snap={snap} setSnap={setSnap} pending={pendingStage} playCinematic={() => { void cinematic.close(); }} exit={exitVR} onStartOver={startOver} orbis={(stage) => { void cinematic.advance(stage); }} cinematic={cinematic} steering={steering} />}
         {inVR && bowlOpen && <BowlWorldPanel radio={radio} onMeditate={startMeditation} onClose={() => setBowlOpen(false)} />}
         {inVR && <MeditationWorldPanel meditation={meditation} />}
         {inVR && <CinematicWorldPanel session={cinematic} />}
-        {inVR && <CinematicWorldPanel session={meditationVisuals} narrate={false} />}
+        {inVR && <CinematicWorldPanel session={meditationVisuals} narrate={false} frame={false} />}
         <HelperTicker helper={helper} />
         <MeditationTicker meditation={meditation} />
         <ReadySignal onReady={() => setReady(true)} />
