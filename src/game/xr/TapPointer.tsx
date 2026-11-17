@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useXR } from "@react-three/xr";
 import * as THREE from "three";
+import { beamObjects } from "./beams";
 
 // Our own controller/hand pointer. It aims from each input source's target-ray pose, finds the
 // objects that have React Three Fiber handlers (onClick, onPointerOver, ...) and calls them,
@@ -168,8 +169,9 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
       if (!pose) continue;
       let p = pointers.current.get(source);
       if (!p) { p = fresh(next.current++); pointers.current.set(source, p); }
-      tools.matrix.fromArray(pose.transform.matrix);
-      if (originMatrix) tools.matrix.premultiply(originMatrix);
+      const beam = beamObjects.get(source);
+      if (beam) { beam.updateWorldMatrix(true, false); tools.matrix.copy(beam.matrixWorld); }
+      else { tools.matrix.fromArray(pose.transform.matrix); if (originMatrix) tools.matrix.premultiply(originMatrix); }
       tools.from.setFromMatrixPosition(tools.matrix);
       tools.dir.set(0, 0, -1).transformDirection(tools.matrix);
       tools.raycaster.set(tools.from, tools.dir); tools.raycaster.far = RANGE;

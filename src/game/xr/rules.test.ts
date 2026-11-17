@@ -5,11 +5,11 @@ describe("Quest rules", () => {
     expect(VR.requiredFeatures).toEqual(["local-floor"]); expect(VR.optionalFeatures).toEqual(["hand-tracking"]);
     expect(VR.origin[1]).toBe(0);
   });
-  it("turns exactly 30 degrees once per stick deflection", () => {
-    const turn = snapStep(0.8, false, true); expect(turn.radians).toBeCloseTo(-30 * Math.PI / 180);
+  it("turns exactly 45 degrees once per stick deflection", () => {
+    const turn = snapStep(0.8, false, true); expect(turn.radians).toBeCloseTo(-45 * Math.PI / 180);
     expect(snapStep(0.9, turn.latched, true).radians).toBe(0);
     expect(snapStep(0, true, true).latched).toBe(false);
-    expect(snapStep(-0.8, false, true).radians).toBeCloseTo(30 * Math.PI / 180);
+    expect(snapStep(-0.8, false, true).radians).toBeCloseTo(45 * Math.PI / 180);
   });
   it("does not turn when disabled or when the stick rests", () => {
     expect(snapStep(1, false, false).radians).toBe(0); expect(snapStep(0.1, false, true).radians).toBe(0);

@@ -4,16 +4,21 @@ import { XROrigin, XRSpace, useXR, useXRInputSourceStates } from "@react-three/x
 import * as THREE from "three";
 import { VR, snapStep } from "./rules";
 import { TapPointer } from "./TapPointer";
+import { beamObjects } from "./beams";
 
 // Always-visible aiming beam, drawn on top of the world. The library's own ray only shows when it hits something.
+// The pink beams are placed by the library exactly where the controllers are drawn. The tap pointer aims along the same objects,
+// so what you click is always what the beam points at, wherever you have walked or turned.
 function ControllerLasers() {
   const states = useXRInputSourceStates();
   return <>{states.filter((state) => state.type === "controller").map((state) => (
     <XRSpace key={state.inputSource.handedness + state.id} space={state.inputSource.targetRaySpace}>
-      <mesh position={[0, 0, -0.6]} renderOrder={999} raycast={() => {}}>
-        <boxGeometry args={[0.004, 0.004, 1.2]} />
-        <meshBasicMaterial color="#ff8fcf" transparent opacity={0.85} depthTest={false} toneMapped={false} />
-      </mesh>
+      <group ref={(g) => { if (g) beamObjects.set(state.inputSource, g); else beamObjects.delete(state.inputSource); }}>
+        <mesh position={[0, 0, -0.6]} renderOrder={999} raycast={() => {}}>
+          <boxGeometry args={[0.004, 0.004, 1.2]} />
+          <meshBasicMaterial color="#ff8fcf" transparent opacity={0.85} depthTest={false} toneMapped={false} />
+        </mesh>
+      </group>
     </XRSpace>
   ))}</>;
 }
@@ -69,7 +74,8 @@ export function VRRig({ snap, onRestart }: { snap: boolean; onRestart?: () => vo
     const controller = [...session.inputSources].find((s) => s.handedness === "right" && s.gamepad)
       ?? [...session.inputSources].find((s) => s.gamepad);
     const axes = controller?.gamepad?.axes;
-    const turn = snapStep(axes?.[axes.length >= 4 ? 2 : 0] ?? 0, latched.current, snap);
+    const turnAxis = axes?.[axes.length >= 4 ? 2 : 0] ?? 0;
+    const turn = snap ? snapStep(turnAxis, latched.current, snap) : { latched: false, radians: Math.abs(turnAxis) > VR.walkDeadzone ? -turnAxis * VR.smoothTurnDegrees * Math.PI / 180 * Math.min(delta, 0.05) : 0 };
     latched.current = turn.latched;
     const rig = origin.current;
     if (!rig || !turn.radians) return;

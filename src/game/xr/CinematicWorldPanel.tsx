@@ -50,19 +50,18 @@ export function CinematicWorldPanel({ session, narrate = true }: { session: Cine
   }, [session, state.open, state.phase]);
 
   const playing = state.phase === "playing";
-  const H = WIDTH * 9 / 16; const T = 0.07;
+  const H = WIDTH * 9 / 16; const T = 0.05;
   return <>
     <group position={SCREEN} visible={state.open}>
       {/* A framed screen: dark back plate, glowing pink bezel, and two slim posts down to the ground. */}
-      <mesh position={[0, 0, -0.06]} raycast={() => {}}><boxGeometry args={[WIDTH + 0.3, H + 0.3, 0.06]} /><meshStandardMaterial color="#120a14" roughness={0.6} metalness={0.3} /></mesh>
       {([[0, H / 2 + T / 2, WIDTH + T * 2, T], [0, -H / 2 - T / 2, WIDTH + T * 2, T], [-WIDTH / 2 - T / 2, 0, T, H], [WIDTH / 2 + T / 2, 0, T, H]] as const).map(([x, y, w, h], i) =>
-        <mesh key={i} position={[x, y, 0.0]} raycast={() => {}}><boxGeometry args={[w, h, 0.05]} /><meshBasicMaterial color="#ff8fcf" toneMapped={false} /></mesh>)}
-      {[-WIDTH / 2 + 0.3, WIDTH / 2 - 0.3].map((x) => <mesh key={x} position={[x, -(SCREEN[1] - (SCREEN[1] - H / 2) / 2), -0.08]} raycast={() => {}}><boxGeometry args={[0.1, SCREEN[1] - H / 2, 0.1]} /><meshStandardMaterial color="#2a1630" roughness={0.5} metalness={0.4} /></mesh>)}
+        <mesh key={i} position={[x, y, 0.0]} raycast={() => {}}><boxGeometry args={[w, h, 0.05]} /><meshBasicMaterial color="#ff5fc0" transparent opacity={0.4} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} /></mesh>)}
+      {[-WIDTH / 2 + 0.3, WIDTH / 2 - 0.3].map((x) => <mesh key={x} position={[x, -(SCREEN[1] - (SCREEN[1] - H / 2) / 2), -0.08]} raycast={() => {}}><boxGeometry args={[0.1, SCREEN[1] - H / 2, 0.1]} /><meshBasicMaterial color="#ff5fc0" transparent opacity={0.18} blending={THREE.AdditiveBlending} depthWrite={false} toneMapped={false} /></mesh>)}
     </group>
     <group position={SCREEN} visible={state.open && playing}>
       <mesh raycast={() => {}}><planeGeometry args={[WIDTH, WIDTH * 9 / 16]} /><meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} /></mesh>
     </group>
-    <HeadAnchored active={state.open && !playing} distance={1} drop={0.35}>
+    <HeadAnchored active={state.open && !playing} distance={1} drop={0.6}>
       <WorldPanel width={0.7}
         title={state.phase === "error" ? "Xion" : "Orbis cinematic"}
         lines={state.phase === "error" ? [state.error ?? "This cinematic couldn’t play."] : ["Xion is weaving the garden into a moving dream…"]}
