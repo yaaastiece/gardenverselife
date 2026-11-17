@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { Sparkles } from "@react-three/drei";
 import { useXR } from "@react-three/xr";
 import * as THREE from "three";
+import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { WEATHER_FADE, type Weather as WeatherState } from "../weather/weather";
 
 const AREA = { x: 9, z: 9, top: 6, cx: 0, cz: -1.2 };
@@ -10,7 +11,7 @@ const AREA = { x: 9, z: 9, top: 6, cx: 0, cz: -1.2 };
 export function Weather({ weather }: { weather: WeatherState }) {
   const mode = useSyncExternalStore(weather.subscribe, weather.getSnapshot, weather.getSnapshot);
   const inVR = useXR((s) => Boolean(s.session));
-  const amt = useRef({ rain: 0, fog: 0, fireflies: 0 });
+  const amt = useRef({ rain: 0, snow: 0, fog: 0, fireflies: 0 });
   const rainRef = useRef<THREE.LineSegments>(null);
   const fogRef = useRef<THREE.Group>(null);
   const flyRef = useRef<THREE.Group>(null);
@@ -24,6 +25,22 @@ export function Weather({ weather }: { weather: WeatherState }) {
     const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     return { g, speed };
   }, [count]);
+  // One-pixel lines vanish in a headset, so VR gets real streaks: two crossed thin quads per drop.
+  const vrDrops = useMemo(() => {
+    const n = 700; const x = new Float32Array(n), y = new Float32Array(n), z = new Float32Array(n), speed = new Float32Array(n);
+    for (let i = 0; i < n; i++) { x[i] = AREA.cx + (Math.random() - 0.5) * AREA.x; z[i] = AREA.cz + (Math.random() - 0.5) * AREA.z; y[i] = Math.random() * AREA.top; speed[i] = 7 + Math.random() * 3; }
+    const a = new THREE.PlaneGeometry(0.012, 0.45); const b = new THREE.PlaneGeometry(0.012, 0.45); b.rotateY(Math.PI / 2);
+    return { n, x, y, z, speed, geometry: mergeGeometries([a, b]), dummy: new THREE.Object3D() };
+  }, []);
+  const rainVR = useRef<THREE.InstancedMesh>(null);
+  // Snow: soft round flakes that drift down slowly; sized in world units so they read in a headset.
+  const snowRef = useRef<THREE.Points>(null);
+  const snow = useMemo(() => {
+    const n = inVR ? 700 : 1200; const pos = new Float32Array(n * 3); const fall = new Float32Array(n); const phase = new Float32Array(n);
+    for (let i = 0; i < n; i++) { pos.set([AREA.cx + (Math.random() - 0.5) * AREA.x, Math.random() * AREA.top, AREA.cz + (Math.random() - 0.5) * AREA.z], i * 3); fall[i] = 0.5 + Math.random() * 0.6; phase[i] = Math.random() * 6.28; }
+    const g = new THREE.BufferGeometry(); g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    return { n, g, fall, phase };
+  }, [inVR]);
   const mistTex = useMemo(() => {
     const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
     if (x) { const r = x.createRadialGradient(64, 64, 0, 64, 64, 64); r.addColorStop(0, "rgba(240,232,245,0.8)"); r.addColorStop(1, "rgba(235,225,240,0)"); x.fillStyle = r; x.fillRect(0, 0, 128, 128); }
@@ -33,9 +50,9 @@ export function Weather({ weather }: { weather: WeatherState }) {
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05); const a = amt.current; const k = dt / WEATHER_FADE;
-    for (const key of ["rain", "fog", "fireflies"] as const) a[key] = THREE.MathUtils.clamp(a[key] + (mode === key ? k : -k), 0, 1);
+    for (const key of ["rain", "snow", "fog", "fireflies"] as const) a[key] = THREE.MathUtils.clamp(a[key] + (mode === key ? k : -k), 0, 1);
     if (rainRef.current) {
-      rainRef.current.visible = a.rain > 0.01;
+      rainRef.current.visible = !inVR && a.rain > 0.01;
       (rainRef.current.material as THREE.LineBasicMaterial).opacity = 0.85 * a.rain;
       if (rainRef.current.visible) {
         const p = rain.g.getAttribute("position") as THREE.BufferAttribute; const arr = p.array as Float32Array;
@@ -43,6 +60,30 @@ export function Weather({ weather }: { weather: WeatherState }) {
           const o = i * 6; const dy = rain.speed[i]! * dt;
           arr[o + 1]! -= dy; arr[o + 4]! -= dy;
           if (arr[o + 1]! < 0) { arr[o + 1] = AREA.top; arr[o + 4] = AREA.top + 0.32; }
+        }
+        p.needsUpdate = true;
+      }
+    }
+    if (rainVR.current) {
+      rainVR.current.visible = inVR && a.rain > 0.01;
+      (rainVR.current.material as THREE.MeshBasicMaterial).opacity = 0.7 * a.rain;
+      if (rainVR.current.visible) {
+        const d = vrDrops;
+        for (let i = 0; i < d.n; i++) {
+          d.y[i]! -= d.speed[i]! * dt; if (d.y[i]! < 0) d.y[i] = AREA.top;
+          d.dummy.position.set(d.x[i]!, d.y[i]!, d.z[i]!); d.dummy.updateMatrix(); rainVR.current.setMatrixAt(i, d.dummy.matrix);
+        }
+        rainVR.current.instanceMatrix.needsUpdate = true;
+      }
+    }
+    if (snowRef.current) {
+      snowRef.current.visible = a.snow > 0.01;
+      (snowRef.current.material as THREE.PointsMaterial).opacity = 0.95 * a.snow;
+      if (snowRef.current.visible) {
+        const p = snow.g.getAttribute("position") as THREE.BufferAttribute; const arr = p.array as Float32Array; const t = state.clock.elapsedTime;
+        for (let i = 0; i < snow.n; i++) {
+          arr[i * 3 + 1]! -= snow.fall[i]! * dt; arr[i * 3]! += Math.sin(t * 0.7 + snow.phase[i]!) * 0.25 * dt;
+          if (arr[i * 3 + 1]! < 0) arr[i * 3 + 1] = AREA.top;
         }
         p.needsUpdate = true;
       }
@@ -59,9 +100,15 @@ export function Weather({ weather }: { weather: WeatherState }) {
   });
 
   return <group>
-    <lineSegments ref={rainRef} geometry={rain.g} raycast={() => {}} frustumCulled={false}>
+    <instancedMesh ref={rainVR} args={[vrDrops.geometry, undefined, vrDrops.n]} raycast={() => {}} frustumCulled={false} visible={false}>
+      <meshBasicMaterial color="#e8ecf8" transparent opacity={0} depthWrite={false} side={THREE.DoubleSide} />
+    </instancedMesh>
+    <lineSegments ref={rainRef} geometry={rain.g} raycast={() => {}} frustumCulled={false} visible={!inVR}>
       <lineBasicMaterial color="#e8ecf8" transparent opacity={0} depthWrite={false} />
     </lineSegments>
+    <points ref={snowRef} geometry={snow.g} raycast={() => {}} frustumCulled={false} visible={false}>
+      <pointsMaterial map={mistTex} color="#ffffff" size={inVR ? 0.07 : 0.05} sizeAttenuation transparent opacity={0} depthWrite={false} alphaTest={0.02} />
+    </points>
     <group ref={fogRef}>
       {puffs.map((pf) => <sprite key={pf.p} raycast={() => {}} position={[pf.x, pf.y, pf.z]} scale={[pf.s * 1.8, pf.s * 0.6, 1]}>
         <spriteMaterial map={mistTex} transparent opacity={0} depthWrite={false} />
