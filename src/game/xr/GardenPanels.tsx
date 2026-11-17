@@ -32,14 +32,29 @@ export function GardenPanels({ care, beds, selection, quest, interaction, onMoon
   const pick = selection.state.selected;
   const bed = pick ? beds.beds[pick.bed] : undefined;
   const task = MOON_TASKS[quest.state.step];
+  // One menu that follows you and folds down to a small button, instead of panels scattered around the garden.
+  const [menuOpen, setMenuOpen] = useState(true);
+  const [page, setPage] = useState<"care" | "world" | "quest" | "bed">("care");
+  const pickKey = pick ? `${pick.bed}` : "";
+  useEffect(() => { if (pickKey) { setMenuOpen(true); setPage("bed"); } else setPage((p) => (p === "bed" ? "care" : p)); }, [pickKey]);
+  const sky = useSyncExternalStore(weather.subscribe, weather.getSnapshot, weather.getSnapshot);
+  const back: PanelButton = { label: "◂ Back", action: () => setPage("care") };
+  const hide: PanelButton = { label: "Hide menu", action: () => setMenuOpen(false) };
   return <>
-    <WorldPanel position={[-0.9, 1.28, -0.85]} title={`${plantName()} · ${status(care.state)}`} bars={stats(care.state)}
-      lines={[...(care.state.water > 90 ? ["Too much water"] : []), companionStages().map((stage, i) => `${i === care.state.stage ? "● " : ""}${stage.name}`).join(" · ")]}
-      buttons={[{ label: "Water", action: () => care.act("water") }, { label: "Sun", action: () => care.act("sun") }, { label: "Feed soil", action: () => care.act("soil") }, { label: `Weather: ${WEATHER_LABEL[weather.getSnapshot()]}`, action: () => weather.cycle() }, { label: `Snap turn 30°: ${snap ? "On" : "Off"}`, action: () => setSnap(!snap) }, { label: "Change companion / start over", action: onStartOver }, { label: "Exit VR", action: exit }]} />
-    <WorldPanel position={[1.45, 1.25, -0.85]} title="Moonflower" lines={[task.task]} buttons={[{ label: task.action, action: onMoon }]} />
-    {pick && bed && <WorldPanel position={[pick.pos.x, pick.pos.y + 0.35, pick.pos.z]} title={`${PLANT_INFO[pick.kind].name} · ${bedStatus(bed)}`} bars={stats(bed)}
-      lines={[...(bed.water > 90 ? ["Too much water"] : []), PLANT_INFO[pick.kind].likes]}
-      buttons={(["water", "sun", "soil"] as const).map((action) => ({ label: action === "soil" ? "Feed soil" : action === "sun" ? "Sun" : "Water", action: () => { beds.act(pick.bed, action); selection.effect(action); } })).concat([{ label: "Close", action: () => selection.clear() }])} />}
+    <HeadAnchored active follow distance={0.9} drop={0.28} side={-0.36}>
+      {!menuOpen && <WorldPanel width={0.3} title="Menu" buttons={[{ label: "Open menu", action: () => setMenuOpen(true) }]} />}
+      {menuOpen && page === "care" && <WorldPanel title={`${plantName()} · ${status(care.state)}`} bars={stats(care.state)}
+        lines={[...(care.state.water > 90 ? ["Too much water"] : []), companionStages().map((stage, i) => `${i === care.state.stage ? "● " : ""}${stage.name}`).join(" · ")]}
+        buttons={[{ label: "Water", action: () => care.act("water") }, { label: "Sun", action: () => care.act("sun") }, { label: "Feed soil", action: () => care.act("soil") },
+          { label: `Weather & settings`, action: () => setPage("world") }, { label: "Moonflower quest", action: () => setPage("quest") }, hide]} />}
+      {menuOpen && page === "world" && <WorldPanel title="Weather & settings" lines={[`Now: ${WEATHER_LABEL[sky]}`]}
+        buttons={[{ label: `Weather: ${weather.isOn() ? "On" : "Off"}`, active: weather.isOn(), action: () => weather.toggle() }, { label: `Change weather · ${WEATHER_LABEL[sky]}`, action: () => weather.cycle() },
+          { label: `Snap turn 30°: ${snap ? "On" : "Off"}`, action: () => setSnap(!snap) }, { label: "Change companion / start over", action: onStartOver }, { label: "Exit VR", action: exit }, back]} />}
+      {menuOpen && page === "quest" && <WorldPanel title="Moonflower" lines={[task.task]} buttons={[{ label: task.action, action: onMoon }, back]} />}
+      {menuOpen && page === "bed" && pick && bed && <WorldPanel title={`${PLANT_INFO[pick.kind].name} · ${bedStatus(bed)}`} bars={stats(bed)}
+        lines={[...(bed.water > 90 ? ["Too much water"] : []), PLANT_INFO[pick.kind].likes]}
+        buttons={[...(["water", "sun", "soil"] as const).map((action) => ({ label: action === "soil" ? "Feed soil" : action === "sun" ? "Sun" : "Water", action: () => { beds.act(pick.bed, action); selection.effect(action); } })), { label: "Close", action: () => selection.clear() }]} />}
+    </HeadAnchored>
     <XionWorldSpeech interaction={interaction} />
     <HeadAnchored active={cin.open && cin.phase === "playing"} distance={0.9} drop={0.3}>{cin.open && cin.phase === "playing" && <SteeringWorldPanel stage={cin.stage} cinematic={cinematic} steering={steering} playCinematic={playCinematic} />}</HeadAnchored>
   </>;

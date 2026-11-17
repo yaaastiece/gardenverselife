@@ -51,6 +51,8 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
     const canvas = document.createElement("canvas"); canvas.width = 1024; canvas.height = 512;
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace; return texture;
   }, []);
+  const rigToWorld = useMemo(() => new THREE.Matrix4(), []);
+  const viewerMatrix = useMemo(() => new THREE.Matrix4(), []);
   const cameraPos = useMemo(() => new THREE.Vector3(), []);
   const cameraDir = useMemo(() => new THREE.Vector3(), []);
 
@@ -148,7 +150,15 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
     }
     state.current = root.internal as unknown as { interaction: THREE.Object3D[] };
     interaction.current = state.current.interaction.filter((object) => visible(object));
-    const originMatrix = origin.current?.matrixWorld;
+    // Map controller poses into the world using the headset itself as the anchor: world head pose x inverse(head pose in the
+    // controller's space). This stays right however the rig offset is applied, so the aim never drifts when you walk.
+    let originMatrix: THREE.Matrix4 | undefined = origin.current?.matrixWorld;
+    const viewer = frame.getViewerPose(refSpace);
+    if (viewer) {
+      const head = root.gl.xr.getCamera(); head.updateMatrixWorld();
+      rigToWorld.copy(viewerMatrix.fromArray(viewer.transform.matrix)).invert().premultiply(head.matrixWorld);
+      originMatrix = rigToWorld;
+    }
     dots.current.forEach((dot) => { if (dot) dot.visible = false; });
     glows.current.forEach((glow) => { if (glow) glow.visible = false; });
     let slot = 0;
@@ -173,7 +183,7 @@ export function TapPointer({ origin }: { origin: RefObject<THREE.Group | null> }
       // A soft green box glows around whatever is being pointed at.
       const glow = glows.current[slot - 1];
       const target = chain[0];
-      if (glow && target) {
+      if (glow && target && !isPanel(target)) {
         const mesh = target as unknown as THREE.Mesh;
         const geometry = mesh.isMesh ? mesh.geometry : null;
         let ok = false;
